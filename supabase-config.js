@@ -1,5 +1,6 @@
-// Public Supabase project settings. Never put the service_role key in this file.
+// Public Supabase project settings. The publishable key is safe for browser use only with RLS enabled.
+// Never put a service_role or secret key in this file.
 window.SUPABASE_CONFIG = {
-  url: "https://YOUR-PROJECT.supabase.co",
-  anonKey: "YOUR_SUPABASE_ANON_KEY"
+  url: "https://lmwczibsipczfymhyqba.supabase.co",
+  anonKey: "sb_publishable_rcOi9VHw4tP2umMhDqD1YA_rJWwugHi"
 };
