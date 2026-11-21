@@ -33,8 +33,10 @@ html=(ROOT/'index.html').read_text(encoding='utf-8')
 for category in ('article','gallery','video'):
     count=len(re.findall(r'id="'+category+r'-slots"',html))
     assert count==1, f'missing/duplicate {category} slot container'
-    count=len(re.findall(r'data-slot="(?:[1-9]|10)"',html[html.index('id="'+category+'-slots"'):]))
-    assert count>=10, f'{category}: expected ten homepage slots'
+    match=re.search(r'<div class="grid content-slots" id="'+category+r'-slots">(.*?)</div></section>',html,re.S)
+    assert match, f'{category}: slot container missing'
+    count=len(re.findall(r'data-slot="(?:[1-9]|10)"',match.group(1)))
+    assert count==10, f'{category}: expected exactly ten slots, found {count}'
 assert 'create table if not exists public.site_content' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'YOUR-PROJECT' in (ROOT/'supabase-config.js').read_text(encoding='utf-8') or 'https://' in (ROOT/'supabase-config.js').read_text(encoding='utf-8')
