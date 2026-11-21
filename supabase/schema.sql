@@ -114,7 +114,7 @@ with check (public.has_access(array['super_admin'], null));
 grant select, update on public.profiles to authenticated;
 drop policy if exists "accounts staff read own institution" on public.ledger_entries;
 create policy "accounts staff read own institution" on public.ledger_entries for select to authenticated
-using (public.has_access(array['super_admin','accounts_manager','accountant','auditor'], institution));
+using (public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'], institution));
 drop policy if exists "accounts staff create pending" on public.ledger_entries;
 create policy "accounts staff create pending" on public.ledger_entries for insert to authenticated
 with check (
@@ -127,7 +127,7 @@ using (public.has_access(array['super_admin','accounts_manager'], institution))
 with check (public.has_access(array['super_admin','accounts_manager'], institution));
 drop policy if exists "admins read announcements" on public.announcements;
 create policy "admins read announcements" on public.announcements for select to authenticated
-using (public.has_access(array['super_admin','admin','website_admin'], null));
+using (public.has_access(array['super_admin','admin','website_admin','editor'], null));
 drop policy if exists "admins create announcements" on public.announcements;
 create policy "admins create announcements" on public.announcements for insert to authenticated
 with check (created_by = auth.uid() and public.has_access(array['super_admin','admin','website_admin'], null));
@@ -148,7 +148,7 @@ create table if not exists public.site_content (id uuid primary key default gen_
 create index if not exists site_content_public_idx on public.site_content(category,slot_number) where status='published';
 alter table public.site_content enable row level security;
 drop policy if exists "public can read published site content" on public.site_content;
-create policy "public can read published site content" on public.site_content for select to anon,authenticated using(status='published' or public.has_access(array['super_admin','admin','website_admin'],null));
+create policy "public can read published site content" on public.site_content for select to anon,authenticated using(status='published' or public.has_access(array['super_admin','admin','website_admin','editor'],null));
 drop policy if exists "website admins manage site content" on public.site_content;
 create policy "website admins manage site content" on public.site_content for all to authenticated using(public.has_access(array['super_admin','admin','website_admin'],null)) with check(public.has_access(array['super_admin','admin','website_admin'],null));
 grant select on public.site_content to anon,authenticated;
@@ -169,7 +169,7 @@ create table if not exists public.budgets(
 );
 alter table public.budgets enable row level security;
 drop policy if exists "accounts read budgets by institution" on public.budgets;
-create policy "accounts read budgets by institution" on public.budgets for select to authenticated using(public.has_access(array['super_admin','accounts_manager','accountant','auditor'],institution));
+create policy "accounts read budgets by institution" on public.budgets for select to authenticated using(public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],institution));
 drop policy if exists "accounts managers manage budgets" on public.budgets;
 create policy "accounts managers manage budgets" on public.budgets for all to authenticated using(public.has_access(array['super_admin','accounts_manager'],institution)) with check(public.has_access(array['super_admin','accounts_manager'],institution) and created_by=auth.uid());
 grant select,insert,update on public.budgets to authenticated;
@@ -233,6 +233,7 @@ as $$
  where p.id=auth.uid() and (
    p.role='super_admin'
    or (not write_access and p.role in ('auditor','viewer') and (p.institution='both' or p.institution=target_institution))
+   or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
    or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
    or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and (p.institution in ('both','mosque')) and target_institution='mosque')
    or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and (p.institution in ('both','foundation')) and target_institution='foundation')
