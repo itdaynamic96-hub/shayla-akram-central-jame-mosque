@@ -259,3 +259,13 @@ create policy "module records update by role" on public.module_records for updat
 drop policy if exists "module records delete by super admin" on public.module_records;
 create policy "module records delete by super admin" on public.module_records for delete to authenticated using(public.has_access(array['super_admin'],null));
 grant select,insert,update,delete on public.module_records to authenticated;
+
+-- Department administrators may review their own institution's accounts and budgets.
+drop policy if exists "managers approve and edit" on public.ledger_entries;
+create policy "managers approve and edit" on public.ledger_entries for update to authenticated
+using (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'], institution))
+with check (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'], institution));
+drop policy if exists "accounts managers manage budgets" on public.budgets;
+create policy "accounts managers manage budgets" on public.budgets for all to authenticated
+using (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
+with check (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=auth.uid());
