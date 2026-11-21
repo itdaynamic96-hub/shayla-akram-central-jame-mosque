@@ -158,7 +158,7 @@ alter table public.ledger_entries add column if not exists receipt_path text;
 create table if not exists public.budgets(
  id uuid primary key default gen_random_uuid(),
  institution text not null check(institution in ('mosque','foundation')),
- budget_month text not null check(budget_month ~ '^[0-9]{4}-(0[1-9]|1[0-2])
+ budget_month text not null check (budget_month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'),
  category text not null check(length(trim(category))>0),
  planned_amount numeric(14,2) not null check(planned_amount>0),
  created_by uuid not null references auth.users(id),
