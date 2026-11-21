@@ -196,3 +196,9 @@ end;$$;
 drop trigger if exists protect_ledger_history_trigger on public.ledger_entries;
 create trigger protect_ledger_history_trigger before update or delete on public.ledger_entries for each row execute function public.protect_ledger_history();
 revoke delete on public.ledger_entries from authenticated;
+
+
+-- Explicit SQL privileges required by the Admin Panel (RLS policies above still enforce roles).
+grant select, insert, update on public.announcements to authenticated;
+grant select on public.audit_logs to authenticated;
+grant select, update on public.profiles to authenticated;
