@@ -183,6 +183,12 @@ begin
  if old.status in ('approved','rejected') then raise exception 'Finalized ledger entries are immutable; create a correcting entry.'; end if;
  if new.institution<>old.institution or new.created_by<>old.created_by then raise exception 'Institution and creator cannot be changed.'; end if;
  if new.status not in ('pending','approved','rejected') then raise exception 'Invalid ledger status.'; end if;
+ if new.status in ('approved','rejected') then
+   if new.entry_type<>old.entry_type or new.entry_date<>old.entry_date or new.category<>old.category or new.amount<>old.amount or new.payer_or_payee<>old.payer_or_payee or new.payment_method<>old.payment_method or new.reference_no<>old.reference_no or new.note<>old.note or new.fund_category<>old.fund_category or new.receipt_path is distinct from old.receipt_path then
+     raise exception 'Review and approve the original entry without changing its financial details.';
+   end if;
+   if new.approved_by is distinct from auth.uid() or new.approved_at is null then raise exception 'Approval identity and time are required.'; end if;
+ end if;
  return new;
 end;$$;
 drop trigger if exists protect_ledger_history_trigger on public.ledger_entries;
