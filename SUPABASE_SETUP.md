@@ -1,4 +1,4 @@
-# Supabase backend setup (Railway is not used)
+# Supabase backend setup
 1. Create a free Supabase project at https://supabase.com/dashboard.
 2. In SQL Editor, run the complete file `supabase/schema.sql`.
 3. In Project Settings → API, copy the Project URL and anon/public key into `supabase-config.js`. Never use the service_role key in this repository.
