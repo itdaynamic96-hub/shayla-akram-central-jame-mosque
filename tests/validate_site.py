@@ -41,3 +41,11 @@ assert 'create table if not exists public.site_content' in (ROOT/'supabase/schem
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'YOUR-PROJECT' in (ROOT/'supabase-config.js').read_text(encoding='utf-8') or 'https://' in (ROOT/'supabase-config.js').read_text(encoding='utf-8')
 print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepage slots, and Supabase schema markers.')
+
+admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert admin_modules.count("['") == 60, f'Admin Panel: expected 60 module definitions, found {admin_modules.count("['")}'
+subprocess.run(['node','--check',str(ROOT/'admin-modules.js')],check=True)
+migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
+assert 'create table if not exists public.module_records' in migration
+assert 'alter table public.profiles add constraint profiles_role_check' in migration
+print('Admin Panel checks passed: 60 module definitions, module JS syntax, and RLS migration markers.')
