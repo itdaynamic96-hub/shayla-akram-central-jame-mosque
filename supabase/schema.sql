@@ -110,6 +110,8 @@ drop policy if exists "super admins update profiles" on public.profiles;
 create policy "super admins update profiles" on public.profiles for update to authenticated
 using (public.has_access(array['super_admin'], null))
 with check (public.has_access(array['super_admin'], null));
+-- SQL privileges are separate from RLS policies; grant only the operations covered by the policies.
+grant select, update on public.profiles to authenticated;
 drop policy if exists "accounts staff read own institution" on public.ledger_entries;
 create policy "accounts staff read own institution" on public.ledger_entries for select to authenticated
 using (public.has_access(array['super_admin','accounts_manager','accountant','auditor'], institution));
