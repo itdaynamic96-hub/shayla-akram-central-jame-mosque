@@ -46,7 +46,7 @@ admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 module_data = admin_modules.split('const data=[', 1)[1].split('];\\nconst groups=', 1)[0]
 module_count = len(re.findall(r"\\['[^']+','[^']+'\\]", module_data))
 assert module_count == 60, f'Admin Panel: expected 60 module definitions, found {module_count}'
-subprocess.run(['node','--check',str(ROOT/'admin-modules.js')],check=True)
+subprocess.run(['node','--check','--input-type=module'],input=admin_modules,text=True,capture_output=True,check=True)
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
 assert 'alter table public.profiles add constraint profiles_role_check' in migration
