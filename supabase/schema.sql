@@ -270,3 +270,19 @@ drop policy if exists "accounts managers manage budgets" on public.budgets;
 create policy "accounts managers manage budgets" on public.budgets for all to authenticated
 using (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
 with check (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=auth.uid());
+
+create or replace function public.log_module_record_change()
+returns trigger language plpgsql security definer set search_path=public
+as $$
+begin
+ insert into public.audit_logs(actor,table_name,record_id,action,before_data,after_data)
+ values(auth.uid(),'module_records',coalesce(new.id,old.id)::text,tg_op,
+ case when tg_op in ('UPDATE','DELETE') then to_jsonb(old) else null end,
+ case when tg_op in ('INSERT','UPDATE') then to_jsonb(new) else null end);
+ if tg_op='DELETE' then return old; end if;
+ return new;
+end;
+$$;
+drop trigger if exists module_records_audit_trigger on public.module_records;
+create trigger module_records_audit_trigger after insert or update or delete on public.module_records
+for each row execute function public.log_module_record_change();
