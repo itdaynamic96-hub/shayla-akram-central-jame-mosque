@@ -7,6 +7,24 @@
 .read-aloud.open .read-aloud-panel{display:block}.read-aloud-panel p{margin:0 0 9px;color:#42564a;font-size:13px}
 .read-aloud-actions{display:flex;gap:6px;flex-wrap:wrap}.read-aloud-actions button{border:1px solid #d8c795;border-radius:8px;background:#f7f2e5;color:#173d2b;padding:6px 10px;font-size:12px}
 @media(max-width:700px){.read-aloud{right:10px;bottom:10px}}
+
+/* Central admin navigation shell */
+#app.admin-layout{display:block;padding-left:278px}
+#adminSidebar{position:fixed;z-index:50;left:0;top:0;bottom:0;width:260px;overflow:auto;background:#081f19;border-right:1px solid var(--line);padding:16px 12px}
+#adminSidebar .side-brand{color:var(--gold);font-weight:700;font-size:15px;padding:8px 10px 16px}
+#adminSidebar details{border-top:1px solid #254538;padding:7px 0}
+#adminSidebar summary{cursor:pointer;color:#f3e5bd;font-weight:700;padding:8px 6px}
+#adminSidebar a{display:block;color:var(--muted);text-decoration:none;padding:6px 8px 6px 14px;border-radius:7px;font-size:13px}
+#adminSidebar a:hover,#adminSidebar a.active{background:#1c4536;color:#fff}
+#adminSidebar .subnav{padding-left:8px}
+#adminSidebar .side-foot{font-size:11px;color:var(--muted);padding:14px 8px}
+#adminPage{margin:16px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+#adminPage h2{color:var(--gold);margin-top:0}
+#adminPage .subtasks{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+#adminPage .subtasks span{border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--muted);font-size:13px}
+#app.admin-layout>.top{margin-left:0}
+#app.admin-layout>.grid,#app.admin-layout>.panel{margin-left:0}
+@media(max-width:850px){#app.admin-layout{padding-left:0}#adminSidebar{position:relative;width:auto;max-height:42vh;bottom:auto;border:1px solid var(--line);border-radius:12px;margin:12px 0}#adminPage{margin:12px 0}}
 </style></head><body><main><div class="top"><div><div class="brand">সাকছিপাড়া শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</div><h1>Admin Panel</h1><p class="muted">ব্যবহারকারী, ভূমিকা, নোটিশ ও প্রশাসনিক কার্যক্রম</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<a href="./accounts.html">Accounts</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। README-তে সেটআপ নির্দেশিকা আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ Admin লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" required autocomplete="username"><label>পাসওয়ার্ড</label><input id="password" type="password" required autocomplete="current-password"><p><button>লগইন</button></p></form><p class="muted">Public sign-up বন্ধ। Super Admin কর্তৃক অনুমোদিত অ্যাকাউন্ট প্রয়োজন।</p><p id="loginError" class="error" hidden></p></section>
@@ -31,4 +49,109 @@ $('contentReset').onclick=()=>$('contentForm').reset();$('contentForm').addEvent
 $('loadAudit').onclick=async()=>{const{data,error}=await supabase.from('audit_logs').select('*').order('happened_at',{ascending:false}).limit(100);if(error){showError($('auditError'),error);return}$('audit').innerHTML=data.map(x=>'<tr><td>'+escapeHtml(new Date(x.happened_at).toLocaleString('bn-BD'))+'</td><td>'+escapeHtml(x.actor)+'</td><td>'+escapeHtml(x.table_name)+'</td><td>'+escapeHtml(x.action)+'</td><td>'+escapeHtml(x.record_id)+'</td></tr>').join('')};
 </script>
 <div class="read-aloud" id="readAloud"><div class="read-aloud-panel" role="group" aria-label="বাংলায় পড়ে শোনানোর নিয়ন্ত্রণ"><p id="readAloudStatus">বর্তমান পৃষ্ঠার লেখা বাংলায় শুনতে শুরু করুন।</p><div class="read-aloud-actions"><button type="button" id="readStart">▶ শুরু</button><button type="button" id="readPause">Ⅱ বিরতি</button><button type="button" id="readResume">↻ চালু</button><button type="button" id="readStop">■ বন্ধ</button></div></div><button class="read-aloud-toggle" type="button" id="readToggle" aria-expanded="false">🔊 বাংলায় শুনুন</button></div>
-<script>(function(){const root=document.getElementById('readAloud');if(!root)return;const synth=window.speechSynthesis,status=document.getElementById('readAloudStatus'),toggle=document.getElementById('readToggle');let chunks=[],idx=0;toggle.onclick=()=>{root.classList.toggle('open');toggle.setAttribute('aria-expanded',root.classList.contains('open')?'true':'false')};function textToRead(){const main=document.querySelector('main:not(.hidden)')||document.body;const c=main.cloneNode(true);c.querySelectorAll('button,input,textarea,select,script,style,iframe,.read-aloud').forEach(x=>x.remove());return(c.innerText||c.textContent||'').replace(/\s+/g,' ').trim()}function next(){if(idx>=chunks.length){status.textContent='পড়া শেষ হয়েছে।';return}const u=new SpeechSynthesisUtterance(chunks[idx++]);u.lang='bn-BD';u.rate=.92;const v=synth.getVoices();const bn=v.find(x=>/^bn(-|_)/i.test(x.lang))||v.find(x=>/bengali|bangla/i.test(x.name));if(bn)u.voice=bn;u.onend=next;u.onerror=()=>status.textContent='এই ডিভাইসে বাংলা কণ্ঠস্বর পাওয়া যায়নি।';synth.speak(u)}document.getElementById('readStart').onclick=()=>{if(!synth){status.textContent='এই ব্রাউজারে পড়ে শোনানোর সুবিধা নেই।';return}synth.cancel();const t=textToRead();chunks=t.match(/[^।!?]+[।!?]?/g)||[t];idx=0;status.textContent='বাংলায় পড়ে শোনানো হচ্ছে…';next()};document.getElementById('readPause').onclick=()=>{synth.pause();status.textContent='পড়া বিরতিতে আছে।'};document.getElementById('readResume').onclick=()=>{synth.resume();status.textContent='আবার পড়া শুরু হয়েছে।'};document.getElementById('readStop').onclick=()=>{synth.cancel();idx=chunks.length;status.textContent='পড়া বন্ধ করা হয়েছে।'}})();</script></body></html>
+<script>(function(){const root=document.getElementById('readAloud');if(!root)return;const synth=window.speechSynthesis,status=document.getElementById('readAloudStatus'),toggle=document.getElementById('readToggle');let chunks=[],idx=0;toggle.onclick=()=>{root.classList.toggle('open');toggle.setAttribute('aria-expanded',root.classList.contains('open')?'true':'false')};function textToRead(){const main=document.querySelector('main:not(.hidden)')||document.body;const c=main.cloneNode(true);c.querySelectorAll('button,input,textarea,select,script,style,iframe,.read-aloud').forEach(x=>x.remove());return(c.innerText||c.textContent||'').replace(/\s+/g,' ').trim()}function next(){if(idx>=chunks.length){status.textContent='পড়া শেষ হয়েছে।';return}const u=new SpeechSynthesisUtterance(chunks[idx++]);u.lang='bn-BD';u.rate=.92;const v=synth.getVoices();const bn=v.find(x=>/^bn(-|_)/i.test(x.lang))||v.find(x=>/bengali|bangla/i.test(x.name));if(bn)u.voice=bn;u.onend=next;u.onerror=()=>status.textContent='এই ডিভাইসে বাংলা কণ্ঠস্বর পাওয়া যায়নি।';synth.speak(u)}document.getElementById('readStart').onclick=()=>{if(!synth){status.textContent='এই ব্রাউজারে পড়ে শোনানোর সুবিধা নেই।';return}synth.cancel();const t=textToRead();chunks=t.match(/[^।!?]+[।!?]?/g)||[t];idx=0;status.textContent='বাংলায় পড়ে শোনানো হচ্ছে…';next()};document.getElementById('readPause').onclick=()=>{synth.pause();status.textContent='পড়া বিরতিতে আছে।'};document.getElementById('readResume').onclick=()=>{synth.resume();status.textContent='আবার পড়া শুরু হয়েছে।'};document.getElementById('readStop').onclick=()=>{synth.cancel();idx=chunks.length;status.textContent='পড়া বন্ধ করা হয়েছে।'}})();</script>
+<script type="module">
+const groups = [
+{title:'A · ড্যাশবোর্ড ও নিয়ন্ত্রণ',items:[
+['ড্যাশবোর্ড','সার্বিক অবস্থা, আজকের আয়-ব্যয়, সদস্য, অনুদান ও প্রকল্পের সারসংক্ষেপ।','সার্বিক অবস্থা|আজকের কার্যক্রম|দ্রুত কাজ|সতর্কবার্তা'],
+['নোটিফিকেশন','নতুন আবেদন, পেমেন্ট, সতর্কবার্তা ও অনুমোদনের বার্তা।','নতুন বার্তা|পেমেন্ট সতর্কতা|অনুমোদন অপেক্ষমাণ'],
+['কার্যক্রম লগ','কে কখন কোন তথ্য তৈরি, সম্পাদনা বা অনুমোদন করেছেন তার ইতিহাস।','ব্যবহারকারী কার্যক্রম|পরিবর্তনের ইতিহাস|ফিল্টার'],
+['ক্যালেন্ডার','নামাজ, সভা, অনুষ্ঠান, রমজান ও বিশেষ দিনের পরিকল্পনা।','মাসিক ক্যালেন্ডার|অনুষ্ঠান|স্মরণিকা'],
+['টাস্ক ম্যানেজমেন্ট','কাজ তৈরি, দায়িত্ব প্রদান, সময়সীমা ও অগ্রগতি পর্যবেক্ষণ।','নতুন কাজ|দায়িত্ব বণ্টন|অগ্রগতি'],
+['রিপোর্ট কেন্দ্র','দৈনিক, মাসিক ও বার্ষিক প্রশাসনিক ও আর্থিক প্রতিবেদন।','দৈনিক রিপোর্ট|মাসিক রিপোর্ট|বার্ষিক রিপোর্ট']]},
+{title:'B · ওয়েবসাইট ব্যবস্থাপনা',items:[
+['হোমপেজ','ব্যানার, পরিচিতি, গুরুত্বপূর্ণ তথ্য ও হোমপেজের নির্ধারিত কনটেন্ট।','ব্যানার|ফিচার্ড কনটেন্ট|হোমপেজ বিন্যাস'],
+['মেনু ম্যানেজমেন্ট','প্রধান মেনু ও সাবমেনু তৈরি, সম্পাদনা এবং ক্রম পরিবর্তন।','প্রধান মেনু|সাবমেনু|ক্রম পরিবর্তন'],
+['পেজ ম্যানেজমেন্ট','নতুন পেজ তৈরি, সম্পাদনা, খসড়া ও প্রকাশ।','নতুন পেজ|খসড়া|প্রকাশিত পেজ'],
+['মোতাওয়াল্লীর বাণী','মোতাওয়াল্লীর ছবি, বাণী ও পরিচিতি সম্পাদনা।','ছবি|বাণী|পরিচিতি'],
+['মসজিদের ইতিহাস','প্রতিষ্ঠার ইতিহাস, নামকরণের ইতিহাস ও ঐতিহাসিক তথ্য।','প্রতিষ্ঠার ইতিহাস|নামকরণের ইতিহাস|ছবি'],
+['ফাউন্ডেশনের ইতিহাস','প্রতিষ্ঠাতা, লক্ষ্য, উদ্দেশ্য ও কার্যক্রমের ইতিহাস।','প্রতিষ্ঠাতা|লক্ষ্য ও উদ্দেশ্য|কার্যক্রম'],
+['সংবাদ ও আপডেট','সংবাদ লেখা, ছবি, বিভাগ, তারিখ ও প্রকাশনা।','নতুন সংবাদ|বিভাগ|প্রকাশনা'],
+['নোটিশ বোর্ড','সাধারণ নোটিশ, জরুরি ঘোষণা ও প্রকাশের সময় নির্ধারণ।','নতুন নোটিশ|খসড়া|প্রকাশিত নোটিশ'],
+['ফটো গ্যালারি','অ্যালবাম, ছবি আপলোড, ক্যাটাগরি ও প্রদর্শন ক্রম।','নতুন অ্যালবাম|ছবি আপলোড|ক্যাটাগরি'],
+['ভিডিও গ্যালারি','YouTube লিংক, অনুষ্ঠান, ওয়াজ ও বক্তব্যের ভিডিও।','ভিডিও যোগ|ভিডিও তালিকা|ক্যাটাগরি'],
+['ডাউনলোড সেন্টার','PDF, ফরম, প্রতিবেদন ও প্রয়োজনীয় ডকুমেন্ট।','ফাইল আপলোড|ফরম|ডাউনলোড তালিকা'],
+['যোগাযোগ ব্যবস্থাপনা','ঠিকানা, ফোন, ইমেইল, গুগল ম্যাপ ও যোগাযোগের তথ্য।','ঠিকানা|ফোন ও ইমেইল|ম্যাপ'],
+['FAQ','সাধারণ প্রশ্ন ও উত্তর তৈরি এবং সাজানো।','প্রশ্ন যোগ|উত্তর সম্পাদনা|ক্রম'],
+['SEO ব্যবস্থাপনা','পেজ টাইটেল, বিবরণ ও সার্চ ইঞ্জিন সেটিংস।','Page title|Meta description|Social preview']]},
+{title:'C · মসজিদ পরিচালনা',items:[
+['মসজিদ পরিচিতি','মসজিদের নাম, অবস্থান, প্রতিষ্ঠাকাল ও পরিচিতি।','পরিচিতি|ঠিকানা|প্রতিষ্ঠাকাল'],
+['নামাজ ব্যবস্থাপনা','পাঁচ ওয়াক্ত নামাজের সময়সূচি ও জামাতের সময়।','ফজর|যোহর|আসর|মাগরিব|এশা'],
+['আজান ও ইকামত','আজান ও ইকামতের সময়সূচি ও পরিবর্তনের রেকর্ড।','আজানের সময়|ইকামতের সময়|সময়সূচি'],
+['ইমাম ও মুয়াজ্জিন','ইমাম ও মুয়াজ্জিনের পরিচিতি, দায়িত্ব ও নিয়োগ তথ্য।','ইমাম|মুয়াজ্জিন|দায়িত্ব'],
+['খতিব ব্যবস্থাপনা','জুমার খুতবা, বক্তা ও খুতবার বিষয় সংরক্ষণ।','খতিব|খুতবার বিষয়|আর্কাইভ'],
+['ধর্মীয় অনুষ্ঠান','মাহফিল, ওয়াজ, মিলাদ ও অন্যান্য ধর্মীয় আয়োজন।','অনুষ্ঠান যোগ|তারিখ|অংশগ্রহণকারী'],
+['রমজান ব্যবস্থাপনা','সেহরি, ইফতার, তারাবি ও রমজানের সময়সূচি।','সেহরি|ইফতার|তারাবি'],
+['মসজিদ কমিটি','সভাপতি, সম্পাদক, সদস্য ও দায়িত্বের তালিকা।','কমিটি|সদস্য|মেয়াদ'],
+['মসজিদ সম্পদ','জমি, ভবন, আসবাব ও সরঞ্জামের রেজিস্টার।','জমি|ভবন|আসবাব ও সরঞ্জাম'],
+['রক্ষণাবেক্ষণ','পরিষ্কার-পরিচ্ছন্নতা, মেরামত ও রক্ষণাবেক্ষণ কাজ।','কাজের অনুরোধ|মেরামত|সম্পন্ন কাজ']]},
+{title:'D · ফাউন্ডেশন পরিচালনা',items:[
+['ফাউন্ডেশন পরিচিতি','ফাউন্ডেশনের লক্ষ্য, উদ্দেশ্য, পরিচিতি ও কার্যক্রম।','পরিচিতি|লক্ষ্য|কার্যক্রম'],
+['প্রকল্প ব্যবস্থাপনা','নতুন, চলমান ও সম্পন্ন প্রকল্পের বাজেট ও অগ্রগতি।','নতুন প্রকল্প|বাজেট|অগ্রগতি|চূড়ান্ত প্রতিবেদন'],
+['শিক্ষা কার্যক্রম','শিক্ষার্থী, শিক্ষক, ভর্তি ও শিক্ষা সহায়তা।','শিক্ষার্থী|শিক্ষক|ভর্তি'],
+['চিকিৎসা সহায়তা','রোগী নিবন্ধন, চিকিৎসা সহায়তার আবেদন ও অনুমোদন।','রোগী|আবেদন|সহায়তার ইতিহাস'],
+['দরিদ্র সহায়তা','অসহায় পরিবার শনাক্তকরণ, আবেদন ও সহায়তার তথ্য।','পরিবার|আবেদন|সহায়তা বিতরণ'],
+['খাদ্য বিতরণ','খাদ্য সহায়তার তালিকা, বিতরণ পরিকল্পনা ও উপকারভোগী।','খাদ্য তালিকা|বিতরণ|উপকারভোগী'],
+['কর্মসংস্থান','প্রশিক্ষণ, চাকরি ও কর্মসংস্থান সহায়তার তথ্য।','প্রশিক্ষণ|চাকরি|সহায়তা'],
+['বৃত্তি ব্যবস্থাপনা','বৃত্তির আবেদন, যাচাই, অনুমোদন ও বিতরণ।','আবেদন|যাচাই|অনুমোদন'],
+['স্বেচ্ছাসেবক','স্বেচ্ছাসেবক নিবন্ধন, দায়িত্ব ও উপস্থিতি।','নিবন্ধন|দায়িত্ব|উপস্থিতি'],
+['প্রকল্প মূল্যায়ন','প্রকল্পের অগ্রগতি, ব্যয়, ফলাফল ও মূল্যায়ন।','অগ্রগতি|ব্যয়|ফলাফল']]},
+{title:'E · অ্যাকাউন্টস ও আর্থিক ব্যবস্থাপনা',items:[
+['অ্যাকাউন্টস ড্যাশবোর্ড','মসজিদ ও ফাউন্ডেশনের পৃথক আয়, ব্যয় ও স্থিতি।','মসজিদ হিসাব|ফাউন্ডেশন হিসাব|সমন্বিত সারাংশ'],
+['আয় ব্যবস্থাপনা','অনুদান, দান, ভাড়া ও অন্যান্য আয়ের এন্ট্রি।','নতুন আয়|আয়ের খাত|রসিদ'],
+['ব্যয় ব্যবস্থাপনা','ব্যয়ের খাত, বিল, ভাউচার ও অনুমোদন।','নতুন ব্যয়|বিল সংযুক্তি|অনুমোদন'],
+['দান ও অনুদান','দাতার তথ্য, অনুদানের উদ্দেশ্য ও ইতিহাস।','দাতা|অনুদান|রসিদ'],
+['যাকাত ও সদকা','যাকাত, ফিতরা, সদকা ও নির্ধারিত তহবিলের হিসাব।','যাকাত|সদকা|তহবিল'],
+['ব্যাংক ও ক্যাশ','ব্যাংক হিসাব, নগদ টাকা ও ব্যালেন্স।','ব্যাংক|ক্যাশ|সমন্বয়'],
+['পেমেন্ট ব্যবস্থাপনা','bKash, Nagad, ব্যাংক পেমেন্ট ও যাচাই।','bKash|Nagad|ব্যাংক|যাচাই'],
+['বাজেট ব্যবস্থাপনা','মাসিক ও বার্ষিক বাজেট তৈরি ও পর্যবেক্ষণ।','মাসিক বাজেট|বার্ষিক বাজেট|বাজেট বনাম ব্যয়'],
+['ভাউচার ও রসিদ','আয়-ব্যয়ের ভাউচার, রসিদ নম্বর ও প্রিন্ট।','আয় রসিদ|ব্যয় ভাউচার|PDF'],
+['আর্থিক অডিট','হিসাব যাচাই, অমিল শনাক্তকরণ ও অডিট রিপোর্ট।','লেনদেন যাচাই|অমিল|অডিট রিপোর্ট']]},
+{title:'F · সদস্য, নিরাপত্তা ও সিস্টেম',items:[
+['সদস্য ব্যবস্থাপনা','সদস্য নিবন্ধন, সদস্য আইডি, নবায়ন ও ইতিহাস।','নতুন সদস্য|সদস্য তালিকা|আইডি কার্ড'],
+['দাতা ব্যবস্থাপনা','দাতার প্রোফাইল ও অনুদানের ইতিহাস।','দাতা তালিকা|প্রোফাইল|ইতিহাস'],
+['উপকারভোগী','আবেদনকারী, যাচাই ও সহায়তার ইতিহাস।','নতুন আবেদন|যাচাই|ইতিহাস'],
+['আবেদন ব্যবস্থাপনা','নতুন আবেদন, অনুমোদন, বাতিল ও মন্তব্য।','অপেক্ষমাণ|অনুমোদিত|বাতিল'],
+['ইউজার ম্যানেজমেন্ট','অ্যাডমিন, কর্মকর্তা ও কর্মচারীর অ্যাকাউন্ট।','নতুন ব্যবহারকারী|অ্যাকাউন্ট|অবস্থা'],
+['ভূমিকা ও অনুমতি','ব্যবহারকারীর ভূমিকা ও মেনুভিত্তিক অনুমতি।','Super Admin|বিভাগীয় Admin|হিসাবরক্ষক|Auditor'],
+['নিরাপত্তা','পাসওয়ার্ড, OTP, লগইন ইতিহাস ও সেশন নিয়ন্ত্রণ।','পাসওয়ার্ড|OTP|লগইন ইতিহাস'],
+['ব্যাকআপ ও রিস্টোর','ডেটা ব্যাকআপ, সংরক্ষণ ও পুনরুদ্ধার।','ব্যাকআপ|পুনরুদ্ধার|ব্যাকআপ ইতিহাস'],
+['সিস্টেম সেটিংস','প্রতিষ্ঠানের নাম, লোগো, ভাষা, তারিখ ও মুদ্রা।','প্রতিষ্ঠান|ভাষা|তারিখ ও মুদ্রা'],
+['সাহায্য ও সাপোর্ট','অভিযোগ, প্রশ্ন ও সাপোর্ট টিকিট ব্যবস্থাপনা।','নতুন টিকিট|অপেক্ষমাণ|সমাধান']]},
+];
+const slug=s=>'m'+(groups.flatMap(g=>g.items).findIndex(x=>x[0]===s)+1);
+const app=document.getElementById('app');
+function initAdminNav(){
+ if(!app||document.getElementById('adminSidebar'))return;
+ app.classList.add('admin-layout');
+ const side=document.createElement('aside');side.id='adminSidebar';
+ side.innerHTML='<div class="side-brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>ADMIN CONTROL CENTER</small></div>';
+ let n=0;
+ for(const group of groups){const d=document.createElement('details');d.open=true;const sm=document.createElement('summary');sm.textContent=group.title;d.append(sm);for(const item of group.items){n++;const wrap=document.createElement('div');const a=document.createElement('a');a.href='#admin='+slug(item[0]);a.textContent=n+'. '+item[0];a.dataset.module=slug(item[0]);wrap.append(a);const sub=document.createElement('div');sub.className='subnav';item[2].split('|').forEach(t=>{const sa=document.createElement('a');sa.href='#admin='+slug(item[0]);sa.textContent='↳ '+t;sa.dataset.module=slug(item[0]);sub.append(sa)});wrap.append(sub);d.append(wrap)}side.append(d)}
+ const foot=document.createElement('div');foot.className='side-foot';foot.textContent='মোট ৬০টি প্রধান মেনু · ধাপে ধাপে মডিউল সক্রিয় হবে';side.append(foot);app.prepend(side);
+ const page=document.createElement('section');page.id='adminPage';page.hidden=true;side.after(page);
+ const cards=[...app.querySelectorAll(':scope > .panel')];
+ const userCard=cards.find(x=>x.textContent.includes('ব্যবহারকারী ও দায়িত্ব'));
+ const noticeCard=cards.find(x=>x.textContent.includes('নোটিশ তৈরি ও প্রকাশ'));
+ const contentCard=cards.find(x=>x.textContent.includes('হোমপেজ কনটেন্ট ব্যবস্থাপনা'));
+ const auditCard=cards.find(x=>x.textContent.includes('নিরাপত্তা ও অডিট লগ'));
+ const stats=app.querySelector(':scope > .grid');
+ const defs=groups.flatMap(g=>g.items);
+ const moduleFor=(name)=> name==='ড্যাশবোর্ড'?'dashboard':name==='ইউজার ম্যানেজমেন্ট'||name==='ভূমিকা ও অনুমতি'?'users':name==='নোটিশ বোর্ড'||name==='নোটিফিকেশন'?'notices':name==='হোমপেজ'||name==='পেজ ম্যানেজমেন্ট'||name==='ফটো গ্যালারি'||name==='ভিডিও গ্যালারি'?'content':name==='কার্যক্রম লগ'||name==='নিরাপত্তা'?'audit':null;
+ function render(){
+  const key=(location.hash.match(/admin=(m\d+)/)||[])[1]||'dashboard';
+  const ix=key==='dashboard'?-1:Number(key.slice(1))-1;
+  const item=ix<0?['ড্যাশবোর্ড','সার্বিক অবস্থা, দ্রুত কাজ এবং প্রশাসনিক মডিউলের সারাংশ।','সার্বিক অবস্থা|দ্রুত কাজ|সাম্প্রতিক কার্যক্রম']:defs[ix]||defs[0];
+  const linked=moduleFor(item[0]);
+  page.hidden=false;page.innerHTML='<h2>'+item[0]+'</h2><p>'+item[1]+'</p><div class="subtasks">'+item[2].split('|').map(x=>'<span>'+x+'</span>').join('')+'</div><p class="muted">'+(linked?'এই মডিউলের সংযুক্ত কার্যকর অংশ নিচে দেখানো হয়েছে।':'এই মডিউলের পূর্ণ ফরম, ডেটাবেস কার্যক্রম ও অনুমোদন পরবর্তী বাস্তবায়ন ধাপে যুক্ত হবে। আপাতত মেনু ও সাবমেনুর নেভিগেশন প্রস্তুত।')+'</p>';
+  if(stats)stats.hidden=key!=='dashboard';
+  for(const [card,mod] of [[userCard,'users'],[noticeCard,'notices'],[contentCard,'content'],[auditCard,'audit']])if(card)card.hidden=!(key==='dashboard'||linked===mod);
+  if(key==='dashboard'){page.hidden=true}
+  side.querySelectorAll('a[data-module]').forEach(a=>a.classList.toggle('active',a.dataset.module===key));
+ }
+ window.addEventListener('hashchange',render);render();
+}
+const obs=new MutationObserver(()=>{if(!app.hidden){initAdminNav();obs.disconnect()}});
+if(app){if(!app.hidden)initAdminNav();else obs.observe(app,{attributes:true,attributeFilter:['hidden']})}
+</script>
+</body></html>
