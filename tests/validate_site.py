@@ -43,7 +43,9 @@ assert 'YOUR-PROJECT' in (ROOT/'supabase-config.js').read_text(encoding='utf-8')
 print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepage slots, and Supabase schema markers.')
 
 admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
-assert admin_modules.count("['") == 60, f'Admin Panel: expected 60 module definitions, found {admin_modules.count("['")}'
+module_data = admin_modules.split('const data=[', 1)[1].split('];\\nconst groups=', 1)[0]
+module_count = len(re.findall(r"\\['[^']+','[^']+'\\]", module_data))
+assert module_count == 60, f'Admin Panel: expected 60 module definitions, found {module_count}'
 subprocess.run(['node','--check',str(ROOT/'admin-modules.js')],check=True)
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
