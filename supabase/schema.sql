@@ -151,3 +151,40 @@ drop policy if exists "website admins manage site content" on public.site_conten
 create policy "website admins manage site content" on public.site_content for all to authenticated using(public.has_access(array['super_admin','admin','website_admin'],null)) with check(public.has_access(array['super_admin','admin','website_admin'],null));
 grant select on public.site_content to anon,authenticated;
 grant insert,update,delete on public.site_content to authenticated;
+
+-- Accounts extensions: designated funds, budgets and private receipt attachments.
+alter table public.ledger_entries add column if not exists fund_category text not null default 'general' check(fund_category in ('general','zakat','sadaqah','orphan','poor_relief','medical','education','construction'));
+alter table public.ledger_entries add column if not exists receipt_path text;
+create table if not exists public.budgets(
+ id uuid primary key default gen_random_uuid(),
+ institution text not null check(institution in ('mosque','foundation')),
+ budget_month text not null check(budget_month ~ '^\\d{4}-(0[1-9]|1[0-2])$'),
+ category text not null check(length(trim(category))>0),
+ planned_amount numeric(14,2) not null check(planned_amount>0),
+ created_by uuid not null references auth.users(id),
+ created_at timestamptz not null default now(),
+ unique(institution,budget_month,category)
+);
+alter table public.budgets enable row level security;
+drop policy if exists "accounts read budgets by institution" on public.budgets;
+create policy "accounts read budgets by institution" on public.budgets for select to authenticated using(public.has_access(array['super_admin','accounts_manager','accountant','auditor'],institution));
+drop policy if exists "accounts managers manage budgets" on public.budgets;
+create policy "accounts managers manage budgets" on public.budgets for all to authenticated using(public.has_access(array['super_admin','accounts_manager'],institution)) with check(public.has_access(array['super_admin','accounts_manager'],institution) and created_by=auth.uid());
+grant select,insert,update on public.budgets to authenticated;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('private-receipts','private-receipts',false,5242880,array['application/pdf','image/jpeg','image/png','image/webp']) on conflict(id) do nothing;
+drop policy if exists "accounts upload own institution receipts" on storage.objects;
+create policy "accounts upload own institution receipts" on storage.objects for insert to authenticated with check(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1)));
+drop policy if exists "accounts read institution receipts" on storage.objects;
+create policy "accounts read institution receipts" on storage.objects for select to authenticated using(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant','auditor'],split_part(name,'/',1)));
+-- Preserve the audit trail: posted ledger rows cannot be deleted or silently edited.
+create or replace function public.protect_ledger_history() returns trigger language plpgsql set search_path=public as $$
+begin
+ if tg_op='DELETE' then raise exception 'Ledger entries cannot be deleted; use a correcting entry.'; end if;
+ if old.status in ('approved','rejected') then raise exception 'Finalized ledger entries are immutable; create a correcting entry.'; end if;
+ if new.institution<>old.institution or new.created_by<>old.created_by then raise exception 'Institution and creator cannot be changed.'; end if;
+ if new.status not in ('pending','approved','rejected') then raise exception 'Invalid ledger status.'; end if;
+ return new;
+end;$$;
+drop trigger if exists protect_ledger_history_trigger on public.ledger_entries;
+create trigger protect_ledger_history_trigger before update or delete on public.ledger_entries for each row execute function public.protect_ledger_history();
+revoke delete on public.ledger_entries from authenticated;
