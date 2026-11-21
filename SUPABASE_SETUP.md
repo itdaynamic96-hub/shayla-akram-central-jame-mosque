@@ -32,18 +32,23 @@
 Create/invite staff only from Authentication → Users. After each user is created, set the user's role and institution in Table Editor → profiles.
 
 Roles:
-- `admin` / `website_admin`: website content and notices (Admin Panel).
+- `super_admin`: full access across both institutions.
+- `mosque_admin`: mosque operations and mosque financial approvals.
+- `foundation_admin`: foundation operations and foundation financial approvals.
+- `manager`: assigned mosque/foundation operational modules.
+- `editor` / `website_admin`: website content and notices.
+- `admin`: legacy full administrative role.
 - `accounts_manager`: approve/reject financial entries and manage budgets.
 - `accountant`: enter income/expenses and upload receipts.
 - `auditor`: read-only financial review.
 - Institution must be `mosque` or `foundation`. Use `both` only for formally authorized staff.
 
-## 6. Configure Auth URLs
+## 6. Apply the Admin Panel module migration\n1. Open Supabase → SQL Editor → New query.\n2. Open `supabase/admin-modules.sql` in GitHub and copy the complete SQL.\n3. Run it once. It expands the role list and creates the secure record store used by the 60 Admin Panel modules.\n4. Keep Row Level Security enabled; do not run broad public policies.\n\n## 7. Configure Auth URLs
 In Authentication → URL Configuration, set the Site URL to:
 `https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque`
 Add the same site URL and the two page URLs ending in `/admin.html` and `/accounts.html` to the allowed redirect URLs if your project settings require them.
 
-## 7. Test before using real financial data
+## 8. Test before using real financial data
 1. Sign in at /admin.html with the Super Admin.
 2. Add one test article, one test photo URL, and one YouTube video URL; publish and verify each on the homepage.
 3. Create separate mosque and foundation accountant users and confirm each can only see their own institution.
