@@ -1,6 +1,6 @@
 # সাকছিপাড়া শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ
 
-বাংলা ও মোবাইল-রেসপনসিভ পাবলিক ওয়েবসাইট। Hosting: GitHub Pages via GitHub Actions. Railway is intentionally not used.
+বাংলা ও মোবাইল-রেসপনসিভ পাবলিক ওয়েবসাইট। Hosting: GitHub Pages via GitHub Actions.
 
 ## পৃথক ব্যবস্থাপনা লিংক
 - Admin Panel: https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque/admin.html
