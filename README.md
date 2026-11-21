@@ -1,19 +1,15 @@
 # সাকছিপাড়া শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ
 
-বাংলা ও মোবাইল-রেসপনসিভ পাবলিক ওয়েবসাইট।
+বাংলা ও মোবাইল-রেসপনসিভ পাবলিক ওয়েবসাইট। Hosting: GitHub Pages via GitHub Actions. Railway is intentionally not used.
 
-- Public modules: 1–49
-- Protected accounts modules: 50–54
-- Protected administration and security modules: 55–60
-- Theme: Dark Green, Gold and Ivory
-- Hosting workflow: GitHub Pages via GitHub Actions
+## পৃথক ব্যবস্থাপনা লিংক
+- Admin Panel: https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque/admin.html
+- Accounts: https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque/accounts.html
 
-## Important deployment and security notes
+## Backend
+Accounts ও Admin-এর authentication এবং persistent data storage-এর জন্য Supabase ব্যবহার করা হয়েছে। SQL schema: `supabase/schema.sql`; connection config: `supabase-config.js`. Supabase project URL ও anon/public key না বসানো পর্যন্ত login ও database operation চালু হবে না। সেটআপের পূর্ণ নির্দেশিকা: `SUPABASE_SETUP.md`.
 
-The public site is a static information website. The Accounts and Admin modules are not active and do not store financial or personal records. They require a secure backend, authentication, role-based authorization, database rules and audit logging before use.
+**গুরুত্বপূর্ণ:** service_role key কখনো browser code বা GitHub-এ রাখবেন না। Public sign-up বন্ধ রাখুন। প্রথম Super Admin তৈরি ও role assignment Supabase Dashboard থেকে করতে হবে। RLS policy মসজিদ ও ফাউন্ডেশনের হিসাব আলাদা রাখে।
 
-Prayer times, committee members, phone numbers, notices, financial values and other factual records must be entered only after verification by the mosque's authorized representatives. The full original naming-history article and Motawalli message should be inserted verbatim from the source text before the site is treated as final content-complete.
-
-## Deploy
-
-Repository Settings → Pages → Build and deployment → Source → GitHub Actions.
+## যাচাইকৃত তথ্যনীতি
+নামাজের সময়, কমিটির সদস্য, ফোন নম্বর, আর্থিক পরিমাণ ও প্রকল্পের অগ্রগতি দায়িত্বশীল কর্তৃপক্ষ যাচাই না করা পর্যন্ত চূড়ান্ত তথ্য হিসেবে প্রকাশ করা যাবে না।
