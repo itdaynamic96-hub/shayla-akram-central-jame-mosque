@@ -143,9 +143,12 @@ with check (
   or (entry_type='income' and (
     (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true))
     or (fund_category='general' and public.account_module_permission(institution,array['m44'],true))
-    or public.account_module_permission(institution,array['m42'],true)
+    or (fund_category not in ('zakat','sadaqah') and public.account_module_permission(institution,array['m42'],true))
   ))
-  or (entry_type='expense' and public.account_module_permission(institution,array['m43','m45'],true))
+  or (entry_type='expense' and (
+    public.account_module_permission(institution,array['m43'],true)
+    or (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true))
+  ))
  )
 );
 drop policy if exists "managers approve and edit" on public.ledger_entries;
@@ -156,8 +159,11 @@ using (
   or public.account_module_permission(institution,array['m50'],true,true)
   or (entry_type='income' and fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true,true))
   or (entry_type='income' and fund_category='general' and public.account_module_permission(institution,array['m44'],true,true))
-  or (entry_type='income' and public.account_module_permission(institution,array['m42'],true,true))
-  or (entry_type='expense' and public.account_module_permission(institution,array['m43','m45'],true,true))
+  or (entry_type='income' and fund_category not in ('zakat','sadaqah') and public.account_module_permission(institution,array['m42'],true,true))
+  or (entry_type='expense' and (
+    public.account_module_permission(institution,array['m43'],true,true)
+    or (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true,true))
+  ))
  )
 )
 with check (
