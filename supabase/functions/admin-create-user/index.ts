@@ -38,6 +38,15 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     .single();
 
   if (callerProfileError || callerProfile?.role !== "super_admin") {
+    console.error("admin-create-user: super_admin check failed", {
+      authMode: ctx.authMode,
+      callerId,
+      userClaimsId: ctx.userClaims?.id ?? null,
+      jwtSubject: ctx.jwtClaims?.sub ?? null,
+      profileRole: callerProfile?.role ?? null,
+      profileErrorCode: callerProfileError?.code ?? null,
+      profileErrorMessage: callerProfileError?.message ?? null,
+    });
     return json({ error: "শুধু Super Admin কর্মী অ্যাকাউন্ট পরিচালনা করতে পারবেন।" }, 403);
   }
 
