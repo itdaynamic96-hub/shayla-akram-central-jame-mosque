@@ -60,7 +60,8 @@ const modules = [
   { key: "m57", name: "নিরাপত্তা" },
   { key: "m58", name: "ব্যাকআপ ও রিস্টোর" },
   { key: "m59", name: "সিস্টেম সেটিংস" },
-  { key: "m60", name: "সাহায্য ও সাপোর্ট" }
+  { key: "m60", name: "সাহায্য ও সাপোর্ট" },
+  { key: "m61", name: "মুসল্লী নিবন্ধন" }
 ];
 let selectedUserId = null;
 let profiles = [];
@@ -80,9 +81,9 @@ async function functionError(error) {
 function renderChecks(selected = []) {
   const selectedMap = new Map(selected.map(x => [x.module_key, x]));
   const institution = $("staffInstitution").value;
-  const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31); });
+  const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return (n !== 61 || institution !== "foundation") && (n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31)); });
   const heading = $("staffModuleHeading");
-  if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৬০টি)`;
+  if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৬১টি)`;
   $("staffModules").innerHTML = visibleModules.map(m => {
     const old = selectedMap.get(m.key) || {};
     return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
