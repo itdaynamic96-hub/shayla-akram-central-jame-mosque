@@ -80,7 +80,7 @@ function renderChecks(selected = []) {
 function readChecks() {
   return [...$("staffModules").querySelectorAll("[data-module]:checked")].map(el => {
     const key = el.dataset.module;
-    return { module_key: key, can_write: !!$("[data-write='"+key+"']")?.checked, can_approve: !!$("[data-approve='"+key+"']")?.checked };
+    return { module_key: key, can_write: !!document.querySelector("[data-write='"+key+"']")?.checked, can_approve: !!document.querySelector("[data-approve='"+key+"']")?.checked };
   });
 }
 async function init() {
@@ -131,12 +131,13 @@ $("staffRows").addEventListener("click", async e => {
       $("staffMessage").hidden = false;
       root.scrollIntoView({ behavior: "smooth", block: "start" });
     } else if (toggle) {
-      const action = confirm("এই অ্যাকাউন্টটি নিষ্ক্রিয়/সক্রিয় অবস্থা বদলাবেন?") ? "disable" : null;
+      const choice = prompt("অ্যাকাউন্টের অবস্থা লিখুন: disable অথবা enable", "disable");
+      const action = choice === "disable" || choice === "enable" ? choice : null;
       if (!action) return;
       const { data, error } = await supabase.functions.invoke("admin-create-user", { body: { action, user_id: toggle } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      alert("অ্যাকাউন্ট নিষ্ক্রিয় হয়েছে। সক্রিয় করতে সম্পাদনা তালিকা থেকে Enable ব্যবহার করতে হবে।");
+      alert(action === "disable" ? "অ্যাকাউন্ট নিষ্ক্রিয় হয়েছে।" : "অ্যাকাউন্ট সক্রিয় হয়েছে।");
     }
   } catch (err) { showError($("staffError"), err); }
 });
