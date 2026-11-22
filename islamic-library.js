@@ -150,7 +150,7 @@ async function loadHadithChapter(book,chapter,title){
   rows.forEach(item=>{
    const record=item.hadith||item;
    const card=document.createElement('article');card.className='hadith-card';
-   const meta=document.createElement('div');meta.className='meta';meta.textContent='হাদীস নং '+bn(record.hadithNo||record.hadith_number||record.number||'—')+(record.rabiNameBn?' · বর্ণনাকারী: '+record.rabiNameBn:'')+(record.topicName?' · '+record.topicName:'');
+   const meta=document.createElement('div');meta.className='meta';meta.textContent='হাদীস নং '+bn(record.hadithNo||record.hadith_number||record.hadith_id||record.number||'—')+((record.rabiNameBn||record.narrator)?' · বর্ণনাকারী: '+(record.rabiNameBn||record.narrator):'')+(record.topicName?' · '+record.topicName:'');
    card.appendChild(meta);
    const arText=record.hadithArabic||record.ar||record.arabic||'';
    if(arText){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=arText;card.appendChild(ar)}
