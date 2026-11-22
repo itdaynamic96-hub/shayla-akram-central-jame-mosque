@@ -1,5 +1,6 @@
 -- Granular module permissions and Super Admin-managed Auth accounts.
 -- Safe to re-run. Run after schema.sql and admin-modules.sql.
+alter table public.profiles add column if not exists email text;
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check check (role in (
  'pending','super_admin','mosque_admin','foundation_admin','accountant','manager','editor','auditor','viewer',
