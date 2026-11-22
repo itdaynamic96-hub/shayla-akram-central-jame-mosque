@@ -79,7 +79,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (fullName.length < 2 || fullName.length > 120) {
       return json({ error: "নাম ২–১২০ অক্ষরের মধ্যে দিন।" }, 400);
     }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json({ error: "সঠিক ইমেইল ঠিকানা দিন।" }, 400);
     }
     if (password.length < 10 || password.length > 128) {
