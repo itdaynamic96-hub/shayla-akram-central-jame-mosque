@@ -1,4 +1,5 @@
 import { withSupabase } from "npm:@supabase/server@1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,20 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const callerId = ctx.userClaims?.id ?? ctx.jwtClaims?.sub;
   if (!callerId) return json({ error: "Authentication required." }, 401);
 
-  const admin = ctx.supabaseAdmin;
+  // Use the Edge Function server-only service-role key explicitly. The user-scoped
+  // context client is not suitable for privileged profile and Auth administration.
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("admin-create-user: server admin credentials are not configured", {
+      hasSupabaseUrl: Boolean(supabaseUrl),
+      hasServiceRoleKey: Boolean(serviceRoleKey),
+    });
+    return json({ error: "সার্ভারের প্রশাসনিক সংযোগ কনফিগার করা নেই। Supabase Function secrets যাচাই করুন।" }, 500);
+  }
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
   const { data: callerProfile, error: callerProfileError } = await admin
     .from("profiles")
     .select("role")
