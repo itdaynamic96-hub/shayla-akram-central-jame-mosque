@@ -160,6 +160,12 @@ create or replace function public.guard_public_content_publish()
 returns trigger language plpgsql set search_path=public
 as $guard$
 begin
+ if tg_op='DELETE' then
+   if old.status='published' and not public.has_access(array['super_admin','admin','website_admin'],null) then
+     raise exception 'Only an authorized website approver may remove published content.';
+   end if;
+   return old;
+ end if;
  if new.status='published' then
    if tg_op='INSERT' then
      if not public.has_access(array['super_admin','admin','website_admin'],null) then
@@ -178,7 +184,7 @@ drop trigger if exists announcements_publish_guard on public.announcements;
 create trigger announcements_publish_guard before insert or update on public.announcements
 for each row execute function public.guard_public_content_publish();
 drop trigger if exists site_content_publish_guard on public.site_content;
-create trigger site_content_publish_guard before insert or update on public.site_content
+create trigger site_content_publish_guard before insert or update or delete on public.site_content
 for each row execute function public.guard_public_content_publish();
 
 
