@@ -76,7 +76,7 @@ print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepag
 admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 module_data = admin_modules.split('const data=[', 1)[1].split('];' + chr(10) + 'const groups=', 1)[0]
 module_count = len(re.findall(r"\['[^']+','[^']+'\]", module_data))
-assert module_count == 60, f'Admin Panel: expected 60 module definitions, found {module_count}'
+assert module_count == 61, f'Admin Panel: expected 61 module definitions, found {module_count}'
 subprocess.run(['node','--check','--input-type=module'],input=admin_modules,text=True,capture_output=True,check=True)
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
@@ -97,7 +97,12 @@ schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema
 for js in ('admin-modules.js','admin-users.js','supabase-client.js'):
     subprocess.run(['node','--check','--input-type=module'],input=(ROOT/js).read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
-print('Admin Panel checks passed: 60 module definitions, module JS syntax, and RLS migration markers.')
+enhancements=(ROOT/'supabase/admin-panel-enhancements.sql').read_text(encoding='utf-8')
+assert 'm61' in enhancements and 'replace_admin_module_permissions' in enhancements
+assert 'video/mp4' in enhancements and 'application/pdf' in enhancements
+assert 'public.module_record_access' in enhancements
+assert 'মুসল্লী নিবন্ধন' in admin_modules
+print('Admin Panel checks passed: 61 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
 assert 'admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Module permission migration is missing'
