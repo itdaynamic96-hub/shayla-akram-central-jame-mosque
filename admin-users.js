@@ -67,6 +67,16 @@ let profiles = [];
 const root = $("staffManager");
 if (root) init();
 
+async function functionError(error) {
+  const response = error?.context;
+  if (response && typeof response.clone === "function") {
+    try {
+      const body = await response.clone().json();
+      if (body?.error) return new Error(String(body.error));
+    } catch { /* Keep the original Supabase error if the response is not JSON. */ }
+  }
+  return error;
+}
 function renderChecks(selected = []) {
   const selectedMap = new Map(selected.map(x => [x.module_key, x]));
   const institution = $("staffInstitution").value;
@@ -124,7 +134,7 @@ $("staffForm").addEventListener("submit", async e => {
       ? { action: "permissions", user_id: selectedUserId, modules }
       : { action: "create", full_name: $("staffName").value.trim(), email: $("staffEmail").value.trim(), password: $("staffPassword").value, institution: $("staffInstitution").value, modules };
     const { data, error } = await supabase.functions.invoke("admin-create-user", { body: payload });
-    if (error) throw error;
+    if (error) throw await functionError(error);
     if (data?.error) throw new Error(data.error);
     $("staffMessage").textContent = selectedUserId ? "মডিউল অনুমতি হালনাগাদ হয়েছে।" : "নতুন অ্যাকাউন্ট তৈরি হয়েছে।";
     $("staffMessage").hidden = false;
@@ -162,7 +172,7 @@ $("staffRows").addEventListener("click", async e => {
       const action = choice === "disable" || choice === "enable" ? choice : null;
       if (!action) return;
       const { data, error } = await supabase.functions.invoke("admin-create-user", { body: { action, user_id: toggle } });
-      if (error) throw error;
+      if (error) throw await functionError(error);
       if (data?.error) throw new Error(data.error);
       alert(action === "disable" ? "অ্যাকাউন্ট নিষ্ক্রিয় হয়েছে।" : "অ্যাকাউন্ট সক্রিয় হয়েছে।");
     }
