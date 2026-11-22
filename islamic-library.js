@@ -160,20 +160,22 @@ async function loadHadithChapter(book,chapter,title){
   $('islamicContent').replaceChildren(root);
  }catch(e){status('হাদীসের অধ্যায় লোড করা যায়নি। ডেটাসেট/নেটওয়ার্ক সমস্যা হতে পারে। বিকল্প যাচাইযোগ্য পাঠ: https://www.hadithbn.com/ ('+e.message+')')}
 }
-function renderKnowledge(){
+async function renderKnowledge(){
  const topics=[
-  ['তাওহিদ ও ঈমান','আল্লাহ এক ও অদ্বিতীয়। ইবাদত, দোয়া ও চূড়ান্ত ভরসা একমাত্র আল্লাহর জন্য।','সূরা আল-ইখলাস ১১২:১–৪','https://quran.com/112'],
-  ['সালাত','সালাত নিয়মিত আদায়, আল্লাহর স্মরণ এবং অশ্লীলতা ও মন্দ কাজ থেকে বিরত থাকার শিক্ষা দেয়।','সূরা আল-আনকাবুত ২৯:৪৫','https://quran.com/29/45'],
-  ['সিয়াম ও রমজান','রমজানের রোজা তাকওয়া অর্জনের উদ্দেশ্যে ফরজ করা হয়েছে।','সূরা আল-বাকারা ২:১৮৩','https://quran.com/2/183'],
-  ['যাকাত ও দান','যাকাত আদায় এবং আল্লাহর পথে ব্যয় করা ইসলামের গুরুত্বপূর্ণ আর্থিক ইবাদত।','সূরা আল-বাকারা ২:৪৩; ২:২৬১','https://quran.com/2/261'],
-  ['হজ','সামর্থ্যবান মানুষের ওপর আল্লাহর ঘরের হজ পালন ফরজ।','সূরা আলে ইমরান ৩:৯৭','https://quran.com/3/97'],
-  ['পিতা-মাতার অধিকার','আল্লাহর ইবাদতের পাশাপাশি পিতা-মাতার সঙ্গে সদ্ব্যবহারের নির্দেশ দেওয়া হয়েছে।','সূরা আল-ইসরা ১৭:২৩–২৪','https://quran.com/17/23'],
-  ['ন্যায়বিচার ও আমানত','আমানত যথাযথভাবে ফিরিয়ে দেওয়া এবং মানুষের মধ্যে ন্যায়বিচার করার নির্দেশ রয়েছে।','সূরা আন-নিসা ৪:৫৮','https://quran.com/4/58'],
-  ['উত্তম চরিত্র','ন্যায়, ইহসান ও আত্মীয়স্বজনকে দানের নির্দেশ এবং অশ্লীলতা ও অন্যায় থেকে নিষেধ করা হয়েছে।','সূরা আন-নাহল ১৬:৯০','https://quran.com/16/90'],
-  ['জ্ঞান অন্বেষণ','উপকারী জ্ঞান বৃদ্ধির জন্য দোয়া করার শিক্ষা রয়েছে।','সূরা ত্ব-হা ২০:১১৪','https://quran.com/20/114']
+  ['তাওহিদ ও ঈমান','আল্লাহ এক ও অদ্বিতীয়। ইবাদত, দোয়া ও চূড়ান্ত ভরসা একমাত্র আল্লাহর জন্য।','সূরা আল-ইখলাস ১১২:১','112:1'],
+  ['সালাত','সালাত নিয়মিত আদায়, আল্লাহর স্মরণ এবং অশ্লীলতা ও মন্দ কাজ থেকে বিরত থাকার শিক্ষা দেয়।','সূরা আল-আনকাবুত ২৯:৪৫','29:45'],
+  ['সিয়াম ও রমজান','রমজানের রোজা তাকওয়া অর্জনের উদ্দেশ্যে ফরজ করা হয়েছে।','সূরা আল-বাকারা ২:১৮৩','2:183'],
+  ['যাকাত ও দান','যাকাত আদায় এবং আল্লাহর পথে ব্যয় করা ইসলামের গুরুত্বপূর্ণ আর্থিক ইবাদত।','সূরা আল-বাকারা ২:৪৩','2:43'],
+  ['হজ','সামর্থ্যবান মানুষের ওপর আল্লাহর ঘরের হজ পালন ফরজ।','সূরা আলে ইমরান ৩:৯৭','3:97'],
+  ['পিতা-মাতার অধিকার','আল্লাহর ইবাদতের পাশাপাশি পিতা-মাতার সঙ্গে সদ্ব্যবহারের নির্দেশ দেওয়া হয়েছে।','সূরা আল-ইসরা ১৭:২৩','17:23'],
+  ['ন্যায়বিচার ও আমানত','আমানত যথাযথভাবে ফিরিয়ে দেওয়া এবং মানুষের মধ্যে ন্যায়বিচার করার নির্দেশ রয়েছে।','সূরা আন-নিসা ৪:৫৮','4:58'],
+  ['উত্তম চরিত্র','ন্যায়, ইহসান ও আত্মীয়স্বজনকে দানের নির্দেশ এবং অশ্লীলতা ও অন্যায় থেকে নিষেধ করা হয়েছে।','সূরা আন-নাহল ১৬:৯০','16:90'],
+  ['জ্ঞান অন্বেষণ','উপকারী জ্ঞান বৃদ্ধির জন্য দোয়া করার শিক্ষা রয়েছে।','সূরা ত্ব-হা ২০:১১৪','20:114']
  ];
+ status('বিষয়ভিত্তিক বাংলা ব্যাখ্যা ও আরবি আয়াত লোড হচ্ছে…');
  const root=document.createElement('div');const grid=document.createElement('div');grid.className='islamic-list';
- topics.forEach(t=>{const card=document.createElement('article');card.className='knowledge-card';const h=document.createElement('h3');h.textContent=t[0];const p=document.createElement('p');p.textContent=t[1];const small=document.createElement('small');small.textContent='কুরআনের সূত্র: '+t[2]+' · ';const a=document.createElement('a');a.href=t[3];a.target='_blank';a.rel='noopener noreferrer';a.textContent='আয়াত পড়ুন ↗';small.appendChild(a);card.append(h,p,small);grid.appendChild(card)});
+ const rows=await Promise.all(topics.map(async t=>{try{const r=await json(quranApi+'/ayah/'+t[3]+'/editions/quran-uthmani,bn.bengali');const ed=r.data||[];return {ar:ed.find(x=>x.edition?.identifier==='quran-uthmani')?.text||'',bn:ed.find(x=>x.edition?.identifier==='bn.bengali')?.text||''}}catch(_){return {ar:'',bn:''}}}));
+ topics.forEach((t,i)=>{const card=document.createElement('article');card.className='knowledge-card';const h=document.createElement('h3');h.textContent=t[0];const p=document.createElement('p');p.textContent=t[1];card.append(h,p);if(rows[i].ar){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=rows[i].ar;card.appendChild(ar)}if(rows[i].bn){const tr=document.createElement('p');tr.className='translation';tr.textContent=rows[i].bn;card.appendChild(tr)}const small=document.createElement('small');small.textContent='কুরআনের সূত্র: '+t[2]+' · ';const a=document.createElement('a');a.href='https://quran.com/'+t[3];a.target='_blank';a.rel='noopener noreferrer';a.textContent='আয়াত ও তাফসির পড়ুন ↗';small.appendChild(a);card.appendChild(small);grid.appendChild(card)});
  root.appendChild(grid);$('islamicContent').replaceChildren(root);
 }
 addMenu('পবিত্র কোরআন শিক্ষা',[
