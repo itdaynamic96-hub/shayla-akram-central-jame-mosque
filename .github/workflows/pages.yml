@@ -1,7 +1,7 @@
 name: Validate and deploy static site to GitHub Pages
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "admin-panel-repair-20261122"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,6 +24,7 @@ jobs:
         run: python tests/validate_site.py
   deploy:
     needs: validate
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
