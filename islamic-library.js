@@ -86,7 +86,7 @@ async function loadQuran(kind,id){
   if(!ar||!bnEd)throw new Error('আরবি/বাংলা সংস্করণ পাওয়া যায়নি');
   const bnByNo=new Map((bnEd.ayahs||[]).map(a=>[String(a.surah?.number||'')+':'+a.numberInSurah,a.text]));
   const fragment=document.createDocumentFragment();
-  const header=document.createElement('div');header.className='islamic-note';header.textContent=(kind==='juz'?'পারা '+bn(id):ar.ayahs?.[0]?.surah?.name||'সূরা')+' · আরবি: Uthmani · বাংলা অনুবাদ: '+(bnEd.edition?.name||'বাংলা অনুবাদ');fragment.appendChild(header);
+  const header=document.createElement('div');header.className='islamic-note';header.textContent=(kind==='juz'?'পারা '+bn(id):ar.ayahs?.[0]?.surah?.name||'সূরা')+' · আরবি: Uthmani · বাংলা অনুবাদ: '+(bnEd.edition?.name||'বাংলা অনুবাদ')+' · তথ্যসূত্র: AlQuran Cloud API';fragment.appendChild(header);
   (ar.ayahs||[]).forEach(a=>{
    const card=document.createElement('article');card.className='quran-ayah';
    const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent=(a.surah?.name||'')+' · সূরা '+bn(a.surah?.number||'')+' · আয়াত '+bn(a.numberInSurah);
@@ -143,7 +143,7 @@ async function loadHadithChapter(book,chapter,title){
  status(title+' অধ্যায়ের হাদীস লোড হচ্ছে…');
  try{
   const data=await json(hadithCdn+'/'+book.path+'/Chapter/'+chapter+'.json');
-  const rows=Array.isArray(data)?data:(Array.isArray(data.data)?data.data:(Array.isArray(data.hadiths)?data.hadiths:[]));
+  const rows=Array.isArray(data)?data:(Array.isArray(data.data)?data.data:(Array.isArray(data.hadiths)?data.hadiths:(data.hadith?[data.hadith]:(data.data?.hadith?[data.data.hadith]:[]))));
   if(!rows.length)throw new Error('এই অধ্যায়ে পাঠ পাওয়া যায়নি');
   const root=document.createElement('div');const h=document.createElement('div');h.className='islamic-note';h.textContent=book.name+' · '+title;root.appendChild(h);
   rows.forEach(item=>{
