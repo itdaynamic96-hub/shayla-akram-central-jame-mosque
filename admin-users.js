@@ -74,9 +74,9 @@ function renderChecks(selected = []) {
   $("staffModules").innerHTML = visibleModules.map(m => {
     const old = selectedMap.get(m.key) || {};
     return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
-      <span>${String(Number(m.key.slice(1))).padStart(2,"0")}. ${escapeHtml(m.name)}</span></label>
-      <span class="staff-perms"><label><input type="checkbox" data-write="${m.key}" ${old.can_write ? "checked" : ""}> লিখতে/সম্পাদনা</label>
-      <label><input type="checkbox" data-approve="${m.key}" ${old.can_approve ? "checked" : ""}> অনুমোদন</label></span></div>`;
+      <span>${String(Number(m.key.slice(1))).padStart(2,"0")}. ${escapeHtml(m.name)} — দেখার অনুমতি</span></label>
+      <span class="staff-perms"><label><input type="checkbox" data-write="${m.key}" ${old.can_write ? "checked" : ""} ${old.module_key ? "" : "disabled"}> লিখতে/সম্পাদনা</label>
+      <label><input type="checkbox" data-approve="${m.key}" ${old.can_approve ? "checked" : ""} ${old.module_key && old.can_write ? "" : "disabled"}> অনুমোদন</label></span></div>`;
   }).join("");
 }
 function readChecks() {
@@ -85,6 +85,21 @@ function readChecks() {
     return { module_key: key, can_write: !!document.querySelector("[data-write='"+key+"']")?.checked, can_approve: !!document.querySelector("[data-approve='"+key+"']")?.checked };
   });
 }
+$("staffModules").addEventListener("change", e => {
+  const el = e.target;
+  const key = el.dataset.module || el.dataset.write || el.dataset.approve;
+  if (!key) return;
+  const view = $("staffModules").querySelector('[data-module="' + key + '"]');
+  const write = $("staffModules").querySelector('[data-write="' + key + '"]');
+  const approve = $("staffModules").querySelector('[data-approve="' + key + '"]');
+  if (el.matches("[data-module]") && !view.checked) {
+    write.checked = false;
+    approve.checked = false;
+  }
+  if (el.matches("[data-write]") && !write.checked) approve.checked = false;
+  write.disabled = !view.checked;
+  approve.disabled = !view.checked || !write.checked;
+});
 async function init() {
   if (!configured) return;
   try {
