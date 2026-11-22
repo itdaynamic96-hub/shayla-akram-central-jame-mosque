@@ -6,6 +6,10 @@
 - Admin Panel: https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque/admin.html
 - Accounts: https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque/accounts.html
 
+## কনটেন্ট ব্যবস্থাপনা
+- ইসলামিক জ্ঞানভান্ডার, ইসলামিক আলোকচিত্র ও ভিডিও শিক্ষা Admin Panel থেকে যোগ, সম্পাদনা, প্রকাশ বা খসড়া/লুকানো রাখা যায়।
+- কুরআন/হাদিসের রেফারেন্স এবং ছবি/ভিডিওর উৎস ও কৃতিত্ব উল্লেখ করুন।
+
 ## Backend
 Accounts ও Admin-এর authentication এবং persistent data storage-এর জন্য Supabase ব্যবহার করা হয়েছে। SQL schema: `supabase/schema.sql`; connection config: `supabase-config.js`. Supabase project URL ও anon/public key না বসানো পর্যন্ত login ও database operation চালু হবে না। সেটআপের পূর্ণ নির্দেশিকা: `SUPABASE_SETUP.md`.
 

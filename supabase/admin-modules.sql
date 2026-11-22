@@ -1,3 +1,7 @@
+-- Editorial references and media attribution for the public content library.
+alter table public.site_content add column if not exists source_url text;
+alter table public.site_content add column if not exists media_credit text;
+
 -- Role expansion and structured CRUD for the 60 administration modules.
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check check (role in (

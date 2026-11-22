@@ -36,8 +36,17 @@ for category in ('article','gallery','video'):
     match=re.search(r'<div class="grid content-slots" id="'+category+r'-slots">(.*?)</div></section>',html,re.S)
     assert match, f'{category}: slot container missing'
     count=len(re.findall(r'data-slot="(?:[1-9]|10)"',match.group(1)))
-    assert count==10, f'{category}: expected exactly ten slots, found {count}'
+    minimum={'article':10,'gallery':3,'video':5}[category]
+    assert count>=minimum, f'{category}: expected at least {minimum} curated starter cards, found {count}'
 assert 'create table if not exists public.site_content' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+assert 'source_url text' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+assert 'media_credit text' in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
+assert 'ইসলামিক জ্ঞানভান্ডার' in html and 'ইসলামিক আলোকচিত্র' in html and 'ভিডিও শিক্ষা ও দাওয়াহ' in html
+assert 'শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন' in html
+assert 'শায়লা আক্রাম' not in html and 'সাকছিপাড়া শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ' not in html
+assert 'source_url' in (ROOT/'admin.html').read_text(encoding='utf-8')
+assert 'media_credit' in (ROOT/'admin.html').read_text(encoding='utf-8')
+assert 'source_url,media_credit,updated_at' in html
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'

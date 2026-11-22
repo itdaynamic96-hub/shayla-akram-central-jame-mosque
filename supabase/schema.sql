@@ -147,7 +147,7 @@ using (public.has_access(array['super_admin','admin','auditor'], null));
 -- Never expose the service_role key in browser files or GitHub.
 
 -- Homepage content: ten slots for each of three categories.
-create table if not exists public.site_content (id uuid primary key default gen_random_uuid(),category text not null check(category in ('article','gallery','video')),slot_number smallint not null check(slot_number between 1 and 10),title text not null check(length(trim(title))>0),body text not null default '',media_url text,status text not null default 'draft' check(status in ('draft','published')),created_by uuid not null references auth.users(id),updated_at timestamptz not null default now(),unique(category,slot_number));
+create table if not exists public.site_content (id uuid primary key default gen_random_uuid(),category text not null check(category in ('article','gallery','video')),slot_number smallint not null check(slot_number between 1 and 10),title text not null check(length(trim(title))>0),body text not null default '',media_url text,source_url text,media_credit text,status text not null default 'draft' check(status in ('draft','published')),created_by uuid not null references auth.users(id),updated_at timestamptz not null default now(),unique(category,slot_number));
 create index if not exists site_content_public_idx on public.site_content(category,slot_number) where status='published';
 alter table public.site_content enable row level security;
 drop policy if exists "public can read published site content" on public.site_content;
