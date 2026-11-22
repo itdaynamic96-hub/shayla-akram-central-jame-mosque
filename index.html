@@ -282,8 +282,13 @@ function renderPublishedModuleRecords(moduleNo){
   const heading=document.createElement('h3');heading.textContent=record.title||'প্রকাশিত তথ্য';card.appendChild(heading);
   const data=record.data||{},labels=data.public_labels||{};
   Object.entries(data).forEach(([key,value])=>{
-   if(['public_module','public_display','public_labels','description'].includes(key)||value===null||value===undefined||String(value).trim()==='')return;
-   const p=document.createElement('p');const label=document.createElement('strong');label.textContent=(labels[key]||key.replace(/_/g,' '))+': ';p.append(label,document.createTextNode(String(value)));card.appendChild(p);
+   if(['public_module','public_display','public_labels','description'].includes(key)||key.endsWith('_storage_path')||value===null||value===undefined||String(value).trim()==='')return;
+   const p=document.createElement('p');const label=document.createElement('strong');label.textContent=(labels[key]||key.replace(/_/g,' '))+': ';p.appendChild(label);
+   let safe=null;try{const u=new URL(String(value));if(u.protocol==='https:')safe=u.href}catch(_){}
+   if(safe&&/(photo|image|poster|logo|cover|thumbnail)/i.test(key)){const img=document.createElement('img');img.src=safe;img.alt=record.title||'প্রকাশিত ছবি';img.loading='lazy';img.style.cssText='display:block;max-width:100%;max-height:360px;object-fit:contain;border-radius:10px;margin-top:8px';p.appendChild(img)}
+   else if(safe&&/(url)$/i.test(key)){const a=document.createElement('a');a.href=safe;a.target='_blank';a.rel='noopener noreferrer';a.textContent=key==='file_url'||key==='document_url'?'ফাইল ডাউনলোড/দেখুন ↗':'লিংক খুলুন ↗';p.appendChild(a)}
+   else p.appendChild(document.createTextNode(String(value)));
+   card.appendChild(p);
   });
   if(data.description){const p=document.createElement('p');p.textContent=data.description;card.appendChild(p)}
   const stamp=document.createElement('small');stamp.textContent='সর্বশেষ হালনাগাদ: '+new Date(record.updated_at||record.created_at).toLocaleDateString('bn-BD');card.appendChild(stamp);
