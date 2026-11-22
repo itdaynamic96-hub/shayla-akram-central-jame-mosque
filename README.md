@@ -15,5 +15,9 @@ Accounts ও Admin-এর authentication এবং persistent data storage-এ�
 
 **গুরুত্বপূর্ণ:** service_role key কখনো browser code বা GitHub-এ রাখবেন না। Public sign-up বন্ধ রাখুন। প্রথম Super Admin তৈরি ও role assignment Supabase Dashboard থেকে করতে হবে। RLS policy মসজিদ ও ফাউন্ডেশনের হিসাব আলাদা রাখে।
 
+## Accounts permission repair
+
+For existing projects where the Accounts page reports `permission denied for table ledger_entries`, run `supabase/accounts-permissions-fix.sql` in Supabase SQL Editor after the schema and Admin module SQL.
+
 ## যাচাইকৃত তথ্যনীতি
 নামাজের সময়, কমিটির সদস্য, ফোন নম্বর, আর্থিক পরিমাণ ও প্রকল্পের অগ্রগতি দায়িত্বশীল কর্তৃপক্ষ যাচাই না করা পর্যন্ত চূড়ান্ত তথ্য হিসেবে প্রকাশ করা যাবে না।
