@@ -105,3 +105,105 @@ end;
 $$;
 revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.replace_admin_module_permissions(uuid,jsonb) to service_role;
+
+-- Map the Accounts modules (m41-m50) to the real ledger, budget and receipt tables.
+create or replace function public.account_module_permission(
+ target_institution text, target_modules text[], write_access boolean default false, approve_access boolean default false
+) returns boolean language sql stable security definer set search_path=public
+as $$
+ select exists(
+  select 1 from public.profiles p
+  join public.admin_module_permissions mp on mp.user_id=p.id
+  where p.id=auth.uid() and p.role='custom_admin'
+    and (p.institution='both' or p.institution=target_institution)
+    and mp.module_key=any(target_modules) and mp.can_view
+    and (not write_access or mp.can_write)
+    and (not approve_access or mp.can_approve)
+ );
+$$;
+revoke all on function public.account_module_permission(text,text[],boolean,boolean) from public;
+grant execute on function public.account_module_permission(text,text[],boolean,boolean) to authenticated;
+
+drop policy if exists "accounts staff read own institution" on public.ledger_entries;
+create policy "accounts staff read own institution" on public.ledger_entries for select to authenticated
+using (
+ public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],institution)
+ or public.account_module_permission(institution,array['m41','m42','m43','m44','m45','m46','m47','m48','m49','m50'])
+);
+drop policy if exists "accounts staff create pending" on public.ledger_entries;
+create policy "accounts staff create pending" on public.ledger_entries for insert to authenticated
+with check (
+ status='pending' and created_by=auth.uid() and (
+  public.has_access(array['super_admin','accounts_manager','accountant'],institution)
+  or (entry_type='income' and (
+    (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true))
+    or (fund_category='general' and public.account_module_permission(institution,array['m44'],true))
+    or public.account_module_permission(institution,array['m42'],true)
+  ))
+  or (entry_type='expense' and public.account_module_permission(institution,array['m43','m45'],true))
+ )
+);
+drop policy if exists "managers approve and edit" on public.ledger_entries;
+create policy "managers approve and edit" on public.ledger_entries for update to authenticated
+using (
+ status='pending' and (
+  public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
+  or public.account_module_permission(institution,array['m42','m43','m44','m45','m50'],true,true)
+ )
+)
+with check (
+ public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
+ or public.account_module_permission(institution,array['m42','m43','m44','m45','m50'],true,true)
+);
+
+drop policy if exists "accounts read budgets by institution" on public.budgets;
+create policy "accounts read budgets by institution" on public.budgets for select to authenticated
+using (
+ public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],institution)
+ or public.account_module_permission(institution,array['m41','m48'])
+);
+drop policy if exists "accounts managers insert budgets" on public.budgets;
+create policy "accounts managers insert budgets" on public.budgets for insert to authenticated
+with check (
+ created_by=auth.uid() and (
+  public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
+  or public.account_module_permission(institution,array['m48'],true)
+ )
+);
+drop policy if exists "accounts managers update budgets" on public.budgets;
+create policy "accounts managers update budgets" on public.budgets for update to authenticated
+using (
+ public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
+ or public.account_module_permission(institution,array['m48'],true)
+)
+with check (
+ public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
+ or public.account_module_permission(institution,array['m48'],true)
+);
+
+drop policy if exists "accounts upload own institution receipts" on storage.objects;
+create policy "accounts upload own institution receipts" on storage.objects for insert to authenticated
+with check (
+ bucket_id='private-receipts' and owner_id=auth.uid()::text and (
+  public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1))
+  or public.account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)
+ )
+);
+drop policy if exists "accounts read institution receipts" on storage.objects;
+create policy "accounts read institution receipts" on storage.objects for select to authenticated
+using (
+ bucket_id='private-receipts' and (
+  public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],split_part(name,'/',1))
+  or public.account_module_permission(split_part(name,'/',1),array['m41','m49','m50'])
+ )
+);
+drop policy if exists "accounts delete unlinked own receipts" on storage.objects;
+create policy "accounts delete unlinked own receipts" on storage.objects for delete to authenticated
+using (
+ bucket_id='private-receipts' and owner_id=auth.uid()::text
+ and public.receipt_is_unlinked(name)
+ and (
+  public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1))
+  or public.account_module_permission(split_part(name,'/',1),array['m49'],true)
+ )
+);
