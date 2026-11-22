@@ -112,10 +112,19 @@ $("staffForm").addEventListener("submit", async e => {
     $("staffMessage").textContent = selectedUserId ? "মডিউল অনুমতি হালনাগাদ হয়েছে।" : "নতুন অ্যাকাউন্ট তৈরি হয়েছে।";
     $("staffMessage").hidden = false;
     $("staffForm").reset();
-    $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").required = true;
+    $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffPassword").required = true;
     selectedUserId = null; $("staffSubmit").textContent = "অ্যাকাউন্ট তৈরি করুন";
     renderChecks(); await loadStaff();
   } catch (err) { showError($("staffError"), err); }
+});
+$("staffReset").addEventListener("click", e => {
+  e.preventDefault();
+  selectedUserId = null;
+  $("staffForm").reset();
+  $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffPassword").required = true;
+  $("staffSubmit").textContent = "অ্যাকাউন্ট তৈরি করুন";
+  $("staffMessage").hidden = true; $("staffError").hidden = true;
+  renderChecks();
 });
 $("staffRows").addEventListener("click", async e => {
   const edit = e.target.dataset.edit, toggle = e.target.dataset.toggle;
