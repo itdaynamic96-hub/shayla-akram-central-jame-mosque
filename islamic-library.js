@@ -3,7 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const quranApi='https://api.alquran.cloud/v1';
-const hadithCdn='https://cdn.jsdelivr.net/gh/md-rifatkhan/hadithbangla@main';
+const hadithCdn='https://cdn.jsdelivr.net/gh/kafelanetwork/hadith-api@main';
 const books=[
  {key:'Bukhari',meta:'bukhari',name:'সহীহ বুখারী',path:'Bukhari'},
  {key:'Muslim',meta:'muslim',name:'সহীহ মুসলিম',path:'Muslim'},
@@ -68,7 +68,7 @@ async function renderQuran(){
   $('islamicToolbar').replaceChildren();
   const mode=select('পাঠের ধরন','quranMode',[{value:'juz',label:'পারা অনুযায়ী'},{value:'surah',label:'সূরা অনুযায়ী'}]);
   const juz=select('পারা','quranJuz',Array.from({length:30},(_,i)=>({value:String(i+1),label:'পারা '+bn(i+1)})));
-  const surah=select('সূরা','quranSurah',list.map(s=>({value:String(s.number),label:bn(s.number)+'. '+s.name+' — '+s.englishName})));
+  const surah=select('সূরা','quranSurah',list.map(s=>({value:String(s.number),label:'সূরা '+bn(s.number)+' — '+s.name})));
   const go=document.createElement('button');go.className='islamic-control';go.textContent='পড়া শুরু করুন';$('islamicToolbar').appendChild(go);
   const sync=()=>{juz.parentElement.style.display=mode.value==='juz'?'':'none';surah.parentElement.style.display=mode.value==='surah'?'':'none'};
   mode.addEventListener('change',sync);sync();
@@ -79,10 +79,11 @@ async function renderQuran(){
 async function loadQuran(kind,id){
  status('আরবি মূল পাঠ ও বাংলা অনুবাদ আনা হচ্ছে…');
  try{
-  const data=await json(quranApi+'/'+kind+'/'+encodeURIComponent(id)+'/editions/quran-uthmani,bn.bengali');
-  const editions=data.data||[];
-  const ar=editions.find(x=>x.edition&&x.edition.identifier==='quran-uthmani')||editions[0];
-  const bnEd=editions.find(x=>x.edition&&x.edition.identifier==='bn.bengali')||editions[1];
+  const [arData,bnData]=await Promise.all([
+   json(quranApi+'/'+kind+'/'+encodeURIComponent(id)+'/quran-uthmani'),
+   json(quranApi+'/'+kind+'/'+encodeURIComponent(id)+'/bn.bengali')
+  ]);
+  const ar=arData.data,bnEd=bnData.data;
   if(!ar||!bnEd)throw new Error('আরবি/বাংলা সংস্করণ পাওয়া যায়নি');
   const bnByNo=new Map((bnEd.ayahs||[]).map(a=>[String(a.surah?.number||'')+':'+a.numberInSurah,a.text]));
   const fragment=document.createDocumentFragment();
@@ -108,8 +109,8 @@ async function renderSurahReferences(kind){
    :'তাফসিরে আয়াতের ব্যাখ্যা, প্রেক্ষাপট ও আলেমদের মতামত থাকতে পারে। মূল উৎসে তাফসির নির্বাচন করে পড়ুন; অনুবাদকে তাফসিরের বিকল্প মনে করবেন না।';
   root.appendChild(note);const grid=document.createElement('div');grid.className='islamic-list';
   list.forEach(s=>{
-   const a=document.createElement('a');a.href='https://quran.com/'+s.number;a.target='_blank';a.rel='noopener noreferrer';
-   a.textContent=bn(s.number)+'. '+s.name+' — '+s.englishName+' ('+bn(s.numberOfAyahs)+' আয়াত) · '+(s.revelationType==='Meccan'?'মাক্কী':'মাদানী')+' · উৎস খুলুন ↗';
+   const a=document.createElement('a');a.href='https://quran.com/bn/'+s.number;a.target='_blank';a.rel='noopener noreferrer';
+   a.textContent='সূরা '+bn(s.number)+' — '+s.name+' · '+bn(s.numberOfAyahs)+' আয়াত · '+(s.revelationType==='Meccan'?'মাক্কী':'মাদানী')+' · বাংলা পাঠ ও ব্যাখ্যা খুলুন ↗';
    grid.appendChild(a);
   });
   root.appendChild(grid);$('islamicContent').replaceChildren(root);
@@ -128,16 +129,16 @@ async function loadHadithBook(key){
  const book=books.find(b=>b.key===key);if(!book)return;
  status(book.name+'-এর অধ্যায়ের তালিকা লোড হচ্ছে…');
  try{
-  const meta=await json(hadithCdn+'/'+book.path+'/Meta/'+book.meta+'.json');
+  const meta=await json(hadithCdn+'/'+book.path+'/Meta/'+encodeURIComponent(book.meta)+'.json');
   const entries=Object.entries(meta||{}).sort((a,b)=>Number(a[0])-Number(b[0]));
-  const root=document.createElement('div');const note=document.createElement('div');note.className='islamic-note';note.textContent=book.name+' · অধ্যায় নির্বাচন করুন। হাদীসের আরবি ও বাংলা পাঠ, বর্ণনাকারী ও নম্বর উৎস ডেটাসেট অনুযায়ী দেখানো হবে। ডেটা উৎস: Bangla Hadith dataset (md-rifatkhan/hadithbangla)।';root.appendChild(note);
+  const root=document.createElement('div');const note=document.createElement('div');note.className='islamic-note';note.textContent=book.name+' · অধ্যায় নির্বাচন করুন। হাদীসের আরবি ও বাংলা পাঠ, বর্ণনাকারী ও নম্বর উৎস ডেটাসেট অনুযায়ী দেখানো হবে। ডেটা উৎস: Kafela Network Hadith API; আরবি ও বাংলা পাঠ।';root.appendChild(note);
   const grid=document.createElement('div');grid.className='islamic-list';
   entries.forEach(([num,item])=>{
    const b=document.createElement('button');b.type='button';b.textContent=bn(num)+'. '+(item.title||'অধ্যায়')+(item.hadis_range?' · হাদীস '+item.hadis_range:'');
    b.addEventListener('click',()=>loadHadithChapter(book,num,item.title||''));grid.appendChild(b);
   });
   root.appendChild(grid);$('islamicContent').replaceChildren(root);
- }catch(e){status('এই মুহূর্তে অধ্যায়ের তালিকা পাওয়া যাচ্ছে না। উৎসের বিকল্প পাঠ খুলুন: hadithbn.com ('+e.message+')')}
+ }catch(e){status('অধ্যায়ের তালিকা লোড করা যায়নি: '+e.message+'. কিছুক্ষণ পর আবার চেষ্টা করুন। তথ্যসূত্র: Kafela Network Hadith API.')}
 }
 async function loadHadithChapter(book,chapter,title){
  status(title+' অধ্যায়ের হাদীস লোড হচ্ছে…');
@@ -151,14 +152,15 @@ async function loadHadithChapter(book,chapter,title){
    const card=document.createElement('article');card.className='hadith-card';
    const meta=document.createElement('div');meta.className='meta';meta.textContent='হাদীস নং '+bn(record.hadithNo||record.hadith_number||record.number||'—')+(record.rabiNameBn?' · বর্ণনাকারী: '+record.rabiNameBn:'')+(record.topicName?' · '+record.topicName:'');
    card.appendChild(meta);
-   if(record.hadithArabic){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=record.hadithArabic;card.appendChild(ar)}
-   const bnText=record.hadithBengali||record.bengali||record.text_bn;
+   const arText=record.hadithArabic||record.ar||record.arabic||'';
+   if(arText){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=arText;card.appendChild(ar)}
+   const bnText=record.hadithBengali||record.bengali||record.text_bn||record.bn||record.text;
    if(bnText){const bnEl=document.createElement('div');bnEl.className='bn';bnEl.textContent=bnText;card.appendChild(bnEl)}
-   if(record.hadithEnglish){const en=document.createElement('details');const summary=document.createElement('summary');summary.textContent='ইংরেজি পাঠ';const p=document.createElement('p');p.textContent=record.hadithEnglish;en.append(summary,p);card.appendChild(en)}
+   if(record.grade){const grade=document.createElement('div');grade.className='meta';grade.textContent='হাদীসের মান: '+record.grade;card.appendChild(grade)}
    root.appendChild(card);
   });
   $('islamicContent').replaceChildren(root);
- }catch(e){status('হাদীসের অধ্যায় লোড করা যায়নি। ডেটাসেট/নেটওয়ার্ক সমস্যা হতে পারে। বিকল্প যাচাইযোগ্য পাঠ: https://www.hadithbn.com/ ('+e.message+')')}
+ }catch(e){status('হাদীসের অধ্যায় লোড করা যায়নি: '+e.message+'. নেটওয়ার্ক বা উৎসের ডেটা যাচাই করে আবার চেষ্টা করুন।')}
 }
 async function renderKnowledge(){
  const topics=[
