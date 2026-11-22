@@ -102,6 +102,10 @@ assert 'm61' in enhancements and 'replace_admin_module_permissions' in enhanceme
 assert 'video/mp4' in enhancements and 'application/pdf' in enhancements
 assert 'public.module_record_access' in enhancements
 assert 'মুসল্লী নিবন্ধন' in admin_modules
+assert all(x in admin_modules for x in ('dashIncome','dashExpense','dashPending','dashMembers','dashEvents','dashTasks','dashProjects','dashReports')), 'Admin: live dashboard metrics are incomplete'
+assert 'ledger_entries' in admin_modules and 'dashboardRefresh' in admin_modules, 'Admin: dashboard must load live account data and support refresh'
+assert 'dash-shortcuts' in admin_modules and 'dashUpcoming' in admin_modules and 'dashRecent' in admin_modules, 'Admin: dashboard quick links and activity panels are missing'
+assert 'dash-metrics' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: responsive dashboard styles are missing'
 print('Admin Panel checks passed: 61 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
