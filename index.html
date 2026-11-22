@@ -306,6 +306,12 @@ renderNav();
    const{data:published,error:publishedError}=await client.from('module_records').select('module_key,title,data,created_at,updated_at').eq('status','published').eq('data->>public_display','true').order('updated_at',{ascending:false});
    if(publishedError)throw publishedError;
    publishedModuleRecords=published||[];
+   const galleryRecords=publishedModuleRecords.filter(x=>x.module_key==='m15');
+   const galleryRoot=document.getElementById('gallery-slots');
+   galleryRecords.forEach(record=>{const d=record.data||{};if(!d.image_url||!galleryRoot)return;const card=document.createElement('article');card.className='modulecard gallery-card published-content';const img=document.createElement('img');img.src=d.image_url;img.alt=record.title;img.loading='lazy';card.appendChild(img);const title=document.createElement('b');title.textContent=record.title;card.appendChild(title);if(d.caption){const p=document.createElement('p');p.textContent=d.caption;card.appendChild(p)}if(d.credit){const small=document.createElement('small');small.textContent='কৃতিত্ব: '+d.credit;card.appendChild(small)}galleryRoot.appendChild(card)});
+   const videoRecords=publishedModuleRecords.filter(x=>x.module_key==='m16');
+   const videoRoot=document.getElementById('video-slots');
+   videoRecords.forEach(record=>{const d=record.data||{};if(!d.video_url||!videoRoot)return;const card=document.createElement('article');card.className='modulecard video-card published-content';const title=document.createElement('b');title.textContent=record.title;card.appendChild(title);const id=youtubeId(d.video_url);if(id){const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id);frame.title=record.title;frame.loading='lazy';frame.allowFullscreen=true;card.appendChild(frame)}else{const link=safeHttp(d.video_url);if(link){const a=document.createElement('a');a.href=link.href;a.target='_blank';a.rel='noopener noreferrer';a.textContent='ভিডিও দেখুন';card.appendChild(a)}}if(d.summary){const p=document.createElement('p');p.textContent=d.summary;card.appendChild(p)}videoRoot.appendChild(card)});
    const latestFor=key=>publishedModuleRecords.filter(x=>x.module_key===key).sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0))[0]?.data||{};
    const prayerData=latestFor('m22'),adhanData=latestFor('m23');
    if(Object.keys(prayerData).length||Object.keys(adhanData).length){
