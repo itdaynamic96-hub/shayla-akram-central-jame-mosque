@@ -47,7 +47,7 @@ as $$
 $$;
 create or replace function public.guard_module_record_publication()
 returns trigger language plpgsql security definer set search_path=public
-as $
+as $guard$
 begin
  if new.status in ('approved','published') then
    if not public.module_record_approval_access(new.module_key,new.institution) then
@@ -59,7 +59,7 @@ begin
  end if;
  return new;
 end;
-$;
+$guard$;
 drop trigger if exists module_record_publication_guard on public.module_records;
 create trigger module_record_publication_guard before insert or update on public.module_records
 for each row execute function public.guard_module_record_publication();
@@ -91,7 +91,7 @@ using(public.has_access(array['super_admin','admin','website_admin','editor'],nu
 with check(public.has_access(array['super_admin','admin','website_admin','editor'],null));
 create or replace function public.guard_public_content_publish()
 returns trigger language plpgsql set search_path=public
-as $
+as $guard$
 begin
  if new.status='published' then
    if tg_op='INSERT' then
@@ -106,7 +106,7 @@ begin
  end if;
  return new;
 end;
-$;
+$guard$;
 drop trigger if exists announcements_publish_guard on public.announcements;
 create trigger announcements_publish_guard before insert or update on public.announcements
 for each row execute function public.guard_public_content_publish();
