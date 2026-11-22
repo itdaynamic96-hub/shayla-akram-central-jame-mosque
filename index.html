@@ -306,6 +306,15 @@ renderNav();
    const{data:published,error:publishedError}=await client.from('module_records').select('module_key,title,data,created_at,updated_at').eq('status','published').eq('data->>public_display','true').order('updated_at',{ascending:false});
    if(publishedError)throw publishedError;
    publishedModuleRecords=published||[];
+   const latestFor=key=>publishedModuleRecords.filter(x=>x.module_key===key).sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0))[0]?.data||{};
+   const prayerData=latestFor('m22'),adhanData=latestFor('m23');
+   if(Object.keys(prayerData).length||Object.keys(adhanData).length){
+    const prayerNames=[['ফজর','fajr'],['যোহর','dhuhr'],['আসর','asr'],['মাগরিব','maghrib'],['এশা','isha']];
+    document.getElementById('prayerTimes').innerHTML=prayerNames.map(([label,key])=>{
+     const adhan=adhanData[key+'_adhan']||'',jamaat=adhanData[key+'_jamaat']||'',time=prayerData[key]||'';
+     return '<div class="time"><b>'+label+'</b><strong class="adhan">'+(adhan?'আজান '+adhan:time)+'</strong>'+(jamaat?'<small>জামাত '+jamaat+'</small>':'')+'</div>';
+    }).join('');
+   }
    if(activeModule!==null)renderPublishedModuleRecords(activeModule);
   }catch(publicError){console.warn('প্রকাশিত মডিউল তথ্য লোড করা যায়নি:',publicError)}
 
