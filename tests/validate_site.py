@@ -54,6 +54,10 @@ assert 'source_url,media_credit,updated_at' in html
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
+assert 'const accountCache={entries:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: cache must initialize before async boot'
+admin_modules_source=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert "a.href='./accounts.html'" in admin_modules_source and 'if(m.g===4)return false' in admin_modules_source, 'Admin: Accounts must be a separate panel'
+assert 'উভয় প্রতিষ্ঠান' not in admin_modules_source, 'Admin: website forms must not expose institution=both'
 assert 'dhakaDate' in accounts and 'dhakaMonth' in accounts
 assert 'tab.location.href=data.signedUrl' in accounts, 'Accounts: receipt popup must be opened before async URL request'
 assert 'uploadedReceiptPath' in accounts, 'Accounts: uploaded receipts must be cleaned up if ledger insert fails'
