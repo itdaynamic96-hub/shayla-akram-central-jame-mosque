@@ -39,6 +39,13 @@ for category in ('article','gallery','video'):
     assert count==10, f'{category}: expected exactly ten slots, found {count}'
 assert 'create table if not exists public.site_content' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+assert 'আর্টিক্যাল undefined' not in html, 'Homepage: slot 10 contains undefined text'
+intro_start=html.index('<div class="intro-history-column">')
+notice_start=html.index('<div class="homegrid">')
+side_start=html.index('<aside class="intro-side-column">')
+assert intro_start < notice_start < side_start, 'Homepage: notices must flow directly under history in the same column'
+assert 'id="latest-notice-content"' in html and 'id="latest-activity-content"' in html
+assert "from('announcements')" in html and "eq('status','published')" in html
 assert 'YOUR-PROJECT' in (ROOT/'supabase-config.js').read_text(encoding='utf-8') or 'https://' in (ROOT/'supabase-config.js').read_text(encoding='utf-8')
 print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepage slots, and Supabase schema markers.')
 
@@ -50,4 +57,12 @@ subprocess.run(['node','--check','--input-type=module'],input=admin_modules,text
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
 assert 'alter table public.profiles add constraint profiles_role_check' in migration
+assert 'public can read published announcements' in migration
+assert "status in ('draft','pending')" in migration
+assert 'guard_module_record_publication' in migration
+assert 'guard_public_content_publish' in migration
+schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema
+for js in ('admin-modules.js','supabase-client.js'):
+    subprocess.run(['node','--check','--input-type=module'],input=(ROOT/js).read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
 print('Admin Panel checks passed: 60 module definitions, module JS syntax, and RLS migration markers.')

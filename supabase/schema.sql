@@ -128,13 +128,16 @@ with check (public.has_access(array['super_admin','accounts_manager'], instituti
 drop policy if exists "admins read announcements" on public.announcements;
 create policy "admins read announcements" on public.announcements for select to authenticated
 using (public.has_access(array['super_admin','admin','website_admin','editor'], null));
+drop policy if exists "public can read published announcements" on public.announcements;
+create policy "public can read published announcements" on public.announcements for select to anon,authenticated using(status='published');
+grant select on public.announcements to anon,authenticated;
 drop policy if exists "admins create announcements" on public.announcements;
 create policy "admins create announcements" on public.announcements for insert to authenticated
-with check (created_by = auth.uid() and public.has_access(array['super_admin','admin','website_admin'], null));
+with check (created_by = auth.uid() and public.has_access(array['super_admin','admin','website_admin','editor'], null));
 drop policy if exists "admins update announcements" on public.announcements;
 create policy "admins update announcements" on public.announcements for update to authenticated
-using (public.has_access(array['super_admin','admin','website_admin'], null))
-with check (public.has_access(array['super_admin','admin','website_admin'], null));
+using (public.has_access(array['super_admin','admin','website_admin','editor'], null))
+with check (public.has_access(array['super_admin','admin','website_admin','editor'], null));
 drop policy if exists "admins read audit logs" on public.audit_logs;
 create policy "admins read audit logs" on public.audit_logs for select to authenticated
 using (public.has_access(array['super_admin','admin','auditor'], null));
@@ -150,9 +153,34 @@ alter table public.site_content enable row level security;
 drop policy if exists "public can read published site content" on public.site_content;
 create policy "public can read published site content" on public.site_content for select to anon,authenticated using(status='published' or public.has_access(array['super_admin','admin','website_admin','editor'],null));
 drop policy if exists "website admins manage site content" on public.site_content;
-create policy "website admins manage site content" on public.site_content for all to authenticated using(public.has_access(array['super_admin','admin','website_admin'],null)) with check(public.has_access(array['super_admin','admin','website_admin'],null));
+create policy "website admins manage site content" on public.site_content for all to authenticated using(public.has_access(array['super_admin','admin','website_admin','editor'],null)) with check(public.has_access(array['super_admin','admin','website_admin','editor'],null));
 grant select on public.site_content to anon,authenticated;
 grant insert,update,delete on public.site_content to authenticated;
+create or replace function public.guard_public_content_publish()
+returns trigger language plpgsql set search_path=public
+as $
+begin
+ if new.status='published' then
+   if tg_op='INSERT' then
+     if not public.has_access(array['super_admin','admin','website_admin'],null) then
+       raise exception 'Only an authorized website approver may publish content.';
+     end if;
+   elsif (to_jsonb(new)-'updated_at'-'created_at') is distinct from (to_jsonb(old)-'updated_at'-'created_at') then
+     if not public.has_access(array['super_admin','admin','website_admin'],null) then
+       raise exception 'Only an authorized website approver may publish content.';
+     end if;
+   end if;
+ end if;
+ return new;
+end;
+$;
+drop trigger if exists announcements_publish_guard on public.announcements;
+create trigger announcements_publish_guard before insert or update on public.announcements
+for each row execute function public.guard_public_content_publish();
+drop trigger if exists site_content_publish_guard on public.site_content;
+create trigger site_content_publish_guard before insert or update on public.site_content
+for each row execute function public.guard_public_content_publish();
+
 
 -- Accounts extensions: designated funds, budgets and private receipt attachments.
 alter table public.ledger_entries add column if not exists fund_category text not null default 'general' check(fund_category in ('general','zakat','sadaqah','orphan','poor_relief','medical','education','construction'));
@@ -251,12 +279,30 @@ as $$
   (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution)) or
   (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin'))));
 $$;
+create or replace function public.guard_module_record_publication()
+returns trigger language plpgsql security definer set search_path=public
+as $
+begin
+ if new.status in ('approved','published') then
+   if not public.module_record_approval_access(new.module_key,new.institution) then
+     raise exception 'Only an authorized approver may approve or publish this record.';
+   end if;
+   if new.approved_by is distinct from auth.uid() or new.approved_at is null then
+     raise exception 'Approval identity and timestamp are required.';
+   end if;
+ end if;
+ return new;
+end;
+$;
+drop trigger if exists module_record_publication_guard on public.module_records;
+create trigger module_record_publication_guard before insert or update on public.module_records
+for each row execute function public.guard_module_record_publication();
 drop policy if exists "module records read by role" on public.module_records;
 create policy "module records read by role" on public.module_records for select to authenticated using(public.module_record_access(module_key,institution,false));
 drop policy if exists "module records insert by role" on public.module_records;
-create policy "module records insert by role" on public.module_records for insert to authenticated with check(public.module_record_access(module_key,institution,true) and created_by=auth.uid() and status<>'approved');
+create policy "module records insert by role" on public.module_records for insert to authenticated with check(public.module_record_access(module_key,institution,true) and created_by=auth.uid() and status in ('draft','pending'));
 drop policy if exists "module records update by role" on public.module_records;
-create policy "module records update by role" on public.module_records for update to authenticated using(public.module_record_access(module_key,institution,true)) with check(public.module_record_access(module_key,institution,true) and (status<>'approved' or public.module_record_approval_access(module_key,institution)));
+create policy "module records update by role" on public.module_records for update to authenticated using(public.module_record_access(module_key,institution,true)) with check(public.module_record_access(module_key,institution,true) and (status not in ('approved','published') or public.module_record_approval_access(module_key,institution)));
 drop policy if exists "module records delete by super admin" on public.module_records;
 create policy "module records delete by super admin" on public.module_records for delete to authenticated using(public.has_access(array['super_admin'],null));
 grant select,insert,update,delete on public.module_records to authenticated;
