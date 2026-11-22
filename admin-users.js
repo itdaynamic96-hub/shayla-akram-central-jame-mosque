@@ -69,7 +69,9 @@ if (root) init();
 
 function renderChecks(selected = []) {
   const selectedMap = new Map(selected.map(x => [x.module_key, x]));
-  $("staffModules").innerHTML = modules.map((m, i) => {
+  const institution = $("staffInstitution").value;
+  const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31); });
+  $("staffModules").innerHTML = visibleModules.map(m => {
     const old = selectedMap.get(m.key) || {};
     return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
       <span>${String(i+1).padStart(2,"0")}. ${escapeHtml(m.name)}</span></label>
@@ -112,11 +114,12 @@ $("staffForm").addEventListener("submit", async e => {
     $("staffMessage").textContent = selectedUserId ? "মডিউল অনুমতি হালনাগাদ হয়েছে।" : "নতুন অ্যাকাউন্ট তৈরি হয়েছে।";
     $("staffMessage").hidden = false;
     $("staffForm").reset();
-    $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffPassword").required = true;
+    $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffInstitution").disabled = false; $("staffPassword").required = true;
     selectedUserId = null; $("staffSubmit").textContent = "অ্যাকাউন্ট তৈরি করুন";
     renderChecks(); await loadStaff();
   } catch (err) { showError($("staffError"), err); }
 });
+$("staffInstitution").addEventListener("change", () => { const selected = readChecks(); renderChecks(selected); });
 $("staffReset").addEventListener("click", e => {
   e.preventDefault();
   selectedUserId = null;
@@ -134,7 +137,7 @@ $("staffRows").addEventListener("click", async e => {
       if (error) throw error;
       selectedUserId = edit;
       renderChecks(data || []);
-      $("staffName").disabled = true; $("staffEmail").disabled = true; $("staffPassword").required = false; $("staffPassword").disabled = true;
+      $("staffName").disabled = true; $("staffEmail").disabled = true; $("staffPassword").required = false; $("staffPassword").disabled = true; $("staffInstitution").disabled = true; $("staffInstitution").value = profiles.find(p => p.id === edit)?.institution || "mosque";
       $("staffSubmit").textContent = "মডিউল অনুমতি সংরক্ষণ";
       $("staffMessage").textContent = "নির্বাচিত কর্মীর অনুমতি সম্পাদনা করছেন।";
       $("staffMessage").hidden = false;
