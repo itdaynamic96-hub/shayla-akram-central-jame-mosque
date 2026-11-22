@@ -84,7 +84,7 @@ function form(m,r=null){
  $('moduleForm').onsubmit=async e=>{e.preventDefault();try{
   const status=$('recordStatus').value,data={...old,description:old.description||''};
   schema.forEach(([key])=>{const el=$('recordField_'+key);data[key]=el?.value?.trim?.()??''});
-  data.public_module=publicId;data.public_display=!privateOnlyModules.has(m.n);
+  data.public_module=publicId;data.public_display=!privateOnlyModules.has(m.n);data.public_labels=Object.fromEntries(schema.map(([key,label])=>[key,label]));
   const p={module_key:m.key,institution:$('recordInstitution').value,title:$('recordTitle').value.trim(),data,status,approved_by:['approved','published'].includes(status)?user.id:(r?.approved_by||null),approved_at:['approved','published'].includes(status)?new Date().toISOString():(r?.approved_at||null),updated_at:new Date().toISOString()};
   const q=r?await supabase.from('module_records').update(p).eq('id',r.id):await supabase.from('module_records').insert({...p,created_by:user.id});
   if(q.error)throw q.error;form(m);await load(m)
