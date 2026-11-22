@@ -68,6 +68,7 @@ assert "status in ('draft','pending')" in migration
 assert 'guard_module_record_publication' in migration
 assert 'guard_public_content_publish' in migration
 assert 'before insert or update or delete on public.site_content' in migration
+assert 'may unpublish content' in migration
 assert 'accounts managers insert budgets' in migration
 assert 'accounts read institution receipts' in migration
 assert "'mosque_admin','foundation_admin'" in migration

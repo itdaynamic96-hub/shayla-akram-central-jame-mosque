@@ -99,6 +99,10 @@ begin
    end if;
    return old;
  end if;
+ if tg_op='UPDATE' and old.status='published' and new.status<>'published'
+    and not public.has_access(array['super_admin','admin','website_admin'],null) then
+   raise exception 'Only an authorized website approver may unpublish content.';
+ end if;
  if new.status='published' then
    if tg_op='INSERT' then
      if not public.has_access(array['super_admin','admin','website_admin'],null) then
