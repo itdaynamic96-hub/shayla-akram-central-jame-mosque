@@ -222,6 +222,19 @@ drop policy if exists "accounts upload own institution receipts" on storage.obje
 create policy "accounts upload own institution receipts" on storage.objects for insert to authenticated with check(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1)));
 drop policy if exists "accounts read institution receipts" on storage.objects;
 create policy "accounts read institution receipts" on storage.objects for select to authenticated using(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],split_part(name,'/',1)));
+create or replace function public.receipt_is_unlinked(target_path text)
+returns boolean language sql stable security definer set search_path=public
+as $receipt$
+ select not exists(select 1 from public.ledger_entries where receipt_path=target_path);
+$receipt$;
+revoke all on function public.receipt_is_unlinked(text) from public;
+grant execute on function public.receipt_is_unlinked(text) to authenticated;
+drop policy if exists "accounts delete unlinked own receipts" on storage.objects;
+create policy "accounts delete unlinked own receipts" on storage.objects for delete to authenticated
+using(bucket_id='private-receipts' and owner_id=auth.uid()::text
+ and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1))
+ and public.receipt_is_unlinked(name));
+
 -- Preserve the audit trail: posted ledger rows cannot be deleted or silently edited.
 create or replace function public.protect_ledger_history() returns trigger language plpgsql set search_path=public as $$
 begin

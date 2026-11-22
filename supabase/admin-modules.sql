@@ -126,6 +126,19 @@ for each row execute function public.guard_public_content_publish();
 drop policy if exists "accounts read institution receipts" on storage.objects;
 create policy "accounts read institution receipts" on storage.objects for select to authenticated
 using(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],split_part(name,'/',1)));
+create or replace function public.receipt_is_unlinked(target_path text)
+returns boolean language sql stable security definer set search_path=public
+as $receipt$
+ select not exists(select 1 from public.ledger_entries where receipt_path=target_path);
+$receipt$;
+revoke all on function public.receipt_is_unlinked(text) from public;
+grant execute on function public.receipt_is_unlinked(text) to authenticated;
+drop policy if exists "accounts delete unlinked own receipts" on storage.objects;
+create policy "accounts delete unlinked own receipts" on storage.objects for delete to authenticated
+using(bucket_id='private-receipts' and owner_id=auth.uid()::text
+ and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1))
+ and public.receipt_is_unlinked(name));
+
 -- Department administrators may review their own institution's accounts and budgets.
 drop policy if exists "managers approve and edit" on public.ledger_entries;
 create policy "managers approve and edit" on public.ledger_entries for update to authenticated

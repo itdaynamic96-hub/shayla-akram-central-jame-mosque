@@ -71,6 +71,8 @@ assert 'before insert or update or delete on public.site_content' in migration
 assert 'may unpublish content' in migration
 assert 'accounts managers insert budgets' in migration
 assert 'accounts read institution receipts' in migration
+assert 'accounts delete unlinked own receipts' in migration
+assert 'receipt_is_unlinked' in migration
 assert "'mosque_admin','foundation_admin'" in migration
 assert 'as '+chr(36)+'guard'+chr(36) in migration
 schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
