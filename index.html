@@ -56,7 +56,17 @@ body{background:linear-gradient(180deg,#f8f5ec 0%,#f2eee2 100%)}
 .article-card .content-kicker{margin-top:2px}
 @media(max-width:600px){.article-card::before,.video-card::before{height:135px;flex-basis:135px}}
 
-/* Compact, consistent spacing and real visible cover images */
+/* Compact Islamic content rows: narrower cards and reduced vertical whitespace */
+.catalog{margin-top:0!important}
+.catalog.content-wrap{max-width:1180px!important;margin-left:auto!important;margin-right:auto!important}
+.grid.content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important;margin-top:4px!important;gap:9px!important}
+.cataloghead{margin:0!important;padding:0!important}
+.cataloghead .sectiontitle{margin:0 0 2px!important;line-height:1.3}
+.cataloghead .subtle{margin:0!important;line-height:1.4}
+@media(max-width:1000px){.grid.content-slots{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:760px){.grid.content-slots{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:480px){.grid.content-slots{grid-template-columns:minmax(0,1fr)!important}}
+/* Keep existing compact spacing and real visible cover images */
 .catalog{margin-top:5px!important}
 .catalog.content-wrap{padding-top:3px!important;padding-bottom:5px!important}
 .content-wrap{padding-top:4px!important;padding-bottom:4px!important}
