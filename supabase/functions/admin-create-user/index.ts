@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
         const can_approve = Boolean(item.can_approve);
         return { user_id: userId, module_key, can_view: true, can_write, can_approve: can_write && can_approve };
       });
-      const { error: permissionError } = await admin.from("admin_module_permissions").insert(rows);
+      const { error: permissionError } = await admin.rpc("replace_admin_module_permissions", { target_user: userId, permission_rows: rows });
       if (permissionError) {
         await admin.auth.admin.deleteUser(userId);
         return reply({ error: "মডিউল অনুমতি সংরক্ষণ ব্যর্থ: " + permissionError.message }, 500);
@@ -80,15 +80,16 @@ Deno.serve(async (req) => {
     const modules = Array.isArray(body.modules) ? body.modules : [];
     const uniqueModules = [...new Set(modules.map((x: any) => String(x?.module_key || "")))];
     if (uniqueModules.length > 60 || uniqueModules.some((k: string) => !/^m(0[1-9]|[1-5][0-9]|60)$/.test(k))) return reply({ error: "মডিউল নির্বাচন সঠিক নয়।" }, 400);
-    const { error: deleteError } = await admin.from("admin_module_permissions").delete().eq("user_id", userId);
-    if (deleteError) return reply({ error: deleteError.message }, 500);
     if (uniqueModules.length) {
       const rows = uniqueModules.map((module_key: string) => {
         const item = modules.find((x: any) => x?.module_key === module_key) || {};
         const can_write = Boolean(item.can_write);
         return { user_id: userId, module_key, can_view: true, can_write, can_approve: can_write && Boolean(item.can_approve) };
       });
-      const { error } = await admin.from("admin_module_permissions").insert(rows);
+      const { error } = await admin.rpc("replace_admin_module_permissions", { target_user: userId, permission_rows: rows });
+      if (error) return reply({ error: error.message }, 500);
+    } else {
+      const { error } = await admin.rpc("replace_admin_module_permissions", { target_user: userId, permission_rows: [] });
       if (error) return reply({ error: error.message }, 500);
     }
     return reply({ success: true });
