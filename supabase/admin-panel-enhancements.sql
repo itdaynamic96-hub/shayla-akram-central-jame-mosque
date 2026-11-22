@@ -132,3 +132,26 @@ using (
 );
 
 -- Muslim registration records remain private; no anon SELECT policy is granted.
+
+-- Allow the permission-management Edge Function to assign up to all 61 modules.
+create or replace function public.replace_admin_module_permissions(target_user uuid, permission_rows jsonb)
+returns void language plpgsql security definer set search_path=public
+as $$
+begin
+ if auth.role() <> 'service_role' then
+   raise exception 'Only the trusted server function may replace module permissions.';
+ end if;
+ if jsonb_typeof(permission_rows) <> 'array' or jsonb_array_length(permission_rows) > 61 then
+   raise exception 'Invalid module permission list.';
+ end if;
+ delete from public.admin_module_permissions where user_id=target_user;
+ insert into public.admin_module_permissions(user_id,module_key,can_view,can_write,can_approve)
+ select target_user, item.value->>'module_key',
+        coalesce((item.value->>'can_view')::boolean,true),
+        coalesce((item.value->>'can_write')::boolean,false),
+        coalesce((item.value->>'can_approve')::boolean,false)
+ from jsonb_array_elements(permission_rows) as item(value);
+end;
+$$;
+revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
+grant execute on function public.replace_admin_module_permissions(uuid,jsonb) to service_role;
