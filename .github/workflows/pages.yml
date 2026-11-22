@@ -1,7 +1,7 @@
 name: Validate and deploy static site to GitHub Pages
 on:
   push:
-    branches: ["main", "admin-panel-repair-20261122"]
+    branches: ["main", "admin-panel-repair-20261122", "admin-dashboard-upgrade-20261122"]
   workflow_dispatch:
 permissions:
   contents: read
