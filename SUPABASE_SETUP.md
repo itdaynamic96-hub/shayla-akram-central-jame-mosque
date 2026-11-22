@@ -43,12 +43,19 @@ Roles:
 - `auditor`: read-only review.\n- `viewer`: read-only access within the assigned institution.
 - Institution must be `mosque` or `foundation`. Use `both` only for formally authorized staff.
 
-## 6. Apply the Admin Panel module migration\n1. Open Supabase → SQL Editor → New query.\n2. Open `supabase/admin-modules.sql` in GitHub and copy the complete SQL.\n3. Run the latest SQL file. It expands the role list, creates the secure record store used by the 60 Admin Panel modules, and adds source/credit fields for Islamic articles and media. If you have run an earlier version, run the updated file again.\n4. Keep Row Level Security enabled; do not run broad public policies.\n\n## 7. Configure Auth URLs
+## 6. Apply the Admin Panel module migration\n1. Open Supabase → SQL Editor → New query.\n2. Open `supabase/admin-modules.sql` in GitHub and copy the complete SQL.\n3. Run the latest SQL file. It expands the role list, creates the secure record store used by the 60 Admin Panel modules, and adds source/credit fields for Islamic articles and media. If you have run an earlier version, run the updated file again.\n4. Keep Row Level Security enabled; do not run broad public policies.\n\n## 7. Repair/enable Accounts database permissions
+1. Open Supabase → SQL Editor → New query.
+2. Open `supabase/accounts-permissions-fix.sql` in GitHub and copy the entire file.
+3. Paste it into SQL Editor and press Run. It is safe to run again if needed.
+4. This grants the signed-in `authenticated` role SELECT/INSERT/UPDATE on ledger entries (the missing SQL privilege that causes `permission denied for table ledger_entries`), while RLS still limits access by role and institution. It keeps receipt files private and does not grant ledger DELETE.
+5. Sign out of Accounts, sign in again, and test with a small pending entry before entering real financial data.
+
+## 8. Configure Auth URLs
 In Authentication → URL Configuration, set the Site URL to:
 `https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque`
 Add the same site URL and the two page URLs ending in `/admin.html` and `/accounts.html` to the allowed redirect URLs if your project settings require them.
 
-## 8. Test before using real financial data
+## 9. Test before using real financial data
 1. Sign in at /admin.html with the Super Admin.
 2. Add one test article, one test photo URL, and one YouTube video URL; publish and verify each on the homepage.
 3. Create separate mosque and foundation accountant users and confirm each can only see their own institution.
