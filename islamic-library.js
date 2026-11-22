@@ -157,7 +157,11 @@ async function loadAsbabSurah(surahNo,list){
   const matches=sourceRows.filter(x=>Number(x.surah)===surahNo);
   const root=document.createElement('div'),surah=list.find(x=>x.number===surahNo);
   const heading=document.createElement('div');heading.className='islamic-note';heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · '+bn(matches.length)+'টি আয়াত-সম্পর্কিত শানে নুযুলের নথি।';root.appendChild(heading);
-  const caution=document.createElement('div');caution.className='islamic-note';caution.textContent='প্রতিটি বর্ণনার মূল আরবি, আনুমানিক বাংলা উচ্চারণ এবং পূর্ণ স্বয়ংক্রিয় বাংলা অনুবাদ দেখানো হবে। অনুবাদটি মেশিন-সহায়িত; ধর্মীয় উদ্ধৃতি হিসেবে ব্যবহারের আগে মূল গ্রন্থ ও যোগ্য আলেমের মাধ্যমে যাচাই করুন।';root.appendChild(caution);
+  if(matches.length){
+   const caution=document.createElement('div');caution.className='islamic-note';
+   caution.textContent='নিচে সংকলনে থাকা বর্ণনাগুলোর মূল আরবি, আনুমানিক বাংলা উচ্চারণ এবং পূর্ণ স্বয়ংক্রিয় বাংলা অনুবাদ দেখানো হবে। অনুবাদটি মেশিন-সহায়িত; ধর্মীয় উদ্ধৃতি হিসেবে ব্যবহারের আগে মূল গ্রন্থ ও যোগ্য আলেমের মাধ্যমে যাচাই করুন।';
+   root.appendChild(caution);
+  }
   if(!matches.length){
    const empty=document.createElement('section');empty.className='islamic-note';
    if(surahNo===89){
