@@ -95,7 +95,7 @@ assert "'mosque_admin','foundation_admin'" in migration
 assert 'as '+chr(36)+'guard'+chr(36) in migration
 schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema
-for js in ('admin-modules.js','supabase-client.js'):
+for js in ('admin-modules.js','admin-users.js','supabase-client.js'):
     subprocess.run(['node','--check','--input-type=module'],input=(ROOT/js).read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
 print('Admin Panel checks passed: 60 module definitions, module JS syntax, and RLS migration markers.')
 
@@ -103,3 +103,5 @@ assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin
 assert 'admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Module permission migration is missing'
 assert 'createUser' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure Auth user creation Edge Function is missing'
 assert 'custom_admin' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Custom module permissions are not wired into Admin modules'
+assert 'document.querySelector' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Staff permission checkboxes must query their controls safely'
+assert 'staffManager' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Super Admin account panel must remain visible after module shell starts'
