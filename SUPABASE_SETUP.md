@@ -9,7 +9,7 @@
 1. Open the project → SQL Editor → New query.
 2. Open this repository file: `supabase/schema.sql`.
 3. Copy the complete file and run it once.
-4. Confirm that the tables `profiles`, `ledger_entries`, `announcements`, `audit_logs`, `site_content`, and `budgets` exist.
+4. Confirm that the tables `profiles`, `ledger_entries`, `announcements`, `audit_logs`, `site_content`, and `budgets` exist, and that the `private-receipts` and `site-media` Storage buckets are present.
 5. The SQL also creates a private Storage bucket named `private-receipts`. Keep it private.
 
 ## 3. Connect the website

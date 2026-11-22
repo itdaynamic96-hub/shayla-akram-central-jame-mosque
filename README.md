@@ -8,7 +8,7 @@
 
 ## কনটেন্ট ব্যবস্থাপনা
 - ইসলামিক জ্ঞানভান্ডার, ইসলামিক আলোকচিত্র ও ভিডিও শিক্ষা Admin Panel থেকে যোগ, সম্পাদনা, প্রকাশ বা খসড়া/লুকানো রাখা যায়।
-- কুরআন/হাদিসের রেফারেন্স এবং ছবি/ভিডিওর উৎস ও কৃতিত্ব উল্লেখ করুন।
+- কুরআন/হাদিসের রেফারেন্স এবং ছবি/ভিডিওর উৎস ও কৃতিত্ব উল্লেখ করুন। Super Admin/Website Admin সর্বোচ্চ ১০ MB-এর ছবি সরাসরি আপলোড করতে পারবেন; ভিডিও YouTube বা নির্ভরযোগ্য উৎসের লিংক দিয়ে যোগ হবে।
 
 ## Backend
 Accounts ও Admin-এর authentication এবং persistent data storage-এর জন্য Supabase ব্যবহার করা হয়েছে। SQL schema: `supabase/schema.sql`; connection config: `supabase-config.js`. Supabase project URL ও anon/public key না বসানো পর্যন্ত login ও database operation চালু হবে না। সেটআপের পূর্ণ নির্দেশিকা: `SUPABASE_SETUP.md`.
