@@ -218,6 +218,23 @@ using(public.has_access(array['super_admin','accounts_manager','mosque_admin','f
 with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution));
 grant select,insert,update on public.budgets to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('private-receipts','private-receipts',false,5242880,array['application/pdf','image/jpeg','image/png','image/webp']) on conflict(id) do nothing;
+-- Public display assets; only website approvers can upload/manage files.
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('site-media','site-media',true,10485760,array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict(id) do update set public=true,file_size_limit=10485760,allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif'];
+drop policy if exists "site media public read" on storage.objects;
+create policy "site media public read" on storage.objects for select to anon,authenticated using(bucket_id='site-media');
+drop policy if exists "site media approvers upload" on storage.objects;
+create policy "site media approvers upload" on storage.objects for insert to authenticated
+with check(bucket_id='site-media' and owner_id=auth.uid()::text and public.has_access(array['super_admin','admin','website_admin'],null));
+drop policy if exists "site media approvers update" on storage.objects;
+create policy "site media approvers update" on storage.objects for update to authenticated
+using(bucket_id='site-media' and public.has_access(array['super_admin','admin','website_admin'],null))
+with check(bucket_id='site-media' and public.has_access(array['super_admin','admin','website_admin'],null));
+drop policy if exists "site media approvers delete" on storage.objects;
+create policy "site media approvers delete" on storage.objects for delete to authenticated
+using(bucket_id='site-media' and public.has_access(array['super_admin','admin','website_admin'],null));
+
 drop policy if exists "accounts upload own institution receipts" on storage.objects;
 create policy "accounts upload own institution receipts" on storage.objects for insert to authenticated with check(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1)));
 drop policy if exists "accounts read institution receipts" on storage.objects;
