@@ -162,6 +162,10 @@ using(bucket_id='private-receipts' and owner_id=auth.uid()::text
  and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1))
  and public.receipt_is_unlinked(name));
 
+-- Explicit SQL table privileges; RLS below remains the row-level security boundary.
+grant select,insert,update on public.ledger_entries to authenticated;
+grant select,insert,update on public.budgets to authenticated;
+
 -- Department administrators may review their own institution's accounts and budgets.
 drop policy if exists "managers approve and edit" on public.ledger_entries;
 create policy "managers approve and edit" on public.ledger_entries for update to authenticated
