@@ -164,8 +164,8 @@ renderNav();
 (async function loadPublishedContent(){
  const cfg=window.SUPABASE_CONFIG||{};
  if(!cfg.url||!cfg.anonKey||cfg.url.includes('YOUR-PROJECT')||cfg.anonKey.includes('YOUR_'))return;
- const safeHttp=value=>{try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u:null}catch(_){return null}};
- const youtubeId=value=>{const u=safeHttp(value);if(!u)return null;const host=u.hostname.toLowerCase();if(!['youtube.com','www.youtube.com','m.youtube.com','youtu.be','www.youtu.be','youtube-nocookie.com','www.youtube-nocookie.com'].includes(host))return null;return host.includes('youtu.be')?u.pathname.split('/').filter(Boolean)[0]:u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop()};
+ const safeHttp=value=>{try{const u=new URL(value);return u.protocol==='https:'?u:null}catch(_){return null}};
+ const youtubeId=value=>{const u=safeHttp(value);if(!u)return null;const host=u.hostname.toLowerCase();if(!['youtube.com','www.youtube.com','m.youtube.com','youtu.be','www.youtu.be','youtube-nocookie.com','www.youtube-nocookie.com'].includes(host))return null;if(host.includes('youtu.be'))return u.pathname.split('/').filter(Boolean)[0]||null;const watch=u.searchParams.get('v');if(watch)return watch;const parts=u.pathname.split('/').filter(Boolean);if(['embed','shorts'].includes(parts[0])&&parts[1])return parts[1];return null};
  try{
   const{createClient}=await import('https://esm.sh/@supabase/supabase-js@2');
   const client=createClient(cfg.url,cfg.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});
