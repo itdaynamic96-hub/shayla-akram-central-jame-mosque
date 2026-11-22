@@ -81,6 +81,8 @@ function renderChecks(selected = []) {
   const selectedMap = new Map(selected.map(x => [x.module_key, x]));
   const institution = $("staffInstitution").value;
   const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31); });
+  const heading = $("staffModuleHeading");
+  if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৬০টি)`;
   $("staffModules").innerHTML = visibleModules.map(m => {
     const old = selectedMap.get(m.key) || {};
     return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
