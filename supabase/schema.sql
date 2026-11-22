@@ -199,13 +199,19 @@ alter table public.budgets enable row level security;
 drop policy if exists "accounts read budgets by institution" on public.budgets;
 create policy "accounts read budgets by institution" on public.budgets for select to authenticated using(public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],institution));
 drop policy if exists "accounts managers manage budgets" on public.budgets;
-create policy "accounts managers manage budgets" on public.budgets for all to authenticated using(public.has_access(array['super_admin','accounts_manager'],institution)) with check(public.has_access(array['super_admin','accounts_manager'],institution) and created_by=auth.uid());
+drop policy if exists "accounts managers insert budgets" on public.budgets;
+create policy "accounts managers insert budgets" on public.budgets for insert to authenticated
+with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=auth.uid());
+drop policy if exists "accounts managers update budgets" on public.budgets;
+create policy "accounts managers update budgets" on public.budgets for update to authenticated
+using(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
+with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution));
 grant select,insert,update on public.budgets to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('private-receipts','private-receipts',false,5242880,array['application/pdf','image/jpeg','image/png','image/webp']) on conflict(id) do nothing;
 drop policy if exists "accounts upload own institution receipts" on storage.objects;
 create policy "accounts upload own institution receipts" on storage.objects for insert to authenticated with check(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1)));
 drop policy if exists "accounts read institution receipts" on storage.objects;
-create policy "accounts read institution receipts" on storage.objects for select to authenticated using(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant','auditor'],split_part(name,'/',1)));
+create policy "accounts read institution receipts" on storage.objects for select to authenticated using(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],split_part(name,'/',1)));
 -- Preserve the audit trail: posted ledger rows cannot be deleted or silently edited.
 create or replace function public.protect_ledger_history() returns trigger language plpgsql set search_path=public as $$
 begin

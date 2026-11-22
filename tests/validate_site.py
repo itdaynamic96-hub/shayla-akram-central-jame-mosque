@@ -39,6 +39,12 @@ for category in ('article','gallery','video'):
     assert count==10, f'{category}: expected exactly ten slots, found {count}'
 assert 'create table if not exists public.site_content' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
+assert 'dhakaDate' in accounts and 'dhakaMonth' in accounts
+assert 'tab.location.href=data.signedUrl' in accounts, 'Accounts: receipt popup must be opened before async URL request'
+assert 'uploadedReceiptPath' in accounts, 'Accounts: uploaded receipts must be cleaned up if ledger insert fails'
+assert 'range(offset,offset+299)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert 'আর্টিক্যাল undefined' not in html, 'Homepage: slot 10 contains undefined text'
 intro_start=html.index('<div class="intro-history-column">')
 notice_start=html.index('<div class="homegrid">')
@@ -61,6 +67,9 @@ assert 'public can read published announcements' in migration
 assert "status in ('draft','pending')" in migration
 assert 'guard_module_record_publication' in migration
 assert 'guard_public_content_publish' in migration
+assert 'accounts managers insert budgets' in migration
+assert 'accounts read institution receipts' in migration
+assert "'mosque_admin','foundation_admin'" in migration
 assert 'as '+chr(36)+'guard'+chr(36) in migration
 schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema

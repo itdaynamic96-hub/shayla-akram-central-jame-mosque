@@ -113,15 +113,22 @@ for each row execute function public.guard_public_content_publish();
 drop trigger if exists site_content_publish_guard on public.site_content;
 create trigger site_content_publish_guard before insert or update on public.site_content
 for each row execute function public.guard_public_content_publish();
+drop policy if exists "accounts read institution receipts" on storage.objects;
+create policy "accounts read institution receipts" on storage.objects for select to authenticated
+using(bucket_id='private-receipts' and public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],split_part(name,'/',1)));
 -- Department administrators may review their own institution's accounts and budgets.
 drop policy if exists "managers approve and edit" on public.ledger_entries;
 create policy "managers approve and edit" on public.ledger_entries for update to authenticated
 using (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'], institution))
 with check (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'], institution));
 drop policy if exists "accounts managers manage budgets" on public.budgets;
-create policy "accounts managers manage budgets" on public.budgets for all to authenticated
-using (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
-with check (public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=auth.uid());
+drop policy if exists "accounts managers insert budgets" on public.budgets;
+create policy "accounts managers insert budgets" on public.budgets for insert to authenticated
+with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=auth.uid());
+drop policy if exists "accounts managers update budgets" on public.budgets;
+create policy "accounts managers update budgets" on public.budgets for update to authenticated
+using(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
+with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution));
 
 create or replace function public.log_module_record_change()
 returns trigger language plpgsql security definer set search_path=public
