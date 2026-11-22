@@ -94,6 +94,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
     const parsed = parseModules();
     if ("error" in parsed) return json({ error: parsed.error }, 400);
+    if (parsed.rows.length === 0) return json({ error: "কমপক্ষে একটি মডিউল নির্বাচন করুন।" }, 400);
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
