@@ -15,6 +15,8 @@ const books=[
 let surahs=null;
 let asbabEntries=null;
 const asbabApi='https://cdn.jsdelivr.net/gh/mostafaahmed97/asbab-al-nuzul-dataset@main/data/structured/json/all.json';
+const tafsirApi='https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@v1.2.3/tafsir';
+const tafsirEditions=[{id:'bn-tafisr-fathul-majid',name:'তাফসির ফাতহুল মাজীদ',author:'আবদুর রহমান বিন হাসান আল-আলশাইখ'}];
 const bn=n=>String(n).replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)]);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function json(url){const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
@@ -49,7 +51,7 @@ window.openLibrary=function(view,book){
  $('islamicLead').textContent=view==='quran'?'৩০ পারা ও ১১৪টি সূরা থেকে আরবি মূল পাঠ এবং বাংলা অনুবাদ পড়ুন।':view==='hadith'?'ছয়টি প্রসিদ্ধ হাদীসগ্রন্থ থেকে অধ্যায়ভিত্তিক আরবি ও বাংলা পাঠ।':view==='asbab'?'সূরা নির্বাচন করে নির্দিষ্ট আয়াতের শানে নুযুল, আরবি আয়াত, বাংলা অর্থ ও মূল বর্ণনা পড়ুন।':view==='tafsir'?'প্রতিটি সূরার তাফসির নির্ভরযোগ্য উৎসে সূরা ও আয়াত ধরে পড়ুন।':'কুরআনের আয়াতের রেফারেন্সসহ নির্বাচিত ইসলামী বিষয়াবলি।';
  if(view==='quran')renderQuran();
  else if(view==='asbab')renderAsbab();
- else if(view==='tafsir')renderSurahReferences(view);
+ else if(view==='tafsir')renderTafsir();
  else if(view==='hadith')renderHadithBooks(book);
  else renderKnowledge();
  history.replaceState(null,'','#islamic-'+view);window.scrollTo({top:0,behavior:'smooth'});
@@ -163,6 +165,64 @@ async function loadAsbabSurah(surahNo,list){
   $('islamicContent').replaceChildren(root);
  }catch(e){status('আয়াতভিত্তিক শানে নুযুল আনা যায়নি: '+e.message)}
 }
+async function renderTafsir(){
+ status('তাফসিরের সূরা ও আয়াতের তালিকা লোড হচ্ছে…');
+ try{
+  const list=await getSurahs();
+  $('islamicToolbar').replaceChildren();
+  const picker=select('সূরা নির্বাচন করুন','tafsirSurah',[{value:'0',label:'সূরা নির্বাচন করুন'},...list.map(x=>({value:String(x.number),label:'সূরা '+bn(x.number)+' — '+x.name}))]);
+  const edition=select('তাফসিরের গ্রন্থ','tafsirEdition',tafsirEditions.map(x=>({value:x.id,label:x.name})));
+  const ayah=select('আয়াত নির্বাচন করুন','tafsirAyah',[{value:'0',label:'আগে সূরা নির্বাচন করুন'}]);
+  const load=()=>loadTafsirSurah(Number(picker.value),edition.value,ayah,list);
+  picker.addEventListener('change',load);
+  edition.addEventListener('change',load);
+  ayah.addEventListener('change',()=>showTafsirAyah(Number(picker.value),edition.value,Number(ayah.value),list));
+  const note=document.createElement('div');note.className='islamic-note';
+  note.textContent='সূরা ও আয়াত নির্বাচন করে বাংলা তাফসির পড়ুন। তাফসিরের পাঠ নির্দিষ্ট গ্রন্থ থেকে নেওয়া; কোনো আয়াতের ব্যাখ্যা ওই উৎসে না থাকলে তা স্পষ্টভাবে জানানো হবে।';
+  $('islamicContent').replaceChildren(note);
+ }catch(e){status('তাফসিরের তালিকা লোড করা যায়নি: '+e.message)}
+}
+let activeTafsirRows=[];
+let activeTafsirSurah=0;
+let activeTafsirList=[];
+async function loadTafsirSurah(surahNo,editionId,ayahSelect,list){
+ if(!surahNo){status('তাফসির দেখতে একটি সূরা নির্বাচন করুন।');return}
+ status('সূরা '+bn(surahNo)+'-এর আয়াতভিত্তিক তাফসির আনা হচ্ছে…');
+ try{
+  const edition=tafsirEditions.find(x=>x.id===editionId);
+  const [tafsirData,arData,bnData]=await Promise.all([
+   json(tafsirApi+'/'+editionId+'/'+surahNo+'.json'),
+   json(quranApi+'/surah/'+surahNo+'/quran-uthmani'),
+   json(quranApi+'/surah/'+surahNo+'/bn.bengali')
+  ]);
+  activeTafsirRows=(tafsirData.ayahs||[]).filter(x=>Number(x.surah)===surahNo&&x.text);
+  activeTafsirSurah=surahNo;activeTafsirList=list;
+  window.__tafsirVerses={ar:new Map((arData.data?.ayahs||[]).map(x=>[x.numberInSurah,x.text])),bn:new Map((bnData.data?.ayahs||[]).map(x=>[x.numberInSurah,x.text]))};
+  ayahSelect.replaceChildren();
+  activeTafsirRows.forEach(row=>{const opt=document.createElement('option');opt.value=String(row.ayah);opt.textContent='আয়াত '+bn(row.ayah);ayahSelect.appendChild(opt)});
+  if(!activeTafsirRows.length){
+   const empty=document.createElement('p');empty.className='islamic-status';empty.textContent='এই সূরার জন্য নির্বাচিত তাফসির গ্রন্থে কোনো আয়াতের ব্যাখ্যা পাওয়া যায়নি।';
+   $('islamicContent').replaceChildren(empty);return;
+  }
+  ayahSelect.value=String(activeTafsirRows[0].ayah);
+  showTafsirAyah(surahNo,editionId,Number(ayahSelect.value),list);
+ }catch(e){status('আয়াতভিত্তিক তাফসির আনা যায়নি: '+e.message+'. পরে আবার চেষ্টা করুন।')}
+}
+function showTafsirAyah(surahNo,editionId,ayahNo,list){
+ const row=activeTafsirRows.find(x=>Number(x.ayah)===ayahNo);
+ if(!row){status('এই আয়াতের তাফসির নির্বাচিত উৎসে পাওয়া যায়নি।');return}
+ const surah=list.find(x=>x.number===surahNo),edition=tafsirEditions.find(x=>x.id===editionId);
+ const verses=window.__tafsirVerses||{ar:new Map(),bn:new Map()};
+ const root=document.createElement('article');root.className='knowledge-card tafsir-card';
+ const heading=document.createElement('h3');heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · আয়াত '+bn(ayahNo);root.appendChild(heading);
+ const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.dir='rtl';ar.textContent=verses.ar.get(ayahNo)||'';
+ const translation=document.createElement('p');translation.className='translation';translation.textContent=verses.bn.get(ayahNo)||'বাংলা আয়াতের অনুবাদ পাওয়া যায়নি।';
+ root.append(ar,translation);
+ const title=document.createElement('h4');title.textContent=edition?.name+' — আয়াতভিত্তিক তাফসির';root.appendChild(title);
+ const tafsir=document.createElement('div');tafsir.className='tafsir-text';tafsir.style.whiteSpace='pre-wrap';tafsir.style.lineHeight='1.95';tafsir.textContent=row.text;root.appendChild(tafsir);
+ const source=document.createElement('small');source.textContent='গ্রন্থ: '+edition?.name+' · লেখক: '+edition?.author+' · ডেটা: Tafsir API / Quran.com collection';root.appendChild(source);
+ $('islamicContent').replaceChildren(root);
+}
 async function renderSurahReferences(kind){
  status('১১৪টি সূরার তালিকা লোড হচ্ছে…');
  try{
@@ -193,8 +253,10 @@ async function loadHadithBook(key){
  const book=books.find(b=>b.key===key);if(!book)return;
  status(book.name+'-এর অধ্যায়ের তালিকা লোড হচ্ছে…');
  try{
-  const meta=await json(hadithCdn+'/'+book.path+'/Meta/'+encodeURIComponent(book.meta)+'.json');
-  const entries=Object.entries(meta||{}).sort((a,b)=>Number(a[0])-Number(b[0]));
+  const metaResponse=await json(hadithCdn+'/'+book.path+'/Meta/'+encodeURIComponent(book.meta)+'.json');
+  const meta=metaResponse.data||metaResponse.meta||metaResponse;
+  const entries=Object.entries(meta||{}).filter(([,v])=>v&&typeof v==='object').sort((a,b)=>Number(a[0])-Number(b[0]));
+  if(!entries.length)throw new Error('গ্রন্থের অধ্যায়-তথ্য ফাঁকা এসেছে');
   const root=document.createElement('div');const note=document.createElement('div');note.className='islamic-note';note.textContent=book.name+' · অধ্যায় নির্বাচন করুন। হাদীসের আরবি ও বাংলা পাঠ, বর্ণনাকারী ও নম্বর উৎস ডেটাসেট অনুযায়ী দেখানো হবে। ডেটা উৎস: Kafela Network Hadith API; আরবি ও বাংলা পাঠ।';root.appendChild(note);
   const grid=document.createElement('div');grid.className='islamic-list';
   entries.forEach(([num,item])=>{
@@ -202,7 +264,7 @@ async function loadHadithBook(key){
    b.addEventListener('click',()=>loadHadithChapter(book,num,item.title||''));grid.appendChild(b);
   });
   root.appendChild(grid);$('islamicContent').replaceChildren(root);
- }catch(e){status('অধ্যায়ের তালিকা লোড করা যায়নি: '+e.message+'. কিছুক্ষণ পর আবার চেষ্টা করুন। তথ্যসূত্র: Kafela Network Hadith API.')}
+ }catch(e){status('অধ্যায়ের তালিকা লোড করা যায়নি: '+e.message+'. সংযোগ পরীক্ষা করে আবার চেষ্টা করুন। তথ্যসূত্র: Kafela Network Hadith API.')}
 }
 async function loadHadithChapter(book,chapter,title){
  status(title+' অধ্যায়ের হাদীস লোড হচ্ছে…');
