@@ -94,10 +94,10 @@ async function init() {
   } catch (e) { showError($("staffError"), e); }
 }
 async function loadStaff() {
-  const { data, error } = await supabase.from("profiles").select("id,full_name,role,institution,created_at").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("profiles").select("id,full_name,email,role,institution,created_at").order("created_at", { ascending: false });
   if (error) throw error;
   profiles = data || [];
-  $("staffRows").innerHTML = profiles.map(p => `<tr><td>${escapeHtml(p.full_name)}</td><td>${escapeHtml(p.role)}</td><td>${escapeHtml(p.institution)}</td><td>${p.role === "custom_admin" ? `<button type="button" data-edit="${p.id}">অনুমতি সম্পাদনা</button> <button type="button" data-toggle="${p.id}">নিষ্ক্রিয়/সক্রিয়</button>` : "মূল প্রশাসক"}</td></tr>`).join("");
+  $("staffRows").innerHTML = profiles.map(p => `<tr><td>${escapeHtml(p.full_name)}</td><td>${escapeHtml(p.email || "—")}</td><td>${escapeHtml(p.role)}</td><td>${escapeHtml(p.institution)}</td><td>${p.role === "custom_admin" ? `<button type="button" data-edit="${p.id}">অনুমতি সম্পাদনা</button> <button type="button" data-toggle="${p.id}">নিষ্ক্রিয়/সক্রিয়</button>` : "মূল প্রশাসক"}</td></tr>`).join("");
 }
 $("staffForm").addEventListener("submit", async e => {
   e.preventDefault();
