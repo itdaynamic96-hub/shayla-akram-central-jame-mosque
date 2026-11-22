@@ -121,7 +121,7 @@ body{background:linear-gradient(180deg,#f8f5ec 0%,#f2eee2 100%)}
 @media(max-width:600px){.islamic-toolbar select,.islamic-toolbar input{width:100%;min-width:0}.islamic-list{grid-template-columns:1fr}}
 </style>
 <style>#admin-home-banner .card{grid-template-columns:minmax(0,1fr) minmax(180px,36%)}@media(max-width:700px){#admin-home-banner .card{grid-template-columns:1fr!important}}</style></head><body>
-<header class="top"><div class="brand"><div class="mark">☪</div><div><strong>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</strong><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন · SHAYLA AKRAM CENTRAL FOUNDATION</small></div></div><span class="lang" aria-label="বাংলা প্রধান সংস্করণ">বাংলা · English labels</span></header>
+<header class="top"><div class="brand"><div class="mark">☪</div><div><strong>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</strong><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div></div><span class="lang" aria-label="বাংলা প্রধান সংস্করণ">বাংলা ওয়েবসাইট</span></header>
 <div class="navwrap"><nav class="nav" id="nav" aria-label="প্রধান মেনু"></nav></div>
 <main id="home">
 <section id="admin-home-banner" class="wrap content-wrap" hidden></section>
@@ -366,4 +366,4 @@ renderNav();
   if(latestActivity){const root=document.getElementById('latest-activity-content');if(root){root.replaceChildren();const title=document.createElement('strong');title.textContent=latestActivity.title;const p=document.createElement('p');p.textContent=latestActivity.body||'নতুন ইসলামী জ্ঞানভিত্তিক লেখা প্রকাশিত হয়েছে।';root.append(title,p)}}
   try{const{data:notices,error:noticeError}=await client.from('announcements').select('title,body,created_at').eq('status','published').order('created_at',{ascending:false}).limit(1);if(!noticeError&&notices&&notices.length){const root=document.getElementById('latest-notice-content');if(root){root.replaceChildren();const title=document.createElement('strong');title.textContent=notices[0].title;const p=document.createElement('p');p.textContent=notices[0].body||'';root.append(title,p)}}else{const record=publishedModuleRecords.filter(x=>x.module_key==='m14').sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0))[0];const root=document.getElementById('latest-notice-content');if(record&&root){root.replaceChildren();const title=document.createElement('strong');title.textContent=record.title;const p=document.createElement('p');p.textContent=record.data?.notice_body||record.data?.description||'';root.append(title,p)}}}catch(noticeErr){console.warn('সর্বশেষ নোটিশ লোড করা যায়নি:',noticeErr)}
  }catch(err){console.warn('প্রকাশিত কনটেন্ট লোড করা যায়নি:',err)}
-})();</script><script src="./islamic-library.js?v=07adab0"></script></body></html>
+})();</script><script src="./islamic-library.js?v=07adab0"></script><script src="./content-limits.js?v=20261122-500words"></script></body></html>
