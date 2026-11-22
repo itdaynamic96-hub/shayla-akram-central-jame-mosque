@@ -57,6 +57,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (keys.length > 60 || keys.some((key) => !validModuleKey(key)) || new Set(keys).size !== keys.length) {
       return { error: "মডিউল নির্বাচন সঠিক নয় বা একই মডিউল একাধিকবার আছে।" as const };
     }
+    if (items.some((item) => item?.can_approve === true && item?.can_write !== true)) {
+      return { error: "অনুমোদনের অনুমতির জন্য আগে লিখতে/সম্পাদনার অনুমতি দিন।" as const };
+    }
     return {
       rows: items.map((item, index) => {
         const canWrite = item.can_write === true;
