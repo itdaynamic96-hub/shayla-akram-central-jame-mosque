@@ -19,6 +19,7 @@ export function money(value) {
   return new Intl.NumberFormat("bn-BD", { style:"currency", currency:"BDT", maximumFractionDigits:2 }).format(Number(value || 0));
 }
 export function showError(target, error) {
+  if (!target) { console.error("Admin UI error target is missing:", error); return; }
   target.textContent = error?.message || String(error || "অজানা সমস্যা হয়েছে।");
   target.hidden = false;
 }
