@@ -17,6 +17,8 @@ Accounts ও Admin-এর authentication এবং persistent data storage-এ�
 
 ## Admin Panel enhancement migration
 
+Validation workflow: repair branch runs checks only; production deployment remains limited to `main`.
+
 Run `supabase/admin-panel-enhancements.sql` in Supabase SQL Editor after the existing `schema.sql`, `admin-modules.sql`, `module-permissions.sql`, and `public-module-records.sql` scripts. This migration adds private Muslim registration (m61), expands module permissions, enables role-scoped media uploads, and permits published dynamic navigation/SEO records. It updates the public `site-media` bucket to accept images, PDFs and MP4/WebM/OGG videos up to 100 MB per object; project storage quotas and upload limits still apply. Muslim registration records are private and require the registrant's consent.
 
 ## Accounts permission repair
