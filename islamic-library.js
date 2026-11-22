@@ -19,6 +19,29 @@ const tafsirApi='https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@v1.2.3/tafsir';
 const tafsirEditions=[{id:'bn-tafisr-fathul-majid',name:'তাফসির ফাতহুল মাজীদ',author:'আবদুর রহমান বিন হাসান আল-আলশাইখ'}];
 const bn=n=>String(n).replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)]);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function arabicToBangla(text){
+ const map={'ا':'আ','أ':'আ','إ':'ই','آ':'আ','ء':'','ؤ':'উ','ئ':'ই','ٱ':'আ','ب':'ব','ت':'ত','ث':'ছ','ج':'জ','ح':'হ','خ':'খ','د':'দ','ذ':'য','ر':'র','ز':'য','س':'স','ش':'শ','ص':'স','ض':'দ','ط':'ত','ظ':'য','ع':'আ','غ':'গ','ف':'ফ','ق':'ক্ব','ك':'ক','ل':'ল','م':'ম','ن':'ন','ه':'হ','و':'ও','ي':'ই','ى':'আ','ة':'হ','پ':'প','چ':'চ','گ':'গ','ک':'ক','ی':'ই','ٰ':'া'};
+ const marks={'َ':'া','ِ':'ি','ُ':'ু','ً':'ান','ٍ':'ইন','ٌ':'উন','ْ':'','ّ':'','ٓ':'','ٔ':'','ٕ':''};
+ const chars=Array.from(String(text||'').normalize('NFC'));let out='';
+ for(let i=0;i<chars.length;i++){const ch=chars[i];if(ch==='ـ')continue;if(marks[ch]!==undefined){if(ch==='ّ'){const last=Array.from(out).pop()||'';out+=last}else out+=marks[ch];continue}if(ch==='\u200f'||ch==='\u200e')continue;if(map[ch]!==undefined){out+=map[ch];continue}out+=ch}
+ return out.replace(/\s+/g,' ').trim();
+}
+function appendPronunciation(parent,arabicText){
+ if(!arabicText)return;
+ const wrap=document.createElement('div');wrap.className='arabic-pronunciation';wrap.style.cssText='margin:5px 0 12px;padding:9px 12px;border-left:3px solid #c5a45b;background:#f8f5ec;border-radius:6px;line-height:1.85';
+ const label=document.createElement('strong');label.textContent='বাংলা উচ্চারণ (আনুমানিক): ';label.style.cssText='font-size:12px;color:#80652f';
+ const value=document.createElement('span');value.textContent=arabicToBangla(arabicText);value.style.cssText='font-size:14px;color:#35483b';
+ wrap.append(label,value);parent.appendChild(wrap);
+}
+async function translateArabicToBangla(text){
+ const source=String(text||'').trim();if(!source)return '';
+ const chunks=[];let rest=source;
+ while(rest.length>0){if(rest.length<=850){chunks.push(rest);break}let cut=rest.lastIndexOf(' ',850);if(cut<450)cut=850;chunks.push(rest.slice(0,cut));rest=rest.slice(cut).trimStart()}
+ const translated=[];
+ for(const chunk of chunks){const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=ar&tl=bn&dt=t&q='+encodeURIComponent(chunk);const data=await json(url);const part=Array.isArray(data?.[0])?data[0].map(x=>x?.[0]||'').join(''):'';if(!part)throw new Error('বাংলা অনুবাদ পাওয়া যায়নি');translated.push(part)}
+ return translated.join(' ');
+}
 async function json(url){const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 function status(msg){$('islamicContent').innerHTML='<p class="islamic-status">'+esc(msg)+'</p>'}
 function addMenu(title,items,direct){
@@ -97,6 +120,7 @@ async function loadQuran(kind,id){
    const card=document.createElement('article');card.className='quran-ayah';
    const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent=(a.surah?.name||'')+' · সূরা '+bn(a.surah?.number||'')+' · আয়াত '+bn(a.numberInSurah);
    const arabic=document.createElement('div');arabic.className='arabic';arabic.lang='ar';arabic.textContent=a.text;
+   appendPronunciation(card,a.text);
    const translation=document.createElement('div');translation.className='translation';translation.textContent=bnByNo.get(String(a.surah?.number||'')+':'+a.numberInSurah)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';
    card.append(ref,arabic,translation);fragment.appendChild(card);
   });
@@ -124,44 +148,34 @@ async function renderAsbab(){
 }
 async function loadAsbabSurah(surahNo,list){
  if(!surahNo){status('শানে নুযুল দেখতে একটি সূরা নির্বাচন করুন।');return}
- status('সূরা '+bn(surahNo)+'-এর আয়াত ও শানে নুযুল আনা হচ্ছে…');
+ status('সূরা '+bn(surahNo)+'-এর আয়াত ও পূর্ণ শানে নুযুল আনা হচ্ছে…');
  try{
-  const [arData,bnData]=await Promise.all([
-   json(quranApi+'/surah/'+surahNo+'/quran-uthmani'),
-   json(quranApi+'/surah/'+surahNo+'/bn.bengali')
-  ]);
-  const arAyahs=new Map((arData.data?.ayahs||[]).map(a=>[a.numberInSurah,a.text]));
-  const bnAyahs=new Map((bnData.data?.ayahs||[]).map(a=>[a.numberInSurah,a.text]));
-  const matches=(asbabEntries||[]).filter(x=>Number(x.surah)===surahNo);
-  const root=document.createElement('div');
-  const surah=list.find(x=>x.number===surahNo);
-  const heading=document.createElement('div');heading.className='islamic-note';
-  heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · '+bn(matches.length)+'টি আয়াত-সম্পর্কিত নথি পাওয়া গেছে।';
-  root.appendChild(heading);
-  if(!matches.length){
-   const empty=document.createElement('p');empty.className='islamic-status';
-   empty.textContent='এই সূরার জন্য সংযুক্ত নির্দিষ্ট আয়াতের শানে নুযুল এই সংকলনে পাওয়া যায়নি। তাই অনুমানভিত্তিক কোনো ঘটনা দেখানো হচ্ছে না।';
-   root.appendChild(empty);$('islamicContent').replaceChildren(root);return;
-  }
-  matches.forEach(entry=>{
+  const [arData,bnData]=await Promise.all([json(quranApi+'/surah/'+surahNo+'/quran-uthmani'),json(quranApi+'/surah/'+surahNo+'/bn.bengali')]);
+  const arAyahs=new Map((arData.data?.ayahs||[]).map(a=>[Number(a.numberInSurah),a.text]));
+  const bnAyahs=new Map((bnData.data?.ayahs||[]).map(a=>[Number(a.numberInSurah),a.text]));
+  const sourceRows=Array.isArray(asbabEntries)?asbabEntries:(Array.isArray(asbabEntries?.data)?asbabEntries.data:[]);
+  const matches=sourceRows.filter(x=>Number(x.surah)===surahNo);
+  const root=document.createElement('div'),surah=list.find(x=>x.number===surahNo);
+  const heading=document.createElement('div');heading.className='islamic-note';heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · '+bn(matches.length)+'টি আয়াত-সম্পর্কিত শানে নুযুলের নথি।';root.appendChild(heading);
+  const caution=document.createElement('div');caution.className='islamic-note';caution.textContent='প্রতিটি বর্ণনার মূল আরবি, আনুমানিক বাংলা উচ্চারণ এবং পূর্ণ স্বয়ংক্রিয় বাংলা অনুবাদ দেখানো হবে। অনুবাদটি মেশিন-সহায়িত; ধর্মীয় উদ্ধৃতি হিসেবে ব্যবহারের আগে মূল গ্রন্থ ও যোগ্য আলেমের মাধ্যমে যাচাই করুন।';root.appendChild(caution);
+  if(!matches.length){const empty=document.createElement('p');empty.className='islamic-status';empty.textContent='এই সূরার জন্য সংযুক্ত নির্দিষ্ট আয়াতের শানে নুযুল এই সংকলনে পাওয়া যায়নি। তাই অনুমানভিত্তিক কোনো ঘটনা দেখানো হচ্ছে না।';root.appendChild(empty);$('islamicContent').replaceChildren(root);return}
+  for(const entry of matches){
    const card=document.createElement('article');card.className='knowledge-card asbab-card';
-   const refs=document.createElement('h3');
-   refs.textContent='আয়াত '+(entry.ayahs||[]).map(bn).join('–');
-   card.appendChild(refs);
-   (entry.ayahs||[]).forEach(ayahNo=>{
-    const verse=document.createElement('section');verse.className='quran-ayah';
-    const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent='সূরা '+bn(surahNo)+' · আয়াত '+bn(ayahNo);
-    const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=arAyahs.get(ayahNo)||'';
-    const translation=document.createElement('div');translation.className='translation';translation.textContent=bnAyahs.get(ayahNo)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';
-    verse.append(ref,ar,translation);card.appendChild(verse);
-   });
-   (entry.occasions||[]).forEach((occasion,index)=>{
-    const label=document.createElement('h4');label.textContent=(entry.occasions.length>1?'শানে নুযুলের বর্ণনা '+bn(index+1):'শানে নুযুলের বর্ণনা')+' — মূল আরবি';card.appendChild(label);
-    const textEl=document.createElement('p');textEl.className='asbab-arabic';textEl.lang='ar';textEl.dir='rtl';textEl.textContent=occasion;card.appendChild(textEl);
-   });
-   const source=document.createElement('small');source.textContent='তথ্যসূত্র: صحيح أسباب النزول دراسة حديثية — ইবরাহিম মুহাম্মদ আল-আলি। সংকলিত ডেটাসেট; বর্ণনার মান ও প্রাসঙ্গিকতা মূল গ্রন্থে যাচাই করুন।';
-   card.appendChild(source);root.appendChild(card);
-  });
+   const ayahs=Array.isArray(entry.ayahs)?entry.ayahs:[entry.ayah||entry.ayah_number].filter(Boolean);
+   const occasions=Array.isArray(entry.occasions)?entry.occasions:(entry.occasions?[entry.occasions]:(entry.occasion?[entry.occasion]:[]));
+   const refs=document.createElement('h3');refs.textContent='আয়াত '+ayahs.map(bn).join('–');card.appendChild(refs);
+   ayahs.forEach(ayahNo=>{const number=Number(ayahNo),verse=document.createElement('section');verse.className='quran-ayah';const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent='সূরা '+bn(surahNo)+' · আয়াত '+bn(number);const arabicText=arAyahs.get(number)||'';const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.dir='rtl';ar.textContent=arabicText;verse.append(ref,ar);appendPronunciation(verse,arabicText);const translation=document.createElement('div');translation.className='translation';translation.textContent=bnAyahs.get(number)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';verse.appendChild(translation);card.appendChild(verse)});
+   if(!occasions.length){const missing=document.createElement('p');missing.className='islamic-status';missing.textContent='এই নথিতে শানে নুযুলের বর্ণনামূলক পাঠ সংযুক্ত নেই।';card.appendChild(missing)}
+   for(let index=0;index<occasions.length;index++){
+    const occasion=String(occasions[index]||'').trim();if(!occasion)continue;
+    const label=document.createElement('h4');label.textContent=(occasions.length>1?'শানে নুযুলের পূর্ণ বর্ণনা '+bn(index+1):'শানে নুযুলের পূর্ণ বর্ণনা');card.appendChild(label);
+    const textEl=document.createElement('p');textEl.className='asbab-arabic';textEl.lang='ar';textEl.dir='rtl';textEl.textContent=occasion;textEl.style.cssText='white-space:pre-wrap;direction:rtl;text-align:right;font-family:"Noto Naskh Arabic","Amiri",serif;font-size:20px;line-height:2.1;margin:8px 0';card.appendChild(textEl);appendPronunciation(card,occasion);
+    const translatedLabel=document.createElement('strong');translatedLabel.textContent='পূর্ণ বাংলা অনুবাদ (স্বয়ংক্রিয়; যাচাইসাপেক্ষ)';card.appendChild(translatedLabel);
+    const translated=document.createElement('p');translated.className='asbab-translation';translated.style.cssText='white-space:pre-wrap;line-height:1.95;margin:7px 0 16px';translated.textContent='বাংলা অনুবাদ তৈরি হচ্ছে…';card.appendChild(translated);
+    try{translated.textContent=await translateArabicToBangla(occasion)||'এই বর্ণনার বাংলা অনুবাদ পাওয়া যায়নি।'}catch(_){translated.textContent='এই মুহূর্তে স্বয়ংক্রিয় বাংলা অনুবাদ পাওয়া যায়নি। মূল আরবি ও আনুমানিক বাংলা উচ্চারণ উপরে দেওয়া আছে।'}
+   }
+   const source=document.createElement('small');source.textContent='তথ্যসূত্র: صحيح أسباب النزول دراسة حديثية — ইবরাহিম মুহাম্মদ আল-আলি। সংকলিত আরবি পাঠ; বাংলা অনুবাদ স্বয়ংক্রিয় এবং মূল গ্রন্থের বিকল্প নয়।';card.appendChild(source);root.appendChild(card);
+  }
   $('islamicContent').replaceChildren(root);
  }catch(e){status('আয়াতভিত্তিক শানে নুযুল আনা যায়নি: '+e.message)}
 }
@@ -216,6 +230,7 @@ function showTafsirAyah(surahNo,editionId,ayahNo,list){
  const root=document.createElement('article');root.className='knowledge-card tafsir-card';
  const heading=document.createElement('h3');heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · আয়াত '+bn(ayahNo);root.appendChild(heading);
  const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.dir='rtl';ar.textContent=verses.ar.get(ayahNo)||'';
+ appendPronunciation(root,ar.textContent);
  const translation=document.createElement('p');translation.className='translation';translation.textContent=verses.bn.get(ayahNo)||'বাংলা আয়াতের অনুবাদ পাওয়া যায়নি।';
  root.append(ar,translation);
  const title=document.createElement('h4');title.textContent=edition?.name+' — আয়াতভিত্তিক তাফসির';root.appendChild(title);
@@ -279,7 +294,7 @@ async function loadHadithChapter(book,chapter,title){
    const meta=document.createElement('div');meta.className='meta';meta.textContent='হাদীস নং '+bn(record.hadithNo||record.hadith_number||record.hadith_id||record.number||'—')+((record.rabiNameBn||record.narrator)?' · বর্ণনাকারী: '+(record.rabiNameBn||record.narrator):'')+(record.topicName?' · '+record.topicName:'');
    card.appendChild(meta);
    const arText=record.hadithArabic||record.ar||record.arabic||'';
-   if(arText){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=arText;card.appendChild(ar)}
+   if(arText){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=arText;card.appendChild(ar);appendPronunciation(card,arText)}
    const bnText=record.hadithBengali||record.bengali||record.text_bn||record.bn||record.text;
    if(bnText){const bnEl=document.createElement('div');bnEl.className='bn';bnEl.textContent=bnText;card.appendChild(bnEl)}
    if(record.grade){const grade=document.createElement('div');grade.className='meta';grade.textContent='হাদীসের মান: '+record.grade;card.appendChild(grade)}
@@ -303,7 +318,7 @@ async function renderKnowledge(){
  status('বিষয়ভিত্তিক বাংলা ব্যাখ্যা ও আরবি আয়াত লোড হচ্ছে…');
  const root=document.createElement('div');const grid=document.createElement('div');grid.className='islamic-list';
  const rows=await Promise.all(topics.map(async t=>{try{const [arData,bnData]=await Promise.all([json(quranApi+'/ayah/'+t[3]+'/quran-uthmani'),json(quranApi+'/ayah/'+t[3]+'/bn.bengali')]);return {ar:arData.data?.text||'',bn:bnData.data?.text||''}}catch(_){return {ar:'',bn:''}}}));
- topics.forEach((t,i)=>{const card=document.createElement('article');card.className='knowledge-card';const h=document.createElement('h3');h.textContent=t[0];const p=document.createElement('p');p.textContent=t[1];card.append(h,p);if(rows[i].ar){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=rows[i].ar;card.appendChild(ar)}if(rows[i].bn){const tr=document.createElement('p');tr.className='translation';tr.textContent=rows[i].bn;card.appendChild(tr)}const small=document.createElement('small');small.textContent='কুরআনের সূত্র: '+t[2]+' · ';const a=document.createElement('a');a.href='https://quran.com/bn/'+t[3];a.target='_blank';a.rel='noopener noreferrer';a.textContent='বাংলা ব্যাখ্যাসহ আয়াত পড়ুন ↗';small.appendChild(a);card.appendChild(small);grid.appendChild(card)});
+ topics.forEach((t,i)=>{const card=document.createElement('article');card.className='knowledge-card';const h=document.createElement('h3');h.textContent=t[0];const p=document.createElement('p');p.textContent=t[1];card.append(h,p);if(rows[i].ar){const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=rows[i].ar;card.appendChild(ar);appendPronunciation(card,rows[i].ar)}if(rows[i].bn){const tr=document.createElement('p');tr.className='translation';tr.textContent=rows[i].bn;card.appendChild(tr)}const small=document.createElement('small');small.textContent='কুরআনের সূত্র: '+t[2]+' · ';const a=document.createElement('a');a.href='https://quran.com/bn/'+t[3];a.target='_blank';a.rel='noopener noreferrer';a.textContent='বাংলা ব্যাখ্যাসহ আয়াত পড়ুন ↗';small.appendChild(a);card.appendChild(small);grid.appendChild(card)});
  root.appendChild(grid);$('islamicContent').replaceChildren(root);
 }
 addMenu('পবিত্র কোরআন শিক্ষা',[
