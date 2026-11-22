@@ -99,6 +99,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (action === "create") {
     const fullName = String(body.full_name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
+    const jobTitle = String(body.job_title ?? "").trim();
     const password = String(body.password ?? "");
     const institution = String(body.institution ?? "");
 
@@ -134,6 +135,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       id: userId,
       full_name: fullName,
       email,
+      job_title: jobTitle,
       role: "custom_admin",
       institution,
     }, { onConflict: "id" });
