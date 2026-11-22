@@ -71,10 +71,10 @@ function renderChecks(selected = []) {
   const selectedMap = new Map(selected.map(x => [x.module_key, x]));
   $("staffModules").innerHTML = modules.map((m, i) => {
     const old = selectedMap.get(m.key) || {};
-    return `<label class="staff-module"><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
-      <span>${String(i+1).padStart(2,"0")}. ${escapeHtml(m.name)}</span>
+    return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
+      <span>${String(i+1).padStart(2,"0")}. ${escapeHtml(m.name)}</span></label>
       <span class="staff-perms"><label><input type="checkbox" data-write="${m.key}" ${old.can_write ? "checked" : ""}> লিখতে/সম্পাদনা</label>
-      <label><input type="checkbox" data-approve="${m.key}" ${old.can_approve ? "checked" : ""}> অনুমোদন</label></span></label>`;
+      <label><input type="checkbox" data-approve="${m.key}" ${old.can_approve ? "checked" : ""}> অনুমোদন</label></span></div>`;
   }).join("");
 }
 function readChecks() {
