@@ -2,15 +2,15 @@
 (() => {
   'use strict';
   const LIMIT = 500;
+  const whitespace = new RegExp(String.fromCharCode(92) + 's+');
   const countWords = value => {
     const text = String(value || '').trim();
-    return text ? text.split(/\\s+/u).length : 0;
+    return text ? text.split(whitespace).length : 0;
   };
   const enhance = textarea => {
     if (!(textarea instanceof HTMLTextAreaElement) || textarea.dataset.wordLimitReady === '1') return;
     textarea.dataset.wordLimitReady = '1';
     textarea.dataset.wordLimit = String(LIMIT);
-    textarea.setAttribute('aria-describedby', (textarea.getAttribute('aria-describedby') || '') + ' word-limit-' + Math.random().toString(36).slice(2));
     const counter = document.createElement('small');
     counter.className = 'word-limit-counter';
     counter.setAttribute('aria-live', 'polite');
@@ -18,7 +18,7 @@
     const update = () => {
       let words = countWords(textarea.value);
       if (words > LIMIT) {
-        const parts = textarea.value.trim().split(/\\s+/u);
+        const parts = textarea.value.trim().split(whitespace);
         const clipped = parts.slice(0, LIMIT).join(' ');
         const pos = Math.min(textarea.selectionStart || clipped.length, clipped.length);
         textarea.value = clipped;
