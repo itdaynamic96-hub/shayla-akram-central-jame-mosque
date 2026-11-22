@@ -1,105 +1,182 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { withSupabase } from "npm:@supabase/server@1";
 
-const cors = {
+const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const reply = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method !== "POST") return reply({ error: "Method not allowed" }, 405);
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
-  const url = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !anonKey || !serviceKey) return reply({ error: "Server configuration is incomplete." }, 500);
+const withCors = (response: Response) => {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(corsHeaders)) headers.set(key, value);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+};
 
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) return reply({ error: "Authentication required." }, 401);
-  const caller = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } });
-  const { data: authData, error: authError } = await caller.auth.getUser();
-  if (authError || !authData.user) return reply({ error: "Invalid session." }, 401);
+const validModuleKey = (key: string) => /^m(0[1-9]|[1-5][0-9]|60)$/.test(key);
 
-  const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: callerProfile, error: profileError } = await admin
-    .from("profiles").select("role").eq("id", authData.user.id).single();
-  if (profileError || callerProfile?.role !== "super_admin") return reply({ error: "Only Super Admin can manage staff accounts." }, 403);
+const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
+  if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
 
-  let body: any;
-  try { body = await req.json(); } catch { return reply({ error: "Invalid JSON body." }, 400); }
-  const action = body?.action || "create";
-  if (action === "create") {
-    const full_name = String(body.full_name || "").trim();
-    const email = String(body.email || "").trim().toLowerCase();
-    const password = String(body.password || "");
-    const institution = body.institution;
-    const modules = Array.isArray(body.modules) ? body.modules : [];
-    if (full_name.length < 2 || full_name.length > 120) return reply({ error: "নাম ২–১২০ অক্ষরের মধ্যে দিন।" }, 400);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply({ error: "সঠিক ইমেইল ঠিকানা দিন।" }, 400);
-    if (password.length < 10 || password.length > 128) return reply({ error: "পাসওয়ার্ড কমপক্ষে ১০ অক্ষরের হতে হবে।" }, 400);
-    if (!["mosque", "foundation", "both"].includes(institution)) return reply({ error: "প্রতিষ্ঠান নির্বাচন সঠিক নয়।" }, 400);
-    const uniqueModules = [...new Set(modules.map((x: any) => String(x?.module_key || "")))];
-    if (uniqueModules.length > 60 || uniqueModules.some((k: string) => !/^m(0[1-9]|[1-5][0-9]|60)$/.test(k))) return reply({ error: "মডিউল নির্বাচন সঠিক নয়।" }, 400);
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email, password, email_confirm: true, user_metadata: { full_name }
-    });
-    if (createError || !created.user) return reply({ error: createError?.message || "অ্যাকাউন্ট তৈরি করা যায়নি।" }, 400);
-    const userId = created.user.id;
-    const { error: updateError } = await admin.from("profiles").upsert({
-      id: userId, full_name, email, role: "custom_admin", institution
-    }, { onConflict: "id" });
-    if (updateError) {
-      await admin.auth.admin.deleteUser(userId);
-      return reply({ error: "প্রোফাইল তৈরি ব্যর্থ: " + updateError.message }, 500);
+  const callerId = ctx.userClaims?.sub;
+  if (!callerId) return json({ error: "Authentication required." }, 401);
+
+  const admin = ctx.supabaseAdmin;
+  const { data: callerProfile, error: callerProfileError } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", callerId)
+    .single();
+
+  if (callerProfileError || callerProfile?.role !== "super_admin") {
+    return json({ error: "শুধু Super Admin কর্মী অ্যাকাউন্ট পরিচালনা করতে পারবেন।" }, 403);
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "অনুরোধের তথ্য সঠিক JSON নয়।" }, 400);
+  }
+
+  const action = typeof body.action === "string" ? body.action : "create";
+
+  const parseModules = () => {
+    if (!Array.isArray(body.modules)) return { error: "মডিউল তালিকা সঠিক নয়।" as const };
+    const items = body.modules as Array<Record<string, unknown>>;
+    const keys = items.map((item) => String(item?.module_key ?? ""));
+    if (keys.length > 60 || keys.some((key) => !validModuleKey(key)) || new Set(keys).size !== keys.length) {
+      return { error: "মডিউল নির্বাচন সঠিক নয় বা একই মডিউল একাধিকবার আছে।" as const };
     }
-    if (uniqueModules.length) {
-      const rows = uniqueModules.map((module_key: string) => {
-        const item = modules.find((x: any) => x?.module_key === module_key) || {};
-        const can_write = Boolean(item.can_write);
-        const can_approve = Boolean(item.can_approve);
-        return { user_id: userId, module_key, can_view: true, can_write, can_approve: can_write && can_approve };
+    return {
+      rows: items.map((item, index) => {
+        const canWrite = item.can_write === true;
+        return {
+          module_key: keys[index],
+          can_view: true,
+          can_write: canWrite,
+          can_approve: canWrite && item.can_approve === true,
+        };
+      }),
+    };
+  };
+
+  if (action === "create") {
+    const fullName = String(body.full_name ?? "").trim();
+    const email = String(body.email ?? "").trim().toLowerCase();
+    const password = String(body.password ?? "");
+    const institution = String(body.institution ?? "");
+
+    if (fullName.length < 2 || fullName.length > 120) {
+      return json({ error: "নাম ২–১২০ অক্ষরের মধ্যে দিন।" }, 400);
+    }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      return json({ error: "সঠিক ইমেইল ঠিকানা দিন।" }, 400);
+    }
+    if (password.length < 10 || password.length > 128) {
+      return json({ error: "পাসওয়ার্ড কমপক্ষে ১০ অক্ষরের হতে হবে।" }, 400);
+    }
+    if (!["mosque", "foundation", "both"].includes(institution)) {
+      return json({ error: "প্রতিষ্ঠান নির্বাচন সঠিক নয়।" }, 400);
+    }
+
+    const parsed = parseModules();
+    if ("error" in parsed) return json({ error: parsed.error }, 400);
+
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (createError || !created.user) {
+      return json({ error: createError?.message ?? "অ্যাকাউন্ট তৈরি করা যায়নি।" }, 400);
+    }
+
+    const userId = created.user.id;
+    const { error: profileError } = await admin.from("profiles").upsert({
+      id: userId,
+      full_name: fullName,
+      email,
+      role: "custom_admin",
+      institution,
+    }, { onConflict: "id" });
+
+    if (profileError) {
+      await admin.auth.admin.deleteUser(userId);
+      return json({ error: "প্রোফাইল তৈরি ব্যর্থ: " + profileError.message }, 500);
+    }
+
+    if (parsed.rows.length > 0) {
+      const { error: permissionError } = await admin.rpc("replace_admin_module_permissions", {
+        target_user: userId,
+        permission_rows: parsed.rows,
       });
-      const { error: permissionError } = await admin.rpc("replace_admin_module_permissions", { target_user: userId, permission_rows: rows });
       if (permissionError) {
         await admin.auth.admin.deleteUser(userId);
-        return reply({ error: "মডিউল অনুমতি সংরক্ষণ ব্যর্থ: " + permissionError.message }, 500);
+        return json({ error: "মডিউল অনুমতি সংরক্ষণ ব্যর্থ: " + permissionError.message }, 500);
       }
     }
-    return reply({ success: true, user_id: userId });
+
+    return json({ success: true, user_id: userId });
   }
 
-  const userId = String(body.user_id || "");
-  if (!/^[0-9a-f-]{36}$/i.test(userId)) return reply({ error: "ব্যবহারকারী নির্বাচন সঠিক নয়।" }, 400);
-  const { data: target, error: targetError } = await admin.from("profiles").select("role").eq("id", userId).single();
-  if (targetError || target?.role !== "custom_admin") return reply({ error: "Custom Admin অ্যাকাউন্ট পাওয়া যায়নি।" }, 404);
+  if (!["permissions", "enable", "disable"].includes(action)) {
+    return json({ error: "অনুমোদিত নয় এমন action।" }, 400);
+  }
+
+  const userId = String(body.user_id ?? "");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+    return json({ error: "ব্যবহারকারী নির্বাচন সঠিক নয়।" }, 400);
+  }
+  if (userId === callerId) return json({ error: "নিজের Super Admin অ্যাকাউন্ট এভাবে পরিবর্তন করা যাবে না।" }, 400);
+
+  const { data: target, error: targetError } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (targetError || target?.role !== "custom_admin") {
+    return json({ error: "Custom Admin অ্যাকাউন্ট পাওয়া যায়নি।" }, 404);
+  }
 
   if (action === "permissions") {
-    const modules = Array.isArray(body.modules) ? body.modules : [];
-    const uniqueModules = [...new Set(modules.map((x: any) => String(x?.module_key || "")))];
-    if (uniqueModules.length > 60 || uniqueModules.some((k: string) => !/^m(0[1-9]|[1-5][0-9]|60)$/.test(k))) return reply({ error: "মডিউল নির্বাচন সঠিক নয়।" }, 400);
-    if (uniqueModules.length) {
-      const rows = uniqueModules.map((module_key: string) => {
-        const item = modules.find((x: any) => x?.module_key === module_key) || {};
-        const can_write = Boolean(item.can_write);
-        return { user_id: userId, module_key, can_view: true, can_write, can_approve: can_write && Boolean(item.can_approve) };
-      });
-      const { error } = await admin.rpc("replace_admin_module_permissions", { target_user: userId, permission_rows: rows });
-      if (error) return reply({ error: error.message }, 500);
-    } else {
-      const { error } = await admin.rpc("replace_admin_module_permissions", { target_user: userId, permission_rows: [] });
-      if (error) return reply({ error: error.message }, 500);
-    }
-    return reply({ success: true });
-  }
-  if (action === "disable" || action === "enable") {
-    const { error } = await admin.auth.admin.updateUserById(userId, {
-      ban_duration: action === "disable" ? "876000h" : "none"
+    const parsed = parseModules();
+    if ("error" in parsed) return json({ error: parsed.error }, 400);
+
+    const { error } = await admin.rpc("replace_admin_module_permissions", {
+      target_user: userId,
+      permission_rows: parsed.rows,
     });
-    if (error) return reply({ error: error.message }, 400);
-    return reply({ success: true });
+    if (error) return json({ error: "অনুমতি সংরক্ষণ ব্যর্থ: " + error.message }, 500);
+    return json({ success: true });
   }
-  return reply({ error: "Unsupported action." }, 400);
+
+  const { error: statusError } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: action === "disable" ? "876000h" : "none",
+  });
+  if (statusError) return json({ error: statusError.message }, 400);
+  return json({ success: true });
+});
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  try {
+    return withCors(await handler(req));
+  } catch (error) {
+    console.error("admin-create-user failed:", error);
+    return json({
+      error: error instanceof Error ? error.message : "সার্ভারে অপ্রত্যাশিত সমস্যা হয়েছে।",
+    }, 500);
+  }
 });
