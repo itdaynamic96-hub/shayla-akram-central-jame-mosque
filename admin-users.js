@@ -60,7 +60,8 @@ const modules = [
   { key: "m57", name: "নিরাপত্তা" },
   { key: "m58", name: "ব্যাকআপ ও রিস্টোর" },
   { key: "m59", name: "সিস্টেম সেটিংস" },
-  { key: "m60", name: "সাহায্য ও সাপোর্ট" }
+  { key: "m60", name: "সাহায্য ও সাপোর্ট" },
+  { key: "m61", name: "মুসল্লী নিবন্ধন" }
 ];
 let selectedUserId = null;
 let profiles = [];
