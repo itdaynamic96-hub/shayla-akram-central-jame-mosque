@@ -82,6 +82,14 @@ body{background:linear-gradient(180deg,#f8f5ec 0%,#f2eee2 100%)}
 .latest-updates-wrap{padding-top:2px!important;padding-bottom:4px!important}
 .homegrid{margin-top:0!important;gap:9px!important}
 @media(max-width:600px){.content-cover,.gallery-card img{height:125px!important;min-height:125px!important}.catalog{margin-top:3px!important}.grid.content-slots{margin-top:5px!important}}
+
+/* Final override: compact Islamic sections and four narrower cards per desktop row */
+.catalog{margin-top:0!important}
+.catalog.content-wrap{max-width:1180px!important;margin-left:auto!important;margin-right:auto!important}
+.grid.content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important;margin-top:4px!important;gap:9px!important}
+@media(max-width:1000px){.grid.content-slots{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:760px){.grid.content-slots{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:480px){.grid.content-slots{grid-template-columns:minmax(0,1fr)!important}}
 </style></head><body>
 <header class="top"><div class="brand"><div class="mark">☪</div><div><strong>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</strong><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন · SHAYLA AKRAM CENTRAL FOUNDATION</small></div></div><span class="lang" aria-label="বাংলা প্রধান সংস্করণ">বাংলা · English labels</span></header>
 <div class="navwrap"><nav class="nav" id="nav" aria-label="প্রধান মেনু"></nav></div>
