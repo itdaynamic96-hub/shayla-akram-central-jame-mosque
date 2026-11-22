@@ -120,9 +120,9 @@ async function loadQuran(kind,id){
    const card=document.createElement('article');card.className='quran-ayah';
    const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent=(a.surah?.name||'')+' · সূরা '+bn(a.surah?.number||'')+' · আয়াত '+bn(a.numberInSurah);
    const arabic=document.createElement('div');arabic.className='arabic';arabic.lang='ar';arabic.textContent=a.text;
-   appendPronunciation(card,a.text);
+   card.append(ref,arabic);appendPronunciation(card,a.text);
    const translation=document.createElement('div');translation.className='translation';translation.textContent=bnByNo.get(String(a.surah?.number||'')+':'+a.numberInSurah)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';
-   card.append(ref,arabic,translation);fragment.appendChild(card);
+   card.appendChild(translation);fragment.appendChild(card);
   });
   $('islamicContent').replaceChildren(fragment);
   if(!ar.ayahs?.length)status('এই নির্বাচনে কোনো আয়াত পাওয়া যায়নি।');
@@ -142,7 +142,7 @@ async function renderAsbab(){
   const load=async()=>loadAsbabSurah(Number(picker.value),list);
   picker.addEventListener('change',load);
   const intro=document.createElement('div');intro.className='islamic-note';
-  intro.textContent='এখানে কেবল নির্দিষ্ট আয়াতের সঙ্গে যুক্ত সংকলিত শানে নুযুলের বর্ণনা দেখানো হয়। সব আয়াতের শানে নুযুল নেই। মূল বর্ণনা আরবিতে; সংশ্লিষ্ট কুরআনের আয়াত ও বাংলা অনুবাদ পাশাপাশি দেওয়া হয়েছে।';
+  intro.textContent='যে আয়াতগুলোর জন্য নির্ভরযোগ্য সূত্রে শানে নুযুলের বর্ণনা সংকলিত আছে, সেগুলোই এখানে দেখানো হবে। সব ১১৪টি সূরার সব আয়াতের শানে নুযুল নেই। মূল আরবি পাঠ, আনুমানিক বাংলা উচ্চারণ, আয়াতের বাংলা অর্থ এবং পূর্ণ বর্ণনার স্বয়ংক্রিয় বাংলা অনুবাদ পাওয়া গেলে দেখুন; অনুবাদ যাচাইসাপেক্ষ।';
   $('islamicContent').replaceChildren(intro);
  }catch(e){status('শানে নুযুলের তথ্য লোড করা যায়নি: '+e.message)}
 }
@@ -230,9 +230,9 @@ function showTafsirAyah(surahNo,editionId,ayahNo,list){
  const root=document.createElement('article');root.className='knowledge-card tafsir-card';
  const heading=document.createElement('h3');heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · আয়াত '+bn(ayahNo);root.appendChild(heading);
  const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.dir='rtl';ar.textContent=verses.ar.get(ayahNo)||'';
- appendPronunciation(root,ar.textContent);
+ root.appendChild(ar);appendPronunciation(root,ar.textContent);
  const translation=document.createElement('p');translation.className='translation';translation.textContent=verses.bn.get(ayahNo)||'বাংলা আয়াতের অনুবাদ পাওয়া যায়নি।';
- root.append(ar,translation);
+ root.appendChild(translation);
  const title=document.createElement('h4');title.textContent=edition?.name+' — আয়াতভিত্তিক তাফসির';root.appendChild(title);
  const tafsir=document.createElement('div');tafsir.className='tafsir-text';tafsir.style.whiteSpace='pre-wrap';tafsir.style.lineHeight='1.95';tafsir.textContent=row.text;root.appendChild(tafsir);
  const source=document.createElement('small');source.textContent='গ্রন্থ: '+edition?.name+' · লেখক: '+edition?.author+' · ডেটা: Tafsir API / Quran.com collection';root.appendChild(source);
