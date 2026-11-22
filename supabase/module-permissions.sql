@@ -96,10 +96,10 @@ begin
  end if;
  delete from public.admin_module_permissions where user_id=target_user;
  insert into public.admin_module_permissions(user_id,module_key,can_view,can_write,can_approve)
- select target_user, x->>'module_key',
-        coalesce((x->>'can_view')::boolean,true),
-        coalesce((x->>'can_write')::boolean,false),
-        coalesce((x->>'can_approve')::boolean,false)
+ select target_user, item.value->>'module_key',
+        coalesce((item.value->>'can_view')::boolean,true),
+        coalesce((item.value->>'can_write')::boolean,false),
+        coalesce((item.value->>'can_approve')::boolean,false)
  from jsonb_array_elements(permission_rows) as item(value);
 end;
 $$;
