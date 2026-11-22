@@ -266,7 +266,26 @@ function moduleGuidance(m,item,i){
  if(/যোগাযোগ|অভিযোগ|পরামর্শ|প্রশ্নোত্তর/.test(t))return 'সেবা নির্দেশনা: যোগাযোগের অনুমোদিত মাধ্যম, সাড়া দেওয়ার প্রক্রিয়া, গোপনীয়তা এবং জরুরি পরিস্থিতিতে করণীয় স্পষ্টভাবে উল্লেখ করতে হবে। ধর্মীয় মাসআলায় যোগ্য আলেমের পরামর্শ নিতে হবে।';
  return 'এই অংশে '+item+' বিষয়ে পরিচিতি, উদ্দেশ্য, প্রয়োজনীয় ধাপ, দায়িত্ব বণ্টন এবং যাচাই করা নথি/তথ্য সংরক্ষণ করুন। বাস্তব নাম, তারিখ, পরিমাণ বা ফলাফল কর্তৃপক্ষের অনুমোদন ছাড়া প্রকাশ করা হবে না।';
 }
-function openModule(n){const m=modules.find(x=>x.n===n);if(!m)return;activeModule=n;$('home').classList.add('hidden');$('detail').classList.remove('hidden');$('crumb').textContent='মডিউল '+bnDigits(m.n)+' / '+m.name;$('detailGroup').textContent=m.n<=31?'CENTRAL JAME MOSQUE · PUBLIC INFORMATION':'SHAYLA AKRAM FOUNDATION · PUBLIC INFORMATION';$('detailTitle').textContent=m.name;$('detailDesc').textContent=m.desc;const root=$('detailItems');root.replaceChildren();m.items.forEach((item,i)=>{const c=document.createElement('article');c.className='detailcard';const h=document.createElement('h3');h.textContent=item;c.appendChild(h);const p=document.createElement('p');p.textContent=moduleGuidance(m,item,i);c.appendChild(p);root.appendChild(c)});$('detailPending').textContent='তথ্য প্রকাশের নীতি: প্রতিটি মডিউলের বিষয়ভিত্তিক নির্দেশনা দেওয়া হয়েছে। বাস্তব ব্যক্তি-পরিচয়, ফোন নম্বর, সময়সূচি, তারিখ, অর্থের পরিমাণ, কমিটির নাম, প্রকল্পের অগ্রগতি বা অন্য কোনো স্থানীয় তথ্য দায়িত্বশীল কর্তৃপক্ষের যাচাই ও অনুমোদন ছাড়া প্রকাশ করা হবে না।';history.replaceState(null,'','#module-'+n);window.scrollTo({top:0,behavior:'smooth'});closeMenus()}
+let publishedModuleRecords=[];
+function renderPublishedModuleRecords(moduleNo){
+ const root=$('detailItems');if(!root)return;
+ const found=publishedModuleRecords.filter(r=>Number(r.data?.public_module)===Number(moduleNo)&&r.data?.public_display===true);
+ if(!found.length)return;
+ root.replaceChildren();
+ found.forEach(record=>{
+  const card=document.createElement('article');card.className='detailcard published-module-record';
+  const heading=document.createElement('h3');heading.textContent=record.title||'প্রকাশিত তথ্য';card.appendChild(heading);
+  const data=record.data||{},labels=data.public_labels||{};
+  Object.entries(data).forEach(([key,value])=>{
+   if(['public_module','public_display','public_labels','description'].includes(key)||value===null||value===undefined||String(value).trim()==='')return;
+   const p=document.createElement('p');const label=document.createElement('strong');label.textContent=(labels[key]||key.replace(/_/g,' '))+': ';p.append(label,document.createTextNode(String(value)));card.appendChild(p);
+  });
+  if(data.description){const p=document.createElement('p');p.textContent=data.description;card.appendChild(p)}
+  const stamp=document.createElement('small');stamp.textContent='সর্বশেষ হালনাগাদ: '+new Date(record.updated_at||record.created_at).toLocaleDateString('bn-BD');card.appendChild(stamp);
+  root.appendChild(card);
+ });
+}
+function openModule(n){const m=modules.find(x=>x.n===n);if(!m)return;activeModule=n;$('home').classList.add('hidden');$('detail').classList.remove('hidden');$('crumb').textContent='মডিউল '+bnDigits(m.n)+' / '+m.name;$('detailGroup').textContent=m.n<=31?'CENTRAL JAME MOSQUE · PUBLIC INFORMATION':'SHAYLA AKRAM FOUNDATION · PUBLIC INFORMATION';$('detailTitle').textContent=m.name;$('detailDesc').textContent=m.desc;const root=$('detailItems');root.replaceChildren();m.items.forEach((item,i)=>{const c=document.createElement('article');c.className='detailcard';const h=document.createElement('h3');h.textContent=item;c.appendChild(h);const p=document.createElement('p');p.textContent=moduleGuidance(m,item,i);c.appendChild(p);root.appendChild(c)});renderPublishedModuleRecords(n);$('detailPending').textContent='তথ্য প্রকাশের নীতি: প্রতিটি মডিউলের বিষয়ভিত্তিক নির্দেশনা দেওয়া হয়েছে। বাস্তব ব্যক্তি-পরিচয়, ফোন নম্বর, সময়সূচি, তারিখ, অর্থের পরিমাণ, কমিটির নাম, প্রকল্পের অগ্রগতি বা অন্য কোনো স্থানীয় তথ্য দায়িত্বশীল কর্তৃপক্ষের যাচাই ও অনুমোদন ছাড়া প্রকাশ করা হবে না।';history.replaceState(null,'','#module-'+n);window.scrollTo({top:0,behavior:'smooth'});closeMenus()}
 function closeMenus(){document.querySelectorAll('.navitem').forEach(x=>x.classList.remove('open'))}
 function showHome(){$('detail').classList.add('hidden');$('home').classList.remove('hidden');history.replaceState(null,'',location.pathname);window.scrollTo({top:0,behavior:'smooth'});closeMenus()}
 document.addEventListener('click',e=>{if(!e.target.closest('.navitem'))closeMenus()});$('year').textContent=new Date().getFullYear();
@@ -283,6 +302,13 @@ renderNav();
  try{
   const{createClient}=await import('https://esm.sh/@supabase/supabase-js@2');
   const client=createClient(cfg.url,cfg.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});
+  try{
+   const{data:published,error:publishedError}=await client.from('module_records').select('module_key,title,data,created_at,updated_at').eq('status','published').eq('data->>public_display','true').order('updated_at',{ascending:false});
+   if(publishedError)throw publishedError;
+   publishedModuleRecords=published||[];
+   if(activeModule!==null)renderPublishedModuleRecords(activeModule);
+  }catch(publicError){console.warn('প্রকাশিত মডিউল তথ্য লোড করা যায়নি:',publicError)}
+
   const{data,error}=await client.from('site_content').select('id,category,slot_number,title,body,media_url,source_url,media_credit,updated_at').eq('status','published').order('slot_number');
   if(error)throw error;
   (data||[]).forEach(item=>{
