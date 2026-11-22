@@ -123,10 +123,10 @@ async function init() {
   } catch (e) { showError($("staffError"), e); }
 }
 async function loadStaff() {
-  const { data, error } = await supabase.from("profiles").select("id,full_name,email,role,institution,created_at").order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("profiles").select("id,full_name,email,role,institution,job_title,created_at").order("created_at", { ascending: false });
   if (error) throw error;
   profiles = data || [];
-  $("staffRows").innerHTML = profiles.map(p => `<tr><td>${escapeHtml(p.full_name)}</td><td>${escapeHtml(p.email || "—")}</td><td>${escapeHtml(p.role)}</td><td>${escapeHtml(p.institution)}</td><td>${p.role === "custom_admin" ? `<button type="button" data-edit="${p.id}">অনুমতি সম্পাদনা</button> <button type="button" data-toggle="${p.id}">নিষ্ক্রিয়/সক্রিয়</button>` : "মূল প্রশাসক"}</td></tr>`).join("");
+  $("staffRows").innerHTML = profiles.map(p => `<tr><td>${escapeHtml(p.full_name)}</td><td>${escapeHtml(p.email || "—")}</td><td>${escapeHtml(p.job_title || "—")}</td><td>${escapeHtml(p.role)}</td><td>${escapeHtml(p.institution)}</td><td>${p.role === "custom_admin" ? `<button type="button" data-edit="${p.id}">অনুমতি সম্পাদনা</button> <button type="button" data-toggle="${p.id}">নিষ্ক্রিয়/সক্রিয়</button>` : "মূল প্রশাসক"}</td></tr>`).join("");
 }
 $("staffForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -134,14 +134,14 @@ $("staffForm").addEventListener("submit", async e => {
     const modules = readChecks();
     const payload = selectedUserId
       ? { action: "permissions", user_id: selectedUserId, modules }
-      : { action: "create", full_name: $("staffName").value.trim(), email: $("staffEmail").value.trim(), password: $("staffPassword").value, institution: $("staffInstitution").value, modules };
+      : { action: "create", full_name: $("staffName").value.trim(), job_title: $("staffJobTitle").value, email: $("staffEmail").value.trim(), password: $("staffPassword").value, institution: $("staffInstitution").value, modules };
     const { data, error } = await supabase.functions.invoke("admin-create-user", { body: payload });
     if (error) throw await functionError(error);
     if (data?.error) throw new Error(data.error);
     $("staffMessage").textContent = selectedUserId ? "মডিউল অনুমতি হালনাগাদ হয়েছে।" : "নতুন অ্যাকাউন্ট তৈরি হয়েছে।";
     $("staffMessage").hidden = false;
     $("staffForm").reset();
-    $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffInstitution").disabled = false; $("staffPassword").required = true;
+    $("staffName").disabled = false; $("staffJobTitle").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffInstitution").disabled = false; $("staffPassword").required = true;
     selectedUserId = null; $("staffSubmit").textContent = "অ্যাকাউন্ট তৈরি করুন";
     renderChecks(); await loadStaff();
   } catch (err) { showError($("staffError"), err); }
@@ -151,7 +151,7 @@ $("staffReset").addEventListener("click", e => {
   e.preventDefault();
   selectedUserId = null;
   $("staffForm").reset();
-  $("staffName").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffInstitution").disabled = false; $("staffPassword").required = true;
+  $("staffName").disabled = false; $("staffJobTitle").disabled = false; $("staffEmail").disabled = false; $("staffPassword").disabled = false; $("staffInstitution").disabled = false; $("staffPassword").required = true;
   $("staffSubmit").textContent = "অ্যাকাউন্ট তৈরি করুন";
   $("staffMessage").hidden = true; $("staffError").hidden = true;
   renderChecks();
@@ -164,7 +164,7 @@ $("staffRows").addEventListener("click", async e => {
       if (error) throw error;
       selectedUserId = edit;
       renderChecks(data || []);
-      $("staffName").disabled = true; $("staffEmail").disabled = true; $("staffPassword").required = false; $("staffPassword").disabled = true; $("staffInstitution").disabled = true; $("staffInstitution").value = profiles.find(p => p.id === edit)?.institution || "mosque";
+      $("staffName").disabled = true; $("staffJobTitle").disabled = true; $("staffEmail").disabled = true; $("staffPassword").required = false; $("staffPassword").disabled = true; $("staffInstitution").disabled = true; $("staffInstitution").value = profiles.find(p => p.id === edit)?.institution || "mosque";
       $("staffSubmit").textContent = "মডিউল অনুমতি সংরক্ষণ";
       $("staffMessage").textContent = "নির্বাচিত কর্মীর অনুমতি সম্পাদনা করছেন।";
       $("staffMessage").hidden = false;
