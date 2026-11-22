@@ -128,7 +128,12 @@ drop policy if exists "accounts staff read own institution" on public.ledger_ent
 create policy "accounts staff read own institution" on public.ledger_entries for select to authenticated
 using (
  public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],institution)
- or public.account_module_permission(institution,array['m41','m42','m43','m44','m45','m46','m47','m48','m49','m50'])
+ or public.account_module_permission(institution,array['m41','m50'])
+ or (entry_type='income' and public.account_module_permission(institution,array['m42','m44']))
+ or (entry_type='expense' and public.account_module_permission(institution,array['m43','m48']))
+ or (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45']))
+ or (receipt_path is not null and public.account_module_permission(institution,array['m49']))
+ or public.account_module_permission(institution,array['m46','m47'])
 );
 drop policy if exists "accounts staff create pending" on public.ledger_entries;
 create policy "accounts staff create pending" on public.ledger_entries for insert to authenticated
@@ -148,12 +153,20 @@ create policy "managers approve and edit" on public.ledger_entries for update to
 using (
  status='pending' and (
   public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
-  or public.account_module_permission(institution,array['m42','m43','m44','m45','m50'],true,true)
+  or public.account_module_permission(institution,array['m50'],true,true)
+  or (entry_type='income' and fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true,true))
+  or (entry_type='income' and fund_category='general' and public.account_module_permission(institution,array['m44'],true,true))
+  or (entry_type='income' and public.account_module_permission(institution,array['m42'],true,true))
+  or (entry_type='expense' and public.account_module_permission(institution,array['m43','m45'],true,true))
  )
 )
 with check (
  public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution)
- or public.account_module_permission(institution,array['m42','m43','m44','m45','m50'],true,true)
+ or public.account_module_permission(institution,array['m50'],true,true)
+ or (entry_type='income' and fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true,true))
+ or (entry_type='income' and fund_category='general' and public.account_module_permission(institution,array['m44'],true,true))
+ or (entry_type='income' and public.account_module_permission(institution,array['m42'],true,true))
+ or (entry_type='expense' and public.account_module_permission(institution,array['m43','m45'],true,true))
 );
 
 drop policy if exists "accounts read budgets by institution" on public.budgets;
