@@ -18,7 +18,7 @@ begin
     where jsonb_typeof(new.data) = 'object'
   loop
     if item.value is not null and btrim(item.value) <> '' then
-      word_count := cardinality(regexp_split_to_array(btrim(item.value), E'\\s+'));
+      word_count := cardinality(regexp_split_to_array(btrim(item.value), '[[:space:]]+'));
       if word_count > 500 then
         raise exception 'এই মডিউলের কোনো তথ্য ৫০০ শব্দের বেশি হতে পারবে না (ক্ষেত্র: %; শব্দ: %)।', item.key, word_count
           using errcode = '22023';
