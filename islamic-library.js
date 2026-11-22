@@ -164,7 +164,19 @@ async function loadAsbabSurah(surahNo,list){
   }
   if(!matches.length){
    const empty=document.createElement('section');empty.className='islamic-note';
-   if(surahNo===89){
+   if(surahNo===20){
+    const title=document.createElement('h3');title.textContent='সূরা ত্বা-হা: প্রাচীন শানে নুযুল গ্রন্থে পাওয়া বর্ণনা ও তার মান';empty.appendChild(title);
+    const intro20=document.createElement('p');intro20.textContent='সূরা ত্বা-হা মক্কী। আল-ওয়াহিদীর “أسباب النزول” এবং ইবনুল জাওযীর “زاد المسير” গ্রন্থে কয়েকটি আয়াতের সঙ্গে সম্পর্কিত কিছু বর্ণনা পাওয়া যায়। তবে নিচের বর্ণনাগুলোর সনদ দুর্বল বা বাতিল বলে সমালোচিত; তাই এগুলোকে প্রমাণিত শানে নুযুল হিসেবে গ্রহণ করা যাবে না।';empty.appendChild(intro20);
+    const r1=document.createElement('h4');r1.textContent='আয়াত ১–২: «طه * ما أنزلنا عليك القرآن لتشقى»';empty.appendChild(r1);
+    const p1=document.createElement('p');p1.textContent='বর্ণনার সারাংশ: কিছু বর্ণনায় বলা হয়েছে, নবী ﷺ দীর্ঘ ইবাদত ও কিয়াম করতেন; তখন কুরাইশের লোকেরা কটূক্তি করে বলেছিল যে কুরআন তাঁর কষ্টের কারণ হয়েছে। অন্য একটি বর্ণনায় আবু জাহল ও নাদর ইবনুল হারিসের কথার উল্লেখ আছে।';empty.appendChild(p1);
+    const grade1=document.createElement('p');grade1.textContent='হাদিস-সমালোচনা: ইবনুল জাওযী উল্লেখ করেন—দাহহাকের সূত্রের বর্ণনাটি মুরসাল ও অত্যন্ত দুর্বল; জুবাইর ইবন সাঈদও পরিত্যক্ত বর্ণনাকারী। মুকাতিলের নামে বর্ণিত আরেকটি খবর সনদবিহীন এবং তিনি সেটিকে বাতিল বলেছেন। অতএব আয়াত ১–২-এর নিশ্চিত শানে নুযুল হিসেবে এগুলো প্রকাশ করা হচ্ছে না।';empty.appendChild(grade1);
+    const r2=document.createElement('h4');r2.textContent='আয়াত ১৩১: «ولا تمدن عينيك إلى ما متعنا به أزواجاً منهم»';empty.appendChild(r2);
+    const p2=document.createElement('p');p2.textContent='বর্ণনার সারাংশ: আবু রাফি‘-এর নামে একটি কাহিনি উদ্ধৃত হয়েছে—নবী ﷺ-এর এক অতিথির জন্য খাবারের ব্যবস্থা করতে গিয়ে এক ইহুদির কাছ থেকে বাকিতে আটা চাওয়া এবং জামিন হিসেবে বর্ম দেওয়ার প্রসঙ্গ। বর্ণনাটিকে আয়াত ১৩১-এর অবতরণের কারণ বলা হয়েছে।';empty.appendChild(p2);
+    const grade2=document.createElement('p');grade2.textContent='হাদিস-সমালোচনা: ইবনুল জাওযী সনদটিকে দুর্বল এবং মতনকে মুনকার বলেছেন; সনদে মূসা ইবন উবাইদাহ আর-রাবাযী দুর্বল। তিনি আরও উল্লেখ করেন, সূরাটি মক্কী অথচ ঘটনাটি মাদানী বলে বর্ণিত—এটিও আপত্তির বিষয়। তাই এটিও প্রমাণিত শানে নুযুল নয়।';empty.appendChild(grade2);
+    const source20=document.createElement('p');source20.textContent='সম্পাদনা-নীতি: দুর্বল/বাতিল বর্ণনা গবেষণার তথ্য হিসেবে উল্লেখ করা হয়েছে, কিন্তু সহিহ বা নিশ্চিত ঘটনা হিসেবে নয়। এই অংশে বর্ণনার পূর্ণ আরবি সনদ ও পূর্ণ মতন উদ্ধৃত করা হয়নি; মূল উৎসের লিংক দেওয়া হয়েছে।';empty.appendChild(source20);
+    const a20=document.createElement('a');a20.href='https://islamweb.net/ar/library/index.php?ID=324&ayano=0&bk_no=63&bookhad=0&flag=0&idfrom=308&idto=309&page=bookcontents&surano=0';a20.target='_blank';a20.rel='noopener noreferrer';a20.textContent='আল-ওয়াহিদী — أسباب النزول, সূরা ত্বা-হা';empty.appendChild(a20);
+    const b20=document.createElement('a');b20.href='https://quranpedia.net/surah/1/20/book/340';b20.target='_blank';b20.rel='noopener noreferrer';b20.textContent='ইবনুল জাওযী — زاد المسير, সূরা ত্বা-হা (বর্ণনার মান-সমালোচনা)';b20.style.marginInlineStart='12px';empty.appendChild(b20);
+   }else if(surahNo===89){
     const title=document.createElement('h3');title.textContent='সূরা আল-ফজর: শানে নুযুলের যাচাইকৃত তথ্য';empty.appendChild(title);
     const summary=document.createElement('p');summary.textContent='সূরা আল-ফজর মক্কী—এটাই অধিকাংশ মুফাসসিরের গ্রহণযোগ্য মত। সালমান আল-আওদার “ইশরাকাত কুরআনিয়্যাহ” গ্রন্থে সূরাটির পরিচিতি অংশে স্পষ্ট বলা হয়েছে: “ولا يعرف لها سبب نزول” — অর্থাৎ, সূরাটির নির্দিষ্ট কোনো শানে নুযুল জানা যায় না। তাই কোনো নির্দিষ্ট ঐতিহাসিক ঘটনাকে ৩০টি আয়াতের অবতরণের নিশ্চিত কারণ হিসেবে এখানে দেখানো হচ্ছে না।';empty.appendChild(summary);
     const context=document.createElement('p');context.textContent='একই গবেষক সম্ভাব্য সামগ্রিক প্রেক্ষাপট হিসেবে উল্লেখ করেন—নবী ﷺ-এর কঠিন সময়ের মধ্যে সূরাটি তাঁকে দুটি বিষয়ে স্মরণ করিয়ে সান্ত্বনা ও দৃঢ়তা দেওয়ার জন্য নাযিল হয়ে থাকতে পারে: আল্লাহর পক্ষ থেকে নবী ﷺ-এর জন্য অনুগ্রহ, নবুওয়ত ও বিজয়ের প্রতিশ্রুতি; এবং সত্য অস্বীকারকারী ও জালিমদের পরিণতি। এটি গবেষকের তাফসিরি ব্যাখ্যা, কোনো নির্দিষ্ট ঘটনার সহিহ হাদিসভিত্তিক শানে নুযুল নয়।';empty.appendChild(context);
@@ -174,7 +186,9 @@ async function loadAsbabSurah(surahNo,list){
     const b=document.createElement('a');b.href='https://quran.com/ar/al-fajr/info';b.target='_blank';b.rel='noopener noreferrer';b.textContent='Quran.com — সূরার পরিচিতি ও ইবন আশুরের ভূমিকা';b.style.marginInlineStart='12px';empty.appendChild(b);
     const c=document.createElement('a');c.href='https://quran.ksu.edu.sa/tafseer/qortobi/sura89-aya1.html';c.target='_blank';c.rel='noopener noreferrer';c.textContent='তাফসির আল-কুরতুবি — সূরা আল-ফজর';c.style.marginInlineStart='12px';empty.appendChild(c);
    }else{
-    empty.textContent='এই সূরার জন্য সংযুক্ত নির্দিষ্ট আয়াতের শানে নুযুল এই সংকলনে পাওয়া যায়নি। তাই অনুমানভিত্তিক কোনো ঘটনা দেখানো হচ্ছে না।';
+    const note=document.createElement('p');note.textContent='বর্তমান স্বয়ংক্রিয় সংকলনে এই সূরার জন্য কোনো আয়াতভিত্তিক নথি পাওয়া যায়নি। এর অর্থ এই নয় যে প্রাচীন শানে নুযুল গ্রন্থে কোনো বর্ণনা নেই। যাচাই ছাড়া কোনো ঘটনা তৈরি করে দেখানো হচ্ছে না।';empty.appendChild(note);
+    const a=document.createElement('a');a.href='https://quranpedia.net/surah/1/'+surahNo+'/book/242';a.target='_blank';a.rel='noopener noreferrer';a.textContent='আল-ওয়াহিদী — أسباب النزول: এই সূরা';empty.appendChild(a);
+    const b=document.createElement('a');b.href='https://islamweb.net/ar/library/index.php?bk_no=228&surano='+surahNo; b.target='_blank';b.rel='noopener noreferrer';b.textContent='আস-সুয়ূতী — لباب النقول: শানে নুযুল গ্রন্থ';b.style.marginInlineStart='12px';empty.appendChild(b);
    }
    root.appendChild(empty);$('islamicContent').replaceChildren(root);return
   }
