@@ -13,6 +13,8 @@ const books=[
  {key:'IbnMajah',meta:'ibnemajah',name:'সুনানে ইবনে মাজাহ',path:'Ibne-Mazah'}
 ];
 let surahs=null;
+let asbabEntries=null;
+const asbabApi='https://cdn.jsdelivr.net/gh/mostafaahmed97/asbab-al-nuzul-dataset@main/data/structured/json/all.json';
 const bn=n=>String(n).replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)]);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function json(url){const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
@@ -44,9 +46,10 @@ window.openLibrary=function(view,book){
  const titles={quran:'বাংলা ও আরবীতে পবিত্র কোরআন',asbab:'সূরা-ভিত্তিক শানে নুযুল',tafsir:'সূরা-ভিত্তিক তাফসির',hadith:'পবিত্র হাদীস শরীফ',knowledge:'ইসলামিক জ্ঞানভান্ডার'};
  $('islamicTitle').textContent=titles[view]||'ইসলামিক জ্ঞানভান্ডার';
  $('islamicCrumb').textContent=titles[view]||'ইসলামিক জ্ঞানভান্ডার';
- $('islamicLead').textContent=view==='quran'?'৩০ পারা ও ১১৪টি সূরা থেকে আরবি মূল পাঠ এবং বাংলা অনুবাদ পড়ুন।':view==='hadith'?'ছয়টি প্রসিদ্ধ হাদীসগ্রন্থ থেকে অধ্যায়ভিত্তিক আরবি ও বাংলা পাঠ।':view==='asbab'?'প্রতিটি সূরার নাযিলের প্রেক্ষাপট নির্ভরযোগ্য তাফসির ও বর্ণনা মিলিয়ে যাচাই করুন।':view==='tafsir'?'প্রতিটি সূরার তাফসির নির্ভরযোগ্য উৎসে সূরা ও আয়াত ধরে পড়ুন।':'কুরআনের আয়াতের রেফারেন্সসহ নির্বাচিত ইসলামী বিষয়াবলি।';
+ $('islamicLead').textContent=view==='quran'?'৩০ পারা ও ১১৪টি সূরা থেকে আরবি মূল পাঠ এবং বাংলা অনুবাদ পড়ুন।':view==='hadith'?'ছয়টি প্রসিদ্ধ হাদীসগ্রন্থ থেকে অধ্যায়ভিত্তিক আরবি ও বাংলা পাঠ।':view==='asbab'?'সূরা নির্বাচন করে নির্দিষ্ট আয়াতের শানে নুযুল, আরবি আয়াত, বাংলা অর্থ ও মূল বর্ণনা পড়ুন।':view==='tafsir'?'প্রতিটি সূরার তাফসির নির্ভরযোগ্য উৎসে সূরা ও আয়াত ধরে পড়ুন।':'কুরআনের আয়াতের রেফারেন্সসহ নির্বাচিত ইসলামী বিষয়াবলি।';
  if(view==='quran')renderQuran();
- else if(view==='asbab'||view==='tafsir')renderSurahReferences(view);
+ else if(view==='asbab')renderAsbab();
+ else if(view==='tafsir')renderSurahReferences(view);
  else if(view==='hadith')renderHadithBooks(book);
  else renderKnowledge();
  history.replaceState(null,'','#islamic-'+view);window.scrollTo({top:0,behavior:'smooth'});
@@ -98,6 +101,67 @@ async function loadQuran(kind,id){
   $('islamicContent').replaceChildren(fragment);
   if(!ar.ayahs?.length)status('এই নির্বাচনে কোনো আয়াত পাওয়া যায়নি।');
  }catch(e){status('কোরআনের পাঠ আনা যায়নি: '+e.message)}
+}
+async function renderAsbab(){
+ status('শানে নুযুলের তথ্য ও সূরার তালিকা লোড হচ্ছে…');
+ try{
+  const [list,entries]=await Promise.all([
+   getSurahs(),
+   asbabEntries?Promise.resolve(asbabEntries):json(asbabApi)
+  ]);
+  asbabEntries=entries;
+  $('islamicToolbar').replaceChildren();
+  const options=[{value:'0',label:'সূরা নির্বাচন করুন'},...list.map(x=>({value:String(x.number),label:'সূরা '+bn(x.number)+' — '+x.name}))];
+  const picker=select('সূরা','asbabSurah',options);
+  const load=async()=>loadAsbabSurah(Number(picker.value),list);
+  picker.addEventListener('change',load);
+  const intro=document.createElement('div');intro.className='islamic-note';
+  intro.textContent='এখানে কেবল নির্দিষ্ট আয়াতের সঙ্গে যুক্ত সংকলিত শানে নুযুলের বর্ণনা দেখানো হয়। সব আয়াতের শানে নুযুল নেই। মূল বর্ণনা আরবিতে; সংশ্লিষ্ট কুরআনের আয়াত ও বাংলা অনুবাদ পাশাপাশি দেওয়া হয়েছে।';
+  $('islamicContent').replaceChildren(intro);
+ }catch(e){status('শানে নুযুলের তথ্য লোড করা যায়নি: '+e.message)}
+}
+async function loadAsbabSurah(surahNo,list){
+ if(!surahNo){status('শানে নুযুল দেখতে একটি সূরা নির্বাচন করুন।');return}
+ status('সূরা '+bn(surahNo)+'-এর আয়াত ও শানে নুযুল আনা হচ্ছে…');
+ try{
+  const [arData,bnData]=await Promise.all([
+   json(quranApi+'/surah/'+surahNo+'/quran-uthmani'),
+   json(quranApi+'/surah/'+surahNo+'/bn.bengali')
+  ]);
+  const arAyahs=new Map((arData.data?.ayahs||[]).map(a=>[a.numberInSurah,a.text]));
+  const bnAyahs=new Map((bnData.data?.ayahs||[]).map(a=>[a.numberInSurah,a.text]));
+  const matches=(asbabEntries||[]).filter(x=>Number(x.surah)===surahNo);
+  const root=document.createElement('div');
+  const surah=list.find(x=>x.number===surahNo);
+  const heading=document.createElement('div');heading.className='islamic-note';
+  heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · '+bn(matches.length)+'টি আয়াত-সম্পর্কিত নথি পাওয়া গেছে।';
+  root.appendChild(heading);
+  if(!matches.length){
+   const empty=document.createElement('p');empty.className='islamic-status';
+   empty.textContent='এই সূরার জন্য সংযুক্ত নির্দিষ্ট আয়াতের শানে নুযুল এই সংকলনে পাওয়া যায়নি। তাই অনুমানভিত্তিক কোনো ঘটনা দেখানো হচ্ছে না।';
+   root.appendChild(empty);$('islamicContent').replaceChildren(root);return;
+  }
+  matches.forEach(entry=>{
+   const card=document.createElement('article');card.className='knowledge-card asbab-card';
+   const refs=document.createElement('h3');
+   refs.textContent='আয়াত '+(entry.ayahs||[]).map(bn).join('–');
+   card.appendChild(refs);
+   (entry.ayahs||[]).forEach(ayahNo=>{
+    const verse=document.createElement('section');verse.className='quran-ayah';
+    const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent='সূরা '+bn(surahNo)+' · আয়াত '+bn(ayahNo);
+    const ar=document.createElement('div');ar.className='arabic';ar.lang='ar';ar.textContent=arAyahs.get(ayahNo)||'';
+    const translation=document.createElement('div');translation.className='translation';translation.textContent=bnAyahs.get(ayahNo)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';
+    verse.append(ref,ar,translation);card.appendChild(verse);
+   });
+   (entry.occasions||[]).forEach((occasion,index)=>{
+    const label=document.createElement('h4');label.textContent=(entry.occasions.length>1?'শানে নুযুলের বর্ণনা '+bn(index+1):'শানে নুযুলের বর্ণনা')+' — মূল আরবি';card.appendChild(label);
+    const textEl=document.createElement('p');textEl.className='asbab-arabic';textEl.lang='ar';textEl.dir='rtl';textEl.textContent=occasion;card.appendChild(textEl);
+   });
+   const source=document.createElement('small');source.textContent='তথ্যসূত্র: صحيح أسباب النزول دراسة حديثية — ইবরাহিম মুহাম্মদ আল-আলি। সংকলিত ডেটাসেট; বর্ণনার মান ও প্রাসঙ্গিকতা মূল গ্রন্থে যাচাই করুন।';
+   card.appendChild(source);root.appendChild(card);
+  });
+  $('islamicContent').replaceChildren(root);
+ }catch(e){status('আয়াতভিত্তিক শানে নুযুল আনা যায়নি: '+e.message)}
 }
 async function renderSurahReferences(kind){
  status('১১৪টি সূরার তালিকা লোড হচ্ছে…');
