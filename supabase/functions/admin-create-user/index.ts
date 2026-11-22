@@ -27,7 +27,7 @@ const validModuleKey = (key: string) => /^m(0[1-9]|[1-5][0-9]|60)$/.test(key);
 const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
 
-  const callerId = ctx.userClaims?.sub;
+  const callerId = ctx.userClaims?.id ?? ctx.jwtClaims?.sub;
   if (!callerId) return json({ error: "Authentication required." }, 401);
 
   const admin = ctx.supabaseAdmin;
