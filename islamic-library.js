@@ -84,14 +84,14 @@ async function loadQuran(kind,id){
   const ar=editions.find(x=>x.edition&&x.edition.identifier==='quran-uthmani')||editions[0];
   const bnEd=editions.find(x=>x.edition&&x.edition.identifier==='bn.bengali')||editions[1];
   if(!ar||!bnEd)throw new Error('আরবি/বাংলা সংস্করণ পাওয়া যায়নি');
-  const bnByNo=new Map((bnEd.ayahs||[]).map(a=>[a.numberInSurah,a.text]));
+  const bnByNo=new Map((bnEd.ayahs||[]).map(a=>[String(a.surah?.number||'')+':'+a.numberInSurah,a.text]));
   const fragment=document.createDocumentFragment();
   const header=document.createElement('div');header.className='islamic-note';header.textContent=(kind==='juz'?'পারা '+bn(id):ar.ayahs?.[0]?.surah?.name||'সূরা')+' · আরবি: Uthmani · বাংলা অনুবাদ: '+(bnEd.edition?.name||'বাংলা অনুবাদ');fragment.appendChild(header);
   (ar.ayahs||[]).forEach(a=>{
    const card=document.createElement('article');card.className='quran-ayah';
    const ref=document.createElement('div');ref.className='ayah-ref';ref.textContent=(a.surah?.name||'')+' · সূরা '+bn(a.surah?.number||'')+' · আয়াত '+bn(a.numberInSurah);
    const arabic=document.createElement('div');arabic.className='arabic';arabic.lang='ar';arabic.textContent=a.text;
-   const translation=document.createElement('div');translation.className='translation';translation.textContent=bnByNo.get(a.numberInSurah)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';
+   const translation=document.createElement('div');translation.className='translation';translation.textContent=bnByNo.get(String(a.surah?.number||'')+':'+a.numberInSurah)||'এই আয়াতের বাংলা অনুবাদ পাওয়া যায়নি।';
    card.append(ref,arabic,translation);fragment.appendChild(card);
   });
   $('islamicContent').replaceChildren(fragment);
@@ -130,7 +130,7 @@ async function loadHadithBook(key){
  try{
   const meta=await json(hadithCdn+'/'+book.path+'/Meta/'+book.meta+'.json');
   const entries=Object.entries(meta||{}).sort((a,b)=>Number(a[0])-Number(b[0]));
-  const root=document.createElement('div');const note=document.createElement('div');note.className='islamic-note';note.textContent=book.name+' · অধ্যায় নির্বাচন করুন। হাদীসের আরবি ও বাংলা পাঠ, বর্ণনাকারী ও নম্বর উৎস ডেটাসেট অনুযায়ী দেখানো হবে।';root.appendChild(note);
+  const root=document.createElement('div');const note=document.createElement('div');note.className='islamic-note';note.textContent=book.name+' · অধ্যায় নির্বাচন করুন। হাদীসের আরবি ও বাংলা পাঠ, বর্ণনাকারী ও নম্বর উৎস ডেটাসেট অনুযায়ী দেখানো হবে। ডেটা উৎস: Bangla Hadith dataset (md-rifatkhan/hadithbangla)।';root.appendChild(note);
   const grid=document.createElement('div');grid.className='islamic-list';
   entries.forEach(([num,item])=>{
    const b=document.createElement('button');b.type='button';b.textContent=bn(num)+'. '+(item.title||'অধ্যায়')+(item.hadis_range?' · হাদীস '+item.hadis_range:'');
