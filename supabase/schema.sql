@@ -216,6 +216,7 @@ drop policy if exists "accounts managers update budgets" on public.budgets;
 create policy "accounts managers update budgets" on public.budgets for update to authenticated
 using(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
 with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution));
+grant select,insert,update on public.ledger_entries to authenticated;
 grant select,insert,update on public.budgets to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('private-receipts','private-receipts',false,5242880,array['application/pdf','image/jpeg','image/png','image/webp']) on conflict(id) do nothing;
 -- Public display assets; only website approvers can upload/manage files.
