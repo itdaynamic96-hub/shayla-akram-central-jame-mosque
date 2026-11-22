@@ -129,7 +129,8 @@ create policy "accounts staff read own institution" on public.ledger_entries for
 using (
  public.has_access(array['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'],institution)
  or public.account_module_permission(institution,array['m41','m50'])
- or (entry_type='income' and public.account_module_permission(institution,array['m42','m44']))
+ or (entry_type='income' and fund_category='general' and public.account_module_permission(institution,array['m44']))
+ or (entry_type='income' and fund_category not in ('zakat','sadaqah') and public.account_module_permission(institution,array['m42']))
  or (entry_type='expense' and public.account_module_permission(institution,array['m43','m48']))
  or (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45']))
  or (receipt_path is not null and public.account_module_permission(institution,array['m49']))
@@ -171,8 +172,11 @@ with check (
  or public.account_module_permission(institution,array['m50'],true,true)
  or (entry_type='income' and fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true,true))
  or (entry_type='income' and fund_category='general' and public.account_module_permission(institution,array['m44'],true,true))
- or (entry_type='income' and public.account_module_permission(institution,array['m42'],true,true))
- or (entry_type='expense' and public.account_module_permission(institution,array['m43','m45'],true,true))
+ or (entry_type='income' and fund_category not in ('zakat','sadaqah') and public.account_module_permission(institution,array['m42'],true,true))
+ or (entry_type='expense' and (
+   public.account_module_permission(institution,array['m43'],true,true)
+   or (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true,true))
+ ))
 );
 
 drop policy if exists "accounts read budgets by institution" on public.budgets;
