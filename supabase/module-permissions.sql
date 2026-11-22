@@ -82,3 +82,26 @@ revoke all on function public.module_record_access(text,text,boolean) from publi
 revoke all on function public.module_record_approval_access(text,text) from public;
 grant execute on function public.module_record_access(text,text,boolean) to authenticated;
 grant execute on function public.module_record_approval_access(text,text) to authenticated;
+
+-- Atomically replace permissions from the trusted Edge Function only.
+create or replace function public.replace_admin_module_permissions(target_user uuid, permission_rows jsonb)
+returns void language plpgsql security definer set search_path=public
+as $$
+begin
+ if auth.role() <> 'service_role' then
+   raise exception 'Only the trusted server function may replace module permissions.';
+ end if;
+ if jsonb_typeof(permission_rows) <> 'array' or jsonb_array_length(permission_rows) > 60 then
+   raise exception 'Invalid module permission list.';
+ end if;
+ delete from public.admin_module_permissions where user_id=target_user;
+ insert into public.admin_module_permissions(user_id,module_key,can_view,can_write,can_approve)
+ select target_user, x->>'module_key',
+        coalesce((x->>'can_view')::boolean,true),
+        coalesce((x->>'can_write')::boolean,false),
+        coalesce((x->>'can_approve')::boolean,false)
+ from jsonb_array_elements(permission_rows) as x;
+end;
+$$;
+revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
+grant execute on function public.replace_admin_module_permissions(uuid,jsonb) to service_role;
