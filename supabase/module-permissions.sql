@@ -100,7 +100,7 @@ begin
         coalesce((x->>'can_view')::boolean,true),
         coalesce((x->>'can_write')::boolean,false),
         coalesce((x->>'can_approve')::boolean,false)
- from jsonb_array_elements(permission_rows) as x;
+ from jsonb_array_elements(permission_rows) as item(value);
 end;
 $$;
 revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
