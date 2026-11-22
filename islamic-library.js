@@ -158,7 +158,20 @@ async function loadAsbabSurah(surahNo,list){
   const root=document.createElement('div'),surah=list.find(x=>x.number===surahNo);
   const heading=document.createElement('div');heading.className='islamic-note';heading.textContent='সূরা '+bn(surahNo)+' — '+(surah?.name||'')+' · '+bn(matches.length)+'টি আয়াত-সম্পর্কিত শানে নুযুলের নথি।';root.appendChild(heading);
   const caution=document.createElement('div');caution.className='islamic-note';caution.textContent='প্রতিটি বর্ণনার মূল আরবি, আনুমানিক বাংলা উচ্চারণ এবং পূর্ণ স্বয়ংক্রিয় বাংলা অনুবাদ দেখানো হবে। অনুবাদটি মেশিন-সহায়িত; ধর্মীয় উদ্ধৃতি হিসেবে ব্যবহারের আগে মূল গ্রন্থ ও যোগ্য আলেমের মাধ্যমে যাচাই করুন।';root.appendChild(caution);
-  if(!matches.length){const empty=document.createElement('p');empty.className='islamic-status';empty.textContent='এই সূরার জন্য সংযুক্ত নির্দিষ্ট আয়াতের শানে নুযুল এই সংকলনে পাওয়া যায়নি। তাই অনুমানভিত্তিক কোনো ঘটনা দেখানো হচ্ছে না।';root.appendChild(empty);$('islamicContent').replaceChildren(root);return}
+  if(!matches.length){
+   const empty=document.createElement('section');empty.className='islamic-note';
+   if(surahNo===89){
+    const title=document.createElement('h3');title.textContent='সূরা আল-ফজর: নির্ভরযোগ্য শানে নুযুলের অবস্থা';empty.appendChild(title);
+    const summary=document.createElement('p');summary.textContent='সূরা আল-ফজর মক্কী সূরা। নির্ভরযোগ্য তাফসিরি ও হাদিস-সমালোচনামূলক সূত্রে এই পুরো সূরা বা এর নির্দিষ্ট কোনো আয়াতের জন্য সহিহ/প্রমাণিত নির্দিষ্ট শানে নুযুলের বর্ণনা পাওয়া যায় না। তাই ৩০টি আয়াতের কোনোটির সঙ্গেই বানানো বা দুর্বল বর্ণনাকে নিশ্চিত ঘটনা হিসেবে যুক্ত করা হচ্ছে না।';empty.appendChild(summary);
+    const context=document.createElement('p');context.textContent='এটি শানে নুযুলের তথ্যের অনুপস্থিতি—সূরার ব্যাখ্যা বা শিক্ষা অনুপস্থিতি নয়। সূরাটিতে পূর্ববর্তী অবাধ্য জাতির পরিণতি, সম্পদ ও দারিদ্র্য দিয়ে মানুষের পরীক্ষা, এতিম-দরিদ্রের অধিকার এবং আখিরাতের জবাবদিহির কথা এসেছে। এগুলো সূরার বিষয়বস্তু; শানে নুযুলের ঘটনা নয়।';empty.appendChild(context);
+    const refs=document.createElement('p');refs.textContent='যাচাইয়ের সূত্র: তাফসিরি গবেষণায় “ولا يعرف لها سبب نزول” (এর কোনো নির্দিষ্ট শানে নুযুল জানা যায় না) উল্লেখ আছে।';empty.appendChild(refs);
+    const a=document.createElement('a');a.href='https://saaid.org/book/22/17123.pdf';a.target='_blank';a.rel='noopener noreferrer';a.textContent='সূরা আল-ফজর বিষয়ক তাফসিরি গবেষণা (PDF)';empty.appendChild(a);
+    const b=document.createElement('a');b.href='https://quran.com/ar/al-fajr/info';b.target='_blank';b.rel='noopener noreferrer';b.textContent='Quran.com — সূরার পরিচিতি ও তাফসিরি ভূমিকা';b.style.marginInlineStart='12px';empty.appendChild(b);
+   }else{
+    empty.textContent='এই সূরার জন্য সংযুক্ত নির্দিষ্ট আয়াতের শানে নুযুল এই সংকলনে পাওয়া যায়নি। তাই অনুমানভিত্তিক কোনো ঘটনা দেখানো হচ্ছে না।';
+   }
+   root.appendChild(empty);$('islamicContent').replaceChildren(root);return
+  }
   for(const entry of matches){
    const card=document.createElement('article');card.className='knowledge-card asbab-card';
    const ayahs=Array.isArray(entry.ayahs)?entry.ayahs:[entry.ayah||entry.ayah_number].filter(Boolean);
