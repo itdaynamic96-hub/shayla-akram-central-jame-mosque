@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     if (createError || !created.user) return reply({ error: createError?.message || "অ্যাকাউন্ট তৈরি করা যায়নি।" }, 400);
     const userId = created.user.id;
     const { error: updateError } = await admin.from("profiles").upsert({
-      id: userId, full_name, role: "custom_admin", institution
+      id: userId, full_name, email, role: "custom_admin", institution
     }, { onConflict: "id" });
     if (updateError) {
       await admin.auth.admin.deleteUser(userId);
