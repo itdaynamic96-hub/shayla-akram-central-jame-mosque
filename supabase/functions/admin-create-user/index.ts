@@ -106,6 +106,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (fullName.length < 2 || fullName.length > 120) {
       return json({ error: "নাম ২–১২০ অক্ষরের মধ্যে দিন।" }, 400);
     }
+    if (jobTitle.length < 2 || jobTitle.length > 100) {
+      return json({ error: "প্রাতিষ্ঠানিক পদবি নির্বাচন করুন।" }, 400);
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json({ error: "সঠিক ইমেইল ঠিকানা দিন।" }, 400);
     }
