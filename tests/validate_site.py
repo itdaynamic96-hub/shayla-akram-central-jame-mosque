@@ -61,13 +61,7 @@ assert 'public can read published announcements' in migration
 assert "status in ('draft','pending')" in migration
 assert 'guard_module_record_publication' in migration
 assert 'guard_public_content_publish' in migration
-assert '$guard
-schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
-assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema
-for js in ('admin-modules.js','supabase-client.js'):
-    subprocess.run(['node','--check','--input-type=module'],input=(ROOT/js).read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
-print('Admin Panel checks passed: 60 module definitions, module JS syntax, and RLS migration markers.')
- in migration
+assert 'as '+chr(36)+'guard'+chr(36) in migration
 schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema
 for js in ('admin-modules.js','supabase-client.js'):
