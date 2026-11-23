@@ -5,8 +5,14 @@ export const supabase = configured ? createClient(cfg.url, cfg.anonKey, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 }) : null;
 export async function currentProfile() {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw error;
+  if (!configured || !supabase) {
+    throw new Error("Supabase সংযোগ কনফিগার করা হয়নি। প্রশাসককে Project URL ও public key যাচাই করতে হবে।");
+  }
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (!session) return { user: null, profile: null };
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
   if (!user) return { user: null, profile: null };
   const { data: profile, error: profileError } = await supabase.from("profiles").select("id,full_name,role,institution").eq("id", user.id).single();
   if (profileError) throw profileError;
