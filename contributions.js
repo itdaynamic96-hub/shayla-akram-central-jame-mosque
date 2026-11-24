@@ -8,26 +8,21 @@ const plusMonth = value => { const d=new Date(value+'T00:00:00Z'); d.setUTCMonth
 const monthLabel = value => { const [y,m]=String(value).slice(0,7).split('-'); return m+'/'+y; };
 const moneyNumber = n => '৳'+Number(n||0).toLocaleString('bn-BD',{maximumFractionDigits:2});
 let ctx=null, members=[], rates=[], payments=[], allocations=[], selectedMember=null;
+let approvedAllocations={}, pendingAllocations={}, paymentById=new Map();
 let canWrite=false;
 
 function showErrorText(id,error){const el=$(id);if(!el)return;el.textContent=error?.message||String(error);el.hidden=false}
 function setSuccess(id,message){const el=$(id);el.textContent=message;el.hidden=false}
 function currentRate(memberId,month){return rates.filter(r=>r.member_id===memberId&&r.effective_month<=month).sort((a,b)=>b.effective_month.localeCompare(a.effective_month))[0]?.monthly_amount||0}
 function calcStatus(member){
- const now=monthNow(), start=member.start_month, paidByMonth={}, pendingByMonth={};
- allocations.forEach(a=>{
-  if(a.member_id!==member.id)return;
-  const p=payments.find(x=>x.id===a.payment_id);
-  if(!p)return;
-  if(p.status==='approved')paidByMonth[a.covered_month]=(paidByMonth[a.covered_month]||0)+Number(a.amount);
-  else if(p.status==='pending')pendingByMonth[a.covered_month]=(pendingByMonth[a.covered_month]||0)+Number(a.amount);
- });
- let cursor=start, previousDue=0,currentDue=0,totalDue=0,hasPending=false,steps=0;
+ const now=monthNow();
+ let cursor=member.start_month, previousDue=0,currentDue=0,totalDue=0,hasPending=false,steps=0;
  while(cursor<=now&&steps<360){
-  const due=Math.max(Number(currentRate(member.id,cursor))-Number(paidByMonth[cursor]||0),0);
+  const key=member.id+'|'+cursor;
+  const due=Math.max(Number(currentRate(member.id,cursor))-Number(approvedAllocations[key]||0),0);
   totalDue+=due;
   if(cursor<now)previousDue+=due;else currentDue=due;
-  if(Number(pendingByMonth[cursor]||0)>0)hasPending=true;
+  if(Number(pendingAllocations[key]||0)>0)hasPending=true;
   cursor=plusMonth(cursor);steps++;
  }
  let status='green',label='পরিশোধ সম্পন্ন';
@@ -50,15 +45,36 @@ function renderMembers(){
   return '<tr><td>'+escapeHtml(m.name)+'</td><td>'+escapeHtml(m.father_name||'—')+'</td><td>'+escapeHtml(m.house_name||'—')+'</td><td>'+escapeHtml(m.mobile||'—')+'</td><td>'+moneyNumber(currentRate(m.id,monthNow()))+'</td><td>'+moneyNumber(s.totalDue)+'</td><td><span class="contribution-status '+statusClass+'">'+s.label+'</span></td><td>'+(canWrite?'<button type="button" data-member-edit="'+m.id+'">সম্পাদনা</button> <button type="button" data-member-pay="'+m.id+'">চাঁদা জমা</button> ':'')+'<button type="button" data-member-history="'+m.id+'">ইতিহাস</button></td></tr>';
  }).join('');
 }
+async function fetchAll(table,configure){
+ let rows=[],offset=0;
+ while(true){
+  let query=supabase.from(table).select('*');
+  if(configure)query=configure(query);
+  const{data,error}=await query.range(offset,offset+499);
+  if(error)throw error;
+  rows=rows.concat(data||[]);
+  if(!data||data.length<500)break;
+  offset+=500;
+ }
+ return rows;
+}
 async function loadData(){
  const [m,r,p,a]=await Promise.all([
-  supabase.from('contribution_members').select('*').eq('institution','mosque').order('name'),
-  supabase.from('contribution_rates').select('*').order('effective_month'),
-  supabase.from('contribution_payments').select('*').eq('institution','mosque').order('payment_date',{ascending:false}),
-  supabase.from('contribution_payment_allocations').select('*')
+  fetchAll('contribution_members',q=>q.eq('institution','mosque').order('name')),
+  fetchAll('contribution_rates',q=>q.order('effective_month')),
+  fetchAll('contribution_payments',q=>q.eq('institution','mosque').order('payment_date',{ascending:false})),
+  fetchAll('contribution_payment_allocations')
  ]);
- for(const result of [m,r,p,a])if(result.error)throw result.error;
- members=m.data||[];rates=r.data||[];payments=p.data||[];allocations=a.data||[];
+ members=m;rates=r;payments=p;allocations=a;
+ paymentById=new Map(payments.map(p=>[p.id,p]));
+ approvedAllocations={};pendingAllocations={};
+ allocations.forEach(a=>{
+  const p=paymentById.get(a.payment_id);
+  if(!p)return;
+  const key=a.member_id+'|'+a.covered_month;
+  if(p.status==='approved')approvedAllocations[key]=(approvedAllocations[key]||0)+Number(a.amount);
+  else if(p.status==='pending')pendingAllocations[key]=(pendingAllocations[key]||0)+Number(a.amount);
+ });
  renderMembers();
 }
 function resetMemberForm(){
