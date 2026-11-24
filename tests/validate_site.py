@@ -162,7 +162,7 @@ assert 'parseModules(target.institution)' in edge, 'Edge Function: validate perm
 assert 'parseModules(institution)' in edge, 'Edge Function: validate new-user module grants against selected institution'
 assert 'target_institution not in (\'mosque\',\'both\')' in permissions_sql, 'Permissions RPC: mosque modules must not be assigned to foundation-only staff'
 assert 'target_institution not in (\'foundation\',\'both\')' in permissions_sql, 'Permissions RPC: foundation modules must not be assigned to mosque-only staff'
-assert 'module_key=\'m61\' and target_institution not in (\'mosque\',\'both\')' in permissions_sql, 'Permissions RPC: Muslim registration must remain mosque-only'
+assert "item.value->>'module_key'='m61' and target_institution not in ('mosque','both')" in permissions_sql, 'Permissions RPC: Muslim registration must remain mosque-only'
 
 assert "target_institution not in ('mosque','both')" in permissions_sql, 'Permissions RPC: enforce mosque-only module ranges'
 assert "target_institution not in ('foundation','both')" in permissions_sql, 'Permissions RPC: enforce foundation-only module ranges'
@@ -172,3 +172,5 @@ assert "substring(target_key from 2)::integer not between 31 and 40 or target_in
 # CI run for mosque-only m61 policy guard.
 
 # CI run for institution-scoped permission validation.
+
+# Re-run after correcting m61 assertion.
