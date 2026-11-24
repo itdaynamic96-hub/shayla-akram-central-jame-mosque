@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque/sitemap.xml
