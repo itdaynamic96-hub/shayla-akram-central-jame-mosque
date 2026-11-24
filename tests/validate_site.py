@@ -199,4 +199,10 @@ for sql_name in ('admin-modules.sql','module-permissions.sql','admin-panel-enhan
 
 # Correct current-user null-safe assertion.
 
+# A saved financial entry must not be reported as failed just because the follow-up refresh fails.
+accounts_html = (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'id="formSuccess"' in accounts_html, 'Accounts: show explicit success after a ledger entry is saved'
+assert 'লেনদেনটি সফলভাবে জমা হয়েছে' in accounts_html, 'Accounts: distinguish a saved entry from a failed refresh'
+assert "showError($('listError'),new Error('লেনদেন সংরক্ষিত হয়েছে" in accounts_html, 'Accounts: report refresh errors separately after successful insert'
+
 # CI run for read-only auditor/viewer scope.
