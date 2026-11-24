@@ -5,11 +5,22 @@ begin;
 
 alter table public.module_records drop constraint if exists module_records_module_key_check;
 alter table public.module_records add constraint module_records_module_key_check
-  check (module_key ~ '^m(0[1-9]|[1-5][0-9]|60|61)$');
+  check (length(module_key)=3 and module_key ~ '^m(0[1-9]|[1-5][0-9]|60|61)');
 
 alter table public.admin_module_permissions drop constraint if exists admin_module_permissions_module_key_check;
 alter table public.admin_module_permissions add constraint admin_module_permissions_module_key_check
-  check (module_key ~ '^m(0[1-9]|[1-5][0-9]|60|61)
+  check (length(module_key)=3 and module_key ~ '^m(0[1-9]|[1-5][0-9]|60|61)');
+
+-- The legacy basic-mosque restriction blocks mosque admin modules and m61.
+alter table public.module_records drop constraint if exists module_records_mosque_basic_module_key_check;
+alter table public.module_records drop constraint if exists module_records_module_institution_check;
+alter table public.module_records add constraint module_records_module_institution_check
+  check (
+    (module_key not in ('m21','m22','m23','m24','m25','m26','m27','m28','m29','m30','m61') or institution='mosque')
+    and
+    (module_key not in ('m31','m32','m33','m34','m35','m36','m37','m38','m39','m40') or institution='foundation')
+  );
+
 create or replace function public.receipt_is_unlinked(target_path text)
 returns boolean language sql stable security definer set search_path=public
 as $receipt$
