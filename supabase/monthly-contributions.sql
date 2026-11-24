@@ -154,12 +154,16 @@ begin
  if member_start_month is null or extract(day from member_start_month)<>1 then raise exception 'শুরুর মাসের প্রথম তারিখ নির্বাচন করুন।'; end if;
  if member_rate_effective_month is null or extract(day from member_rate_effective_month)<>1 then raise exception 'চাঁদার হার কার্যকর হওয়ার মাস নির্বাচন করুন।'; end if;
  if member_monthly_amount is null or member_monthly_amount<=0 then raise exception 'মাসিক চাঁদা শূন্যের বেশি হতে হবে।'; end if;
- if member_rate_effective_month < date_trunc('month',current_date)::date then raise exception 'নতুন চাঁদার হার বর্তমান মাস বা ভবিষ্যৎ মাস থেকে কার্যকর করা যাবে।'; end if;
+ if target_member is null and member_rate_effective_month<>member_start_month then raise exception 'নতুন প্রদানকারীর প্রথম চাঁদার হার শুরুর মাস থেকেই কার্যকর হতে হবে।'; end if;
+ if target_member is not null and member_rate_effective_month < date_trunc('month',current_date)::date then raise exception 'নতুন চাঁদার হার বর্তমান মাস বা ভবিষ্যৎ মাস থেকে কার্যকর করা যাবে।'; end if;
  if target_member is null then
    insert into public.contribution_members(institution,name,father_name,house_name,address,mobile,start_month,sms_consent,created_by)
    values('mosque',trim(member_name),coalesce(trim(member_father_name),''),coalesce(trim(member_house_name),''),coalesce(trim(member_address),''),coalesce(trim(member_mobile),''),member_start_month,coalesce(member_sms_consent,false),auth.uid())
    returning id into v_id;
  else
+   if exists(select 1 from public.contribution_members m join public.contribution_payment_allocations a on a.member_id=m.id where m.id=target_member and m.start_month is distinct from member_start_month) then
+     raise exception 'জমার ইতিহাস থাকা অবস্থায় চাঁদা শুরুর মাস পরিবর্তন করা যাবে না।';
+   end if;
    update public.contribution_members set name=trim(member_name),father_name=coalesce(trim(member_father_name),''),house_name=coalesce(trim(member_house_name),''),address=coalesce(trim(member_address),''),mobile=coalesce(trim(member_mobile),''),start_month=member_start_month,sms_consent=coalesce(member_sms_consent,false),updated_at=now()
    where id=target_member and institution='mosque' returning id into v_id;
    if v_id is null then raise exception 'প্রদানকারীর তথ্য পাওয়া যায়নি।'; end if;
