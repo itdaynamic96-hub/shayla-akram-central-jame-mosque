@@ -19,8 +19,8 @@ function calcStatus(member){
   if(a.member_id!==member.id)return;
   const p=payments.find(x=>x.id===a.payment_id);
   if(!p)return;
-  const bucket=p.status==='approved'?paidByMonth:pendingByMonth;
-  bucket[a.covered_month]=(bucket[a.covered_month]||0)+Number(a.amount);
+  if(p.status==='approved')paidByMonth[a.covered_month]=(paidByMonth[a.covered_month]||0)+Number(a.amount);
+  else if(p.status==='pending')pendingByMonth[a.covered_month]=(pendingByMonth[a.covered_month]||0)+Number(a.amount);
  });
  let cursor=start, previousDue=0,currentDue=0,totalDue=0,hasPending=false,steps=0;
  while(cursor<=now&&steps<360){
@@ -162,8 +162,7 @@ $('contributionMemberForm')?.addEventListener('submit',async e=>{
    member_sms_consent:$('memberSmsConsent').checked
   };
   const{error}=await supabase.rpc('save_contribution_member',payload);if(error)throw error;
-  setSuccess('memberFormSuccess','প্রদানকারীর প্রোফাইল সংরক্ষিত হয়েছে।');
-  await loadData();resetMemberForm();
+  await loadData();resetMemberForm();setSuccess('memberFormSuccess','প্রদানকারীর প্রোফাইল সংরক্ষিত হয়েছে।');
  }catch(err){showErrorText('memberFormError',err);}
 });
 $('paymentCancel')?.addEventListener('click',()=>{$('paymentPanel').hidden=true;});
