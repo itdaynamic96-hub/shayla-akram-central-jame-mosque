@@ -245,7 +245,15 @@ create policy "accounts read institution receipts" on storage.objects for select
 create or replace function public.receipt_is_unlinked(target_path text)
 returns boolean language sql stable security definer set search_path=public
 as $receipt$
- select not exists(select 1 from public.ledger_entries where receipt_path=target_path);
+ select exists (
+   select 1 from storage.objects o
+   where o.bucket_id='private-receipts'
+     and o.name=target_path
+     and o.owner_id=auth.uid()::text
+ ) and not exists (
+   select 1 from public.ledger_entries le
+   where le.receipt_path=target_path
+ );
 $receipt$;
 revoke all on function public.receipt_is_unlinked(text) from public;
 grant execute on function public.receipt_is_unlinked(text) to authenticated;

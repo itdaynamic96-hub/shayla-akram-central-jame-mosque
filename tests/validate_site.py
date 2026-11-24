@@ -137,7 +137,7 @@ assert 'keys.length > 61' in edge, 'Edge Function: allow at most 61 unique modul
 permissions_sql = (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8')
 assert "[1-5][0-9]|60|61" in permissions_sql, 'Permissions SQL: allow m61 in the permission key constraint'
 assert 'jsonb_array_length(permission_rows) > 61' in permissions_sql, 'Permissions SQL: allow at most 61 module permissions'
-assert 'target_profile.role' in permissions_sql, 'Permissions RPC: verify the target is a custom_admin'
+assert "role='custom_admin'" in permissions_sql, 'Permissions RPC: verify the target is a custom_admin'
 assert 'count(distinct item.value->>\'module_key\')' in permissions_sql, 'Permissions RPC: reject duplicate module keys'
 
 for migration_name in ('schema.sql', 'admin-modules.sql'):

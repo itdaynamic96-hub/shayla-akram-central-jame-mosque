@@ -23,7 +23,7 @@ const withCors = (response: Response) => {
   });
 };
 
-const validModuleKey = (key: string) => /^m(0[1-9]|[1-5][0-9]|60)$/.test(key);
+const validModuleKey = (key: string) => /^m(0[1-9]|[1-5][0-9]|60|61)$/.test(key);
 
 const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
@@ -77,7 +77,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (!Array.isArray(body.modules)) return { error: "মডিউল তালিকা সঠিক নয়।" as const };
     const items = body.modules as Array<Record<string, unknown>>;
     const keys = items.map((item) => String(item?.module_key ?? ""));
-    if (keys.length > 60 || keys.some((key) => !validModuleKey(key)) || new Set(keys).size !== keys.length) {
+    if (keys.length > 61 || keys.some((key) => !validModuleKey(key)) || new Set(keys).size !== keys.length) {
       return { error: "মডিউল নির্বাচন সঠিক নয় বা একই মডিউল একাধিকবার আছে।" as const };
     }
     if (items.some((item) => item?.can_approve === true && item?.can_write !== true)) {

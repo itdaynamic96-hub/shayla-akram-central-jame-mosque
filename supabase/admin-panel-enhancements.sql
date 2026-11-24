@@ -136,13 +136,43 @@ using (
 -- Allow the permission-management Edge Function to assign up to all 61 modules.
 create or replace function public.replace_admin_module_permissions(target_user uuid, permission_rows jsonb)
 returns void language plpgsql security definer set search_path=public
-as $$
+as $
 begin
  if auth.role() <> 'service_role' then
    raise exception 'Only the trusted server function may replace module permissions.';
  end if;
- if jsonb_typeof(permission_rows) <> 'array' or jsonb_array_length(permission_rows) > 61 then
+ if jsonb_typeof(permission_rows) is distinct from 'array' then
    raise exception 'Invalid module permission list.';
+ end if;
+ if jsonb_array_length(permission_rows) > 61 then
+   raise exception 'At most 61 module permissions are allowed.';
+ end if;
+ if not exists (
+   select 1 from public.profiles
+   where id=target_user and role='custom_admin'
+ ) then
+   raise exception 'Target user must be an existing custom_admin.';
+ end if;
+ if exists (
+   select 1
+   from jsonb_array_elements(permission_rows) as item(value)
+   where jsonb_typeof(item.value) <> 'object'
+      or coalesce(item.value->>'module_key','') !~ '^m(0[1-9]|[1-5][0-9]|60|61)
+
+      or coalesce(item.value->>'can_view','true') not in ('true','false')
+      or coalesce(item.value->>'can_write','false') not in ('true','false')
+      or coalesce(item.value->>'can_approve','false') not in ('true','false')
+      or (coalesce(item.value->>'can_write','false')='true'
+          and coalesce(item.value->>'can_view','true')<>'true')
+      or (coalesce(item.value->>'can_approve','false')='true'
+          and coalesce(item.value->>'can_write','false')<>'true')
+ ) then
+   raise exception 'Invalid module permission row.';
+ end if;
+ if (select count(*) from jsonb_array_elements(permission_rows))
+    <> (select count(distinct item.value->>'module_key')
+        from jsonb_array_elements(permission_rows) as item(value)) then
+   raise exception 'Duplicate module permission keys are not allowed.';
  end if;
  delete from public.admin_module_permissions where user_id=target_user;
  insert into public.admin_module_permissions(user_id,module_key,can_view,can_write,can_approve)
@@ -152,6 +182,6 @@ begin
         coalesce((item.value->>'can_approve')::boolean,false)
  from jsonb_array_elements(permission_rows) as item(value);
 end;
-$$;
+$;
 revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.replace_admin_module_permissions(uuid,jsonb) to service_role;
