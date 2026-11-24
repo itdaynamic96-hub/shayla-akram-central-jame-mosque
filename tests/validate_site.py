@@ -158,9 +158,15 @@ print('Phase 1 regression checks passed: institution-aware staff edit, 61-module
 
 # Institution boundaries for Custom Admin module grants must be enforced server-side.
 assert 'moduleAllowedForInstitution' in edge, 'Edge Function: validate module grants against the target institution'
+assert 'parseModules(target.institution)' in edge, 'Edge Function: validate permission updates against the target user institution'
 assert 'parseModules(institution)' in edge, 'Edge Function: validate new-user module grants against selected institution'
 assert 'target_institution not in (\'mosque\',\'both\')' in permissions_sql, 'Permissions RPC: mosque modules must not be assigned to foundation-only staff'
 assert 'target_institution not in (\'foundation\',\'both\')' in permissions_sql, 'Permissions RPC: foundation modules must not be assigned to mosque-only staff'
 assert 'module_key=\'m61\' and target_institution not in (\'mosque\',\'both\')' in permissions_sql, 'Permissions RPC: Muslim registration must remain mosque-only'
+
+assert "target_institution not in ('mosque','both')" in permissions_sql, 'Permissions RPC: enforce mosque-only module ranges'
+assert "target_institution not in ('foundation','both')" in permissions_sql, 'Permissions RPC: enforce foundation-only module ranges'
+assert "substring(target_key from 2)::integer not between 21 and 30 or target_institution='mosque'" in permissions_sql, 'Record access helpers: m21-m30 must remain mosque-only'
+assert "substring(target_key from 2)::integer not between 31 and 40 or target_institution='foundation'" in permissions_sql, 'Record access helpers: m31-m40 must remain foundation-only'
 
 # CI run for mosque-only m61 policy guard.

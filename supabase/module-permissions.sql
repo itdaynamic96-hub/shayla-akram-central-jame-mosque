@@ -42,6 +42,8 @@ as $$
         p.role='custom_admin'
         and (p.institution='both' or p.institution=target_institution)
       and (target_key <> 'm61' or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 21 and 30 or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 31 and 40 or target_institution='foundation')
         and exists(
           select 1 from public.admin_module_permissions mp
           where mp.user_id=p.id and mp.module_key=target_key
@@ -72,6 +74,8 @@ as $$
       p.role='custom_admin'
       and (p.institution='both' or p.institution=target_institution)
       and (target_key <> 'm61' or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 21 and 30 or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 31 and 40 or target_institution='foundation')
       and exists(select 1 from public.admin_module_permissions mp
         where mp.user_id=p.id and mp.module_key=target_key and mp.can_view and mp.can_write and mp.can_approve)
     )
@@ -91,6 +95,8 @@ grant execute on function public.module_record_approval_access(text,text) to aut
 create or replace function public.replace_admin_module_permissions(target_user uuid, permission_rows jsonb)
 returns void language plpgsql security definer set search_path=public
 as $$
+declare
+ target_institution text;
 begin
  if auth.role() <> 'service_role' then
    raise exception 'Only the trusted server function may replace module permissions.';
@@ -101,7 +107,10 @@ begin
  if jsonb_array_length(permission_rows) > 61 then
    raise exception 'At most 61 module permissions are allowed.';
  end if;
- if not exists (select 1 from public.profiles where id=target_user and role='custom_admin') then
+ select institution into target_institution
+ from public.profiles
+ where id=target_user and role='custom_admin';
+ if not found then
    raise exception 'Target user must be an existing custom_admin.';
  end if;
  if exists (
@@ -113,8 +122,11 @@ begin
       or coalesce(item.value->>'can_approve','false') not in ('true','false')
       or (coalesce(item.value->>'can_write','false')='true' and coalesce(item.value->>'can_view','true')<>'true')
       or (coalesce(item.value->>'can_approve','false')='true' and coalesce(item.value->>'can_write','false')<>'true')
+      or (coalesce(item.value->>'module_key','') ~ '^m(2[1-9]|30)$' and target_institution not in ('mosque','both'))
+      or (coalesce(item.value->>'module_key','') ~ '^m(3[1-9]|40)$' and target_institution not in ('foundation','both'))
+      or (item.value->>'module_key'='m61' and target_institution not in ('mosque','both'))
  ) then
-   raise exception 'Invalid module permission row.';
+   raise exception 'Invalid module permission row for the target institution.';
  end if;
  if (select count(*) from jsonb_array_elements(permission_rows))
     <> (select count(distinct item.value->>'module_key') from jsonb_array_elements(permission_rows) as item(value)) then
