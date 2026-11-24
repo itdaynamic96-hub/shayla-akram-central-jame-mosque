@@ -100,7 +100,7 @@ function editMember(member){
  $('memberFormTitle').textContent=member?'প্রদানকারীর তথ্য সম্পাদনা':'নতুন চাঁদা প্রদানকারী';
  $('memberSave').textContent=member?'পরিবর্তন সংরক্ষণ':'প্রোফাইল সংরক্ষণ';
  $('memberFormError').hidden=true;$('memberFormSuccess').hidden=true;
- $('memberForm').scrollIntoView({behavior:'smooth',block:'start'});
+ $('contributionMemberForm').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function openPayment(member){
  selectedMember=member;
