@@ -1,7 +1,9 @@
 name: Validate and deploy static site to GitHub Pages
 on:
   push:
-    branches: ["main", "admin-panel-repair-20261122", "admin-dashboard-upgrade-20261122"]
+    branches: ["main", "admin-panel-repair-20261122", "admin-dashboard-upgrade-20261122", "safety-phase1-20261124"]
+  pull_request:
+    branches: ["main", "safety-phase1-20261124"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -22,6 +24,17 @@ jobs:
           python-version: "3.x"
       - name: Validate site files and inline scripts
         run: python tests/validate_site.py
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run desktop and mobile browser smoke tests
+        run: |
+          python -m http.server 4173 --bind 127.0.0.1 > /tmp/sakm-pages.log 2>&1 &
+          echo $! > /tmp/sakm-pages.pid
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && break || sleep 1; done
+          node tests/smoke_pages.cjs
+          kill "$(cat /tmp/sakm-pages.pid)" || true
   deploy:
     needs: validate
     if: github.ref == 'refs/heads/main'

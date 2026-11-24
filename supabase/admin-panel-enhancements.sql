@@ -20,8 +20,26 @@ as $$
   where p.id=auth.uid()
    and (
     p.role='super_admin'
+   or (
+   not write_access and p.role='auditor' and (
+     (target_key='m03' and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
+ or (
+   not write_access and p.role='viewer' and (
+     (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
     or (p.role='custom_admin'
       and (p.institution='both' or p.institution=target_institution)
+      and (target_key <> 'm61' or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 21 and 30 or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 31 and 40 or target_institution='foundation')
       and exists(select 1 from public.admin_module_permissions mp
         where mp.user_id=p.id and mp.module_key=target_key and mp.can_view
           and (not write_access or mp.can_write)))
@@ -51,6 +69,9 @@ as $$
     p.role='super_admin'
     or (p.role='custom_admin'
       and (p.institution='both' or p.institution=target_institution)
+      and (target_key <> 'm61' or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 21 and 30 or target_institution='mosque')
+      and (substring(target_key from 2)::integer not between 31 and 40 or target_institution='foundation')
       and exists(select 1 from public.admin_module_permissions mp
         where mp.user_id=p.id and mp.module_key=target_key and mp.can_view and mp.can_write and mp.can_approve))
     or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque'))
@@ -67,11 +88,11 @@ grant execute on function public.module_record_access(text,text,boolean) to auth
 grant execute on function public.module_record_approval_access(text,text) to authenticated;
 
 -- Public media bucket: images, PDFs and short educational videos.
--- Maximum object size is 100 MB; actual quota/plan limits still apply.
+-- Maximum object size is 50 MB, compatible with the Supabase Free project limit.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('site-media','site-media',true,104857600,
+values('site-media','site-media',true,52428800,
  array['image/jpeg','image/png','image/webp','image/gif','application/pdf','video/mp4','video/webm','video/ogg'])
-on conflict(id) do update set public=true,file_size_limit=104857600,
+on conflict(id) do update set public=true,file_size_limit=52428800,
  allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif','application/pdf','video/mp4','video/webm','video/ogg'];
 
 -- Existing website approvers retain access. Module editors can upload only
@@ -137,12 +158,42 @@ using (
 create or replace function public.replace_admin_module_permissions(target_user uuid, permission_rows jsonb)
 returns void language plpgsql security definer set search_path=public
 as $$
+declare
+ target_institution text;
 begin
  if auth.role() <> 'service_role' then
    raise exception 'Only the trusted server function may replace module permissions.';
  end if;
- if jsonb_typeof(permission_rows) <> 'array' or jsonb_array_length(permission_rows) > 61 then
+ if jsonb_typeof(permission_rows) is distinct from 'array' then
    raise exception 'Invalid module permission list.';
+ end if;
+ if jsonb_array_length(permission_rows) > 61 then
+   raise exception 'At most 61 module permissions are allowed.';
+ end if;
+ select institution into target_institution
+ from public.profiles
+ where id=target_user and role='custom_admin';
+ if not found then
+   raise exception 'Target user must be an existing custom_admin.';
+ end if;
+ if exists (
+   select 1 from jsonb_array_elements(permission_rows) as item(value)
+   where jsonb_typeof(item.value) <> 'object'
+      or coalesce(item.value->>'module_key','') !~ '^m(0[1-9]|[1-5][0-9]|60|61)$'
+      or coalesce(item.value->>'can_view','true') not in ('true','false')
+      or coalesce(item.value->>'can_write','false') not in ('true','false')
+      or coalesce(item.value->>'can_approve','false') not in ('true','false')
+      or (coalesce(item.value->>'can_write','false')='true' and coalesce(item.value->>'can_view','true')<>'true')
+      or (coalesce(item.value->>'can_approve','false')='true' and coalesce(item.value->>'can_write','false')<>'true')
+      or (coalesce(item.value->>'module_key','') ~ '^m(2[1-9]|30)$' and target_institution not in ('mosque','both'))
+      or (coalesce(item.value->>'module_key','') ~ '^m(3[1-9]|40)$' and target_institution not in ('foundation','both'))
+      or (item.value->>'module_key'='m61' and target_institution not in ('mosque','both'))
+ ) then
+   raise exception 'Invalid module permission row for the target institution.';
+ end if;
+ if (select count(*) from jsonb_array_elements(permission_rows))
+    <> (select count(distinct item.value->>'module_key') from jsonb_array_elements(permission_rows) as item(value)) then
+   raise exception 'Duplicate module permission keys are not allowed.';
  end if;
  delete from public.admin_module_permissions where user_id=target_user;
  insert into public.admin_module_permissions(user_id,module_key,can_view,can_write,can_approve)

@@ -49,7 +49,21 @@ as $$
  select exists(select 1 from public.profiles p
  where p.id=auth.uid() and (
    p.role='super_admin'
-   or (not write_access and p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution))
+   or (
+   not write_access and p.role='auditor' and (
+     (target_key='m03' and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
+ or (
+   not write_access and p.role='viewer' and (
+     (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
    or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
    or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
    or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and (p.institution in ('both','mosque')) and target_institution='mosque')
@@ -152,7 +166,15 @@ using(bucket_id='private-receipts' and public.has_access(array['super_admin','ac
 create or replace function public.receipt_is_unlinked(target_path text)
 returns boolean language sql stable security definer set search_path=public
 as $receipt$
- select not exists(select 1 from public.ledger_entries where receipt_path=target_path);
+ select exists (
+   select 1 from storage.objects o
+   where o.bucket_id='private-receipts'
+     and o.name=target_path
+     and o.owner_id=auth.uid()::text
+ ) and not exists (
+   select 1 from public.ledger_entries le
+   where le.receipt_path=target_path
+ );
 $receipt$;
 revoke all on function public.receipt_is_unlinked(text) from public;
 grant execute on function public.receipt_is_unlinked(text) to authenticated;
