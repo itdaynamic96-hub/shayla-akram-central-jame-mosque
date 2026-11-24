@@ -205,4 +205,9 @@ assert 'id="formSuccess"' in accounts_html, 'Accounts: show explicit success aft
 assert 'লেনদেনটি সফলভাবে জমা হয়েছে' in accounts_html, 'Accounts: distinguish a saved entry from a failed refresh'
 assert "showError($('listError'),new Error('লেনদেন সংরক্ষিত হয়েছে" in accounts_html, 'Accounts: report refresh errors separately after successful insert'
 
+# Every site-media video upload path must obey the 50 MB Free-tier cap.
+assert 'videoFile.size>52428800' in admin_html and '104857600' not in admin_html, 'Admin content: video upload must be capped at 50 MB'
+modules_js = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert "kind==='video'?52428800" in modules_js and "kind==='video'?104857600" not in modules_js, 'Module uploads: video upload must be capped at 50 MB'
+
 # CI run for read-only auditor/viewer scope.
