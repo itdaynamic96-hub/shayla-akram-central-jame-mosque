@@ -212,4 +212,8 @@ assert "kind==='video'?52428800" in modules_js and "kind==='video'?104857600" no
 
 # CI run for read-only auditor/viewer scope.
 
+# Approval/rejection must refresh both the ledger list and budget totals.
+approval_handler = accounts_html.split("$('entries').addEventListener('click'",1)[1].split("$('entryForm').addEventListener",1)[0]
+assert 'await loadEntries();await loadBudgets()' in approval_handler, 'Accounts: refresh budget totals after approving or rejecting a ledger entry'
+
 # CI run for 50 MB site-media upload caps.
