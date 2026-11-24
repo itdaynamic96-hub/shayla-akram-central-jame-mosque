@@ -140,6 +140,7 @@ function init(context){
  if(!read){$('contributionPanel').hidden=true;return;}
  $('contributionPanel').hidden=false;
  $('contributionWriteArea').hidden=!canWrite;
+ $('memberNew').hidden=!canWrite;
  $('contributionReadOnlyNote').hidden=canWrite;
  $('memberStartMonth').value=monthNow();$('memberRateMonth').value=monthNow();
  $('paymentDate').value=dateNow();$('paymentTargetMonth').value=monthNow();
