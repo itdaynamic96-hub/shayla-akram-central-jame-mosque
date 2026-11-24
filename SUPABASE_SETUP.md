@@ -107,3 +107,16 @@ Complete the schema, permissions, enhancements, hardening, and public-module SQL
 4. This grants public read access only to records that are explicitly marked for public display, have status `published`, and belong to the approved public module allowlist. Drafts, pending approvals, and private staff/beneficiary/financial records remain unavailable to visitors.
 5. In Admin Panel, enter the module-specific fields, save as draft/pending, then have an authorized approver approve and publish. Published records appear in the matching website module page. Prayer-time records also update the homepage prayer-time panel; published notice records can update the homepage notice panel. Photo/video modules continue to use their dedicated media manager and homepage slots.
 6. After running the SQL, reload the website with Ctrl+F5. Test with one non-sensitive sample record before publishing real information.
+
+
+## 12. Enable monthly mosque contribution tracking
+1. Back up the Supabase project before applying this migration.
+2. Open Supabase → SQL Editor → New query.
+3. Open `supabase/monthly-contributions.sql` from the reviewed feature branch and inspect the complete SQL.
+4. Run it only after the existing `schema.sql` and `module-permissions.sql` migrations are already applied.
+5. The migration creates private, mosque-only contributor profiles, individual monthly-rate history, payment records, month-by-month allocations, and an SMS reminder audit table. It adds no 62nd Admin module.
+6. Use Accounts → “মাসিক চাঁদা প্রদানকারীদের হিসাব”. Grant Custom Admin users both m44 (দাতা ব্যবস্থাপনা) and m47 (পেমেন্ট ব্যবস্থাপনা), with View and Write permissions, to manage contributors and payments. Accountant and Accounts Manager roles can manage it; Auditor and Mosque Admin have read-only access.
+7. Each contribution payment creates one pending income entry in `ledger_entries` in the same database transaction. Approval/rejection of that ledger entry synchronizes the contribution payment status. Do not enter the same contribution again in the general income form.
+8. First test with a non-real sample contributor and a small pending payment. Approve/reject only test entries according to your normal approval policy. Verify the payment appears once in Accounts and the monthly allocation history is correct.
+9. The SMS consent checkbox is off by default. The migration does not send SMS. A verified SMS provider account, current API documentation, credentials stored only in Supabase Edge Function Secrets, consent checks, and a scheduled sender must be configured and tested before automatic reminders can be enabled. Never put an SMS API key in GitHub, browser JavaScript, or chat.
+10. Do not apply this migration to production until the Draft PR is reviewed, a current backup is confirmed, and you explicitly approve the database change.
