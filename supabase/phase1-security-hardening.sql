@@ -170,6 +170,9 @@ revoke all on function public.guard_module_record_publication() from public, ano
 revoke all on function public.log_ledger_change() from public, anon, authenticated;
 revoke all on function public.log_module_record_change() from public, anon, authenticated;
 
+-- Public bucket URLs remain readable; anonymous object listing is not required.
+drop policy if exists "basic mosque media public read" on storage.objects;
+
 -- Keep anonymous published-content reads independent of the privileged role helper.
 drop policy if exists "public can read published site content" on public.site_content;
 drop policy if exists "authenticated can read published site content" on public.site_content;
