@@ -33,6 +33,26 @@ jobs:
             exit 1
           fi
 
+      - name: Validate database URL format (without printing credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const raw = process.env.SUPABASE_DB_URL;
+          let u;
+          try {
+            u = new URL(raw);
+            if (!["postgres:", "postgresql:"].includes(u.protocol)) throw new Error("unsupported protocol");
+            if (!u.hostname || !u.username || !u.password || !u.pathname || u.pathname === "/") throw new Error("missing URL component");
+            decodeURIComponent(u.username);
+            decodeURIComponent(u.password);
+          } catch {
+            console.error("::error::SUPABASE_DB_URL is not a valid PostgreSQL URI. In Supabase Connect, select Session pooler and URI format (not .NET). Percent-encode special characters in the password only. Do not include quotes or spaces.");
+            process.exit(1);
+          }
+          console.log("Database URI format is valid; credentials were not printed.");
+          NODE
+
       - name: Checkout repository
         uses: actions/checkout@v5
 
@@ -58,6 +78,8 @@ jobs:
           test -s data.sql
 
       - name: Export Auth user metadata and Storage objects
+        env:
+          BACKUP_DIR: ${{ runner.temp }}/sakm61-backup
         shell: bash
         run: |
           set -euo pipefail
