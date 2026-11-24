@@ -262,6 +262,8 @@ assert "member_sms_consent boolean default false" in contribution_sql
 assert "unique(member_id,reminder_month,channel)" in contribution_sql
 assert "member_sms_consent:$('memberSmsConsent').checked" in contribution_js
 assert "record_contribution_payment" in contribution_js and "save_contribution_member" in contribution_js
+assert "$('contributionMemberForm').scrollIntoView" in contribution_js
+assert "$('memberForm').scrollIntoView" not in contribution_js
 assert "status-red" in contribution_js and "status-yellow" in contribution_js and "status-green" in contribution_js
 assert 'contributionPanel' in accounts and 'contributions.js' in accounts
 subprocess.run(['node','--check','--input-type=module'],input=contribution_js,text=True,capture_output=True,check=True)
