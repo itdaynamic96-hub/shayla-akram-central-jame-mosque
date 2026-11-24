@@ -180,4 +180,11 @@ assert 'receipt_is_unlinked' in hardening_sql and 'module_record_access' in hard
 
 # Re-run after correcting m61 assertion.
 
+# All intended operational roles must reach the Admin module shell; prevent self-demotion.
+admin_html = (ROOT/'admin.html').read_text(encoding='utf-8')
+for role in ('mosque_admin','foundation_admin','manager','viewer','accountant','accounts_manager'):
+    assert "'"+role+"'" in admin_html.split("if(!['",1)[1].split("].includes(p.role)",1)[0], f'Admin: {role} must be allowed to enter the module shell'
+assert 'currentUserId=user.id' in admin_html, 'Admin: retain the signed-in user ID for self-protection'
+assert 'p.id!==currentUserId' in admin_html, 'Admin: do not offer self role changes to the current Super Admin'
+
 # CI run for incremental hardening migration and Free bucket cap.
