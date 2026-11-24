@@ -40,10 +40,17 @@ Roles:
 - `admin`: legacy full administrative role.
 - `accounts_manager`: approve/reject financial entries and manage budgets.
 - `accountant`: enter income/expenses and upload receipts.
-- `auditor`: read-only review.\n- `viewer`: read-only access within the assigned institution.
+- `auditor`: read-only review.
+- `viewer`: read-only access within the assigned institution.
 - Institution must be `mosque` or `foundation`. Use `both` only for formally authorized staff.
 
-## 6. Apply the Admin Panel module migration\n1. Open Supabase → SQL Editor → New query.\n2. Open `supabase/admin-modules.sql` in GitHub and copy the complete SQL.\n3. Run the latest SQL file. It expands the role list, creates the secure record store used by the 60 Admin Panel modules, and adds source/credit fields for Islamic articles and media. If you have run an earlier version, run the updated file again.\n4. Keep Row Level Security enabled; do not run broad public policies.\n\n## 7. Repair/enable Accounts database permissions
+## 6. Apply the Admin Panel module migration
+1. Open Supabase → SQL Editor → New query.
+2. Open `supabase/admin-modules.sql` in GitHub and copy the complete SQL.
+3. Run the latest SQL file. It expands the role list, creates the secure record store used by all 61 Admin Panel modules, and adds source/credit fields for Islamic articles and media. If you have run an earlier version, run the updated file again.
+4. Keep Row Level Security enabled; do not run broad public policies.
+
+## 7. Repair/enable Accounts database permissions
 1. Open Supabase → SQL Editor → New query.
 2. Open `supabase/accounts-permissions-fix.sql` in GitHub and copy the entire file.
 3. Paste it into SQL Editor and press Run. It is safe to run again if needed.
