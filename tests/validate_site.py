@@ -155,4 +155,12 @@ print('Phase 1 regression checks passed: institution-aware staff edit, 61-module
 
 # Re-run CI against the corrected phase 1 patch.
 
+
+# Institution boundaries for Custom Admin module grants must be enforced server-side.
+assert 'moduleAllowedForInstitution' in edge, 'Edge Function: validate module grants against the target institution'
+assert 'parseModules(institution)' in edge, 'Edge Function: validate new-user module grants against selected institution'
+assert 'target_institution not in (\'mosque\',\'both\')' in permissions_sql, 'Permissions RPC: mosque modules must not be assigned to foundation-only staff'
+assert 'target_institution not in (\'foundation\',\'both\')' in permissions_sql, 'Permissions RPC: foundation modules must not be assigned to mosque-only staff'
+assert 'module_key=\'m61\' and target_institution not in (\'mosque\',\'both\')' in permissions_sql, 'Permissions RPC: Muslim registration must remain mosque-only'
+
 # CI run for mosque-only m61 policy guard.
