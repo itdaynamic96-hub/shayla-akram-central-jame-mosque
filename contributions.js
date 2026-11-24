@@ -47,7 +47,7 @@ function renderMembers(){
  list.innerHTML=members.map(m=>{
   const s=calcStatus(m);
   const statusClass=s.status==='red'?'status-red':s.status==='yellow'?'status-yellow':s.status==='pending'?'status-pending':'status-green';
-  return '<tr><td>'+escapeHtml(m.name)+'</td><td>'+escapeHtml(m.father_name||'—')+'</td><td>'+escapeHtml(m.house_name||'—')+'</td><td>'+escapeHtml(m.mobile||'—')+'</td><td>'+moneyNumber(currentRate(m.id,monthNow()))+'</td><td>'+moneyNumber(s.totalDue)+'</td><td><span class="contribution-status '+statusClass+'">'+s.label+'</span></td><td><button type="button" data-member-edit="'+m.id+'">সম্পাদনা</button> <button type="button" data-member-pay="'+m.id+'">চাঁদা জমা</button> <button type="button" data-member-history="'+m.id+'">ইতিহাস</button></td></tr>';
+  return '<tr><td>'+escapeHtml(m.name)+'</td><td>'+escapeHtml(m.father_name||'—')+'</td><td>'+escapeHtml(m.house_name||'—')+'</td><td>'+escapeHtml(m.mobile||'—')+'</td><td>'+moneyNumber(currentRate(m.id,monthNow()))+'</td><td>'+moneyNumber(s.totalDue)+'</td><td><span class="contribution-status '+statusClass+'">'+s.label+'</span></td><td>'+(canWrite?'<button type="button" data-member-edit="'+m.id+'">সম্পাদনা</button> <button type="button" data-member-pay="'+m.id+'">চাঁদা জমা</button> ':'')+'<button type="button" data-member-history="'+m.id+'">ইতিহাস</button></td></tr>';
  }).join('');
 }
 async function loadData(){
