@@ -240,3 +240,28 @@ assert 'seoRecord.robots' in index_html and 'meta[name="robots"]' in index_html,
 # CI run for real browser desktop/mobile smoke tests.
 
 # Final CI run for the complete audit-fix branch.
+
+
+# Monthly contribution module: profile privacy, atomic ledger linkage, month allocation and permission boundaries.
+contribution_sql = (ROOT/'supabase/monthly-contributions.sql').read_text(encoding='utf-8')
+contribution_js = (ROOT/'contributions.js').read_text(encoding='utf-8')
+assert 'create table if not exists public.contribution_members' in contribution_sql
+assert 'create table if not exists public.contribution_rates' in contribution_sql
+assert 'create table if not exists public.contribution_payments' in contribution_sql
+assert 'create table if not exists public.contribution_payment_allocations' in contribution_sql
+assert 'create table if not exists public.contribution_reminder_log' in contribution_sql
+assert 'alter table public.contribution_members enable row level security' in contribution_sql
+assert "institution text not null default 'mosque' check (institution='mosque')" in contribution_sql
+assert 'public.can_manage_contributions(institution,false)' in contribution_sql
+assert 'revoke insert,update,delete on public.contribution_members from authenticated' in contribution_sql
+assert 'public.save_contribution_member' in contribution_sql and 'public.record_contribution_payment' in contribution_sql
+assert "insert into public.ledger_entries(institution,entry_type,entry_date,category,amount,payer_or_payee" in contribution_sql
+assert "insert into public.contribution_payment_allocations(payment_id,member_id,covered_month,amount)" in contribution_sql
+assert "update public.contribution_payments set status=new.status" in contribution_sql
+assert "member_sms_consent boolean default false" in contribution_sql
+assert "unique(member_id,reminder_month,channel)" in contribution_sql
+assert "member_sms_consent:$('memberSmsConsent').checked" in contribution_js
+assert "record_contribution_payment" in contribution_js and "save_contribution_member" in contribution_js
+assert "status-red" in contribution_js and "status-yellow" in contribution_js and "status-green" in contribution_js
+assert 'contributionPanel' in accounts and 'contributions.js' in accounts
+subprocess.run(['node','--check','--input-type=module'],input=contribution_js,text=True,capture_output=True,check=True)
