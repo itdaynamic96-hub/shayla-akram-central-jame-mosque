@@ -179,3 +179,5 @@ assert 'receipt_is_unlinked' in hardening_sql and 'module_record_access' in hard
 # CI run for institution-scoped permission validation.
 
 # Re-run after correcting m61 assertion.
+
+# CI run for incremental hardening migration and Free bucket cap.
