@@ -136,7 +136,7 @@ using (
 -- Allow the permission-management Edge Function to assign up to all 61 modules.
 create or replace function public.replace_admin_module_permissions(target_user uuid, permission_rows jsonb)
 returns void language plpgsql security definer set search_path=public
-as $
+as $$
 begin
  if auth.role() <> 'service_role' then
    raise exception 'Only the trusted server function may replace module permissions.';
@@ -157,8 +157,7 @@ begin
    select 1
    from jsonb_array_elements(permission_rows) as item(value)
    where jsonb_typeof(item.value) <> 'object'
-      or coalesce(item.value->>'module_key','') !~ '^m(0[1-9]|[1-5][0-9]|60|61)
-
+      or coalesce(item.value->>'module_key','') !~ '^m(0[1-9]|[1-5][0-9]|60|61)$'
       or coalesce(item.value->>'can_view','true') not in ('true','false')
       or coalesce(item.value->>'can_write','false') not in ('true','false')
       or coalesce(item.value->>'can_approve','false') not in ('true','false')
@@ -182,6 +181,6 @@ begin
         coalesce((item.value->>'can_approve')::boolean,false)
  from jsonb_array_elements(permission_rows) as item(value);
 end;
-$;
+$$;
 revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.replace_admin_module_permissions(uuid,jsonb) to service_role;
