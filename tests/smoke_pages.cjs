@@ -14,7 +14,17 @@ const { chromium } = require("playwright");
       for (const viewport of viewports) {
         const page = await browser.newPage({ viewport });
         const pageErrors = [];
+        const consoleErrors = [];
+        const localRequestFailures = [];
         page.on("pageerror", error => pageErrors.push(error.message));
+        page.on("console", message => {
+          if (message.type() === "error") consoleErrors.push(message.text());
+        });
+        page.on("requestfailed", request => {
+          if (request.url().startsWith("http://127.0.0.1:4173/")) {
+            localRequestFailures.push(request.url() + " — " + request.failure()?.errorText);
+          }
+        });
         try {
           await page.goto("http://127.0.0.1:4173/" + path, {
             waitUntil: "domcontentloaded",
