@@ -1,0 +1,85 @@
+name: SAKM-61 Encrypted Database Backup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sakm-61-manual-database-backup
+  cancel-in-progress: false
+
+jobs:
+  database-backup:
+    name: Dump and encrypt database
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+    steps:
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL" || { echo "::error::SUPABASE_DB_URL is missing"; exit 1; }
+          test -n "$BACKUP_ENCRYPTION_KEY" || { echo "::error::BACKUP_ENCRYPTION_KEY is missing"; exit 1; }
+          if [ "${#BACKUP_ENCRYPTION_KEY}" -lt 32 ]; then
+            echo "::error::BACKUP_ENCRYPTION_KEY must contain at least 32 characters"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump database roles, schema, and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/sakm61-backup"
+          cd "$RUNNER_TEMP/sakm61-backup"
+          supabase db dump --remote="$SUPABASE_DB_URL" -f roles.sql --role-only
+          supabase db dump --remote="$SUPABASE_DB_URL" -f schema.sql
+          supabase db dump --remote="$SUPABASE_DB_URL" -f data.sql --data-only --use-copy -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          test -s roles.sql
+          test -s schema.sql
+          test -s data.sql
+          tar -czf "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz" roles.sql schema.sql data.sql
+
+      - name: Encrypt backup archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 \
+            -in "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz" \
+            -out "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          test -s "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc"
+          cd "$RUNNER_TEMP"
+          sha256sum SAKM-61-database-backup.tar.gz.enc > SAKM-61-database-backup.tar.gz.enc.sha256
+          rm -rf "$RUNNER_TEMP/sakm61-backup" "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz"
+
+      - name: Upload encrypted backup only
+        uses: actions/upload-artifact@v4
+        with:
+          name: SAKM-61-encrypted-database-backup
+          path: |
+            ${{ runner.temp }}/SAKM-61-database-backup.tar.gz.enc
+            ${{ runner.temp }}/SAKM-61-database-backup.tar.gz.enc.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove temporary encrypted files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/sakm61-backup"
+          rm -f "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc" "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc.sha256"
