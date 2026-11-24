@@ -220,4 +220,14 @@ assert 'await loadEntries();await loadBudgets()' in approval_handler, 'Accounts:
 assert "if(privateOnlyModules.has(m.n))throw new Error" in modules_js, 'Modules: block public-bucket uploads from private-only modules'
 assert "const privateOnlyModules=new Set" in modules_js and "61" in modules_js.split("const privateOnlyModules=new Set",1)[1].split(");",1)[0], 'Modules: Muslim registration must remain private-only'
 
+# Public SEO crawl controls: keep admin surfaces out of indexes and publish a homepage sitemap.
+index_html = (ROOT/'index.html').read_text(encoding='utf-8')
+admin_html = (ROOT/'admin.html').read_text(encoding='utf-8')
+accounts_html = (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'rel="canonical"' in index_html, 'SEO: homepage needs a canonical URL'
+assert 'name="robots" content="noindex,nofollow"' in admin_html, 'SEO: admin page must not be indexed'
+assert 'name="robots" content="noindex,nofollow"' in accounts_html, 'SEO: accounts page must not be indexed'
+assert (ROOT/'sitemap.xml').exists(), 'SEO: sitemap.xml must exist'
+assert (ROOT/'robots.txt').exists(), 'SEO: robots.txt must exist'
+
 # CI run for 50 MB site-media upload caps.
