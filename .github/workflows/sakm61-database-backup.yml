@@ -1,4 +1,4 @@
-name: SAKM-61 Encrypted Database Backup
+name: SAKM-61 Encrypted Full Backup (best-effort)
 
 on:
   workflow_dispatch:
@@ -11,19 +11,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  database-backup:
-    name: Dump and encrypt database
+  backup:
+    name: Export, encrypt and upload backup
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: https://lmwczibsipczfymhyqba.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+      BACKUP_DIR: ${{ runner.temp }}/sakm61-backup
     steps:
       - name: Validate required secrets
         shell: bash
         run: |
           set -euo pipefail
           test -n "$SUPABASE_DB_URL" || { echo "::error::SUPABASE_DB_URL is missing"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "::error::SUPABASE_SERVICE_ROLE_KEY is missing"; exit 1; }
           test -n "$BACKUP_ENCRYPTION_KEY" || { echo "::error::BACKUP_ENCRYPTION_KEY is missing"; exit 1; }
           if [ "${#BACKUP_ENCRYPTION_KEY}" -lt 32 ]; then
             echo "::error::BACKUP_ENCRYPTION_KEY must contain at least 32 characters"
@@ -43,43 +47,69 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          mkdir -p "$RUNNER_TEMP/sakm61-backup"
-          cd "$RUNNER_TEMP/sakm61-backup"
+          mkdir -p "$BACKUP_DIR/database"
+          cd "$BACKUP_DIR/database"
           supabase db dump --remote="$SUPABASE_DB_URL" -f roles.sql --role-only
           supabase db dump --remote="$SUPABASE_DB_URL" -f schema.sql
           supabase db dump --remote="$SUPABASE_DB_URL" -f data.sql --data-only --use-copy -x "storage.buckets_vectors" -x "storage.vector_indexes"
           test -s roles.sql
           test -s schema.sql
           test -s data.sql
-          tar -czf "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz" roles.sql schema.sql data.sql
 
-      - name: Encrypt backup archive
+      - name: Export Auth user metadata and Storage objects
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 \
-            -in "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz" \
-            -out "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc" \
-            -pass env:BACKUP_ENCRYPTION_KEY
-          test -s "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc"
+          cp scripts/backup-supabase-assets.mjs "$RUNNER_TEMP/backup-supabase-assets.mjs"
           cd "$RUNNER_TEMP"
-          sha256sum SAKM-61-database-backup.tar.gz.enc > SAKM-61-database-backup.tar.gz.enc.sha256
-          rm -rf "$RUNNER_TEMP/sakm61-backup" "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz"
+          npm install --no-save --no-package-lock @supabase/supabase-js@2.49.1
+          node "$RUNNER_TEMP/backup-supabase-assets.mjs"
+          mkdir -p "$BACKUP_DIR/edge-functions"
+          if [ -d supabase/functions ]; then cp -R supabase/functions/. "$BACKUP_DIR/edge-functions/"; fi
+          cat > "$BACKUP_DIR/BACKUP-SCOPE.txt" <<'EOF'
+          Included:
+          - PostgreSQL roles, public schema and data from Supabase CLI dump.
+          - Auth user profile/metadata and provider identity metadata (not password hashes, sessions, refresh tokens, MFA secrets, or provider credentials).
+          - Storage bucket settings and object bytes accessible through the Storage API.
+          - Edge Function source files committed in this repository at the workflow's checked-out commit.
+          Not included / restore caveats:
+          - Supabase-managed Auth/Storage schemas and internal service state.
+          - Password hashes and active sessions; users may need password resets or re-invitations.
+          - Edge Function deployed secrets, project secrets, Auth provider secrets, SMTP settings, API keys, JWT signing secrets, and dashboard-only project settings.
+          - Remote Edge Function code not committed to this repository.
+          - A verified end-to-end restore into a fresh Supabase project.
+          This artifact is a best-effort recovery bundle, not a guaranteed one-click full-project clone.
+          EOF
+
+      - name: Create archive and encrypt it
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          tar -czf "$RUNNER_TEMP/SAKM-61-backup.tar.gz" -C "$RUNNER_TEMP" sakm61-backup
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 \
+            -in "$RUNNER_TEMP/SAKM-61-backup.tar.gz" \
+            -out "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          test -s "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc"
+          cd "$RUNNER_TEMP"
+          sha256sum SAKM-61-backup.tar.gz.enc > SAKM-61-backup.tar.gz.enc.sha256
+          rm -rf "$BACKUP_DIR" "$RUNNER_TEMP/node_modules" "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz"
 
       - name: Upload encrypted backup only
         uses: actions/upload-artifact@v4
         with:
-          name: SAKM-61-encrypted-database-backup
+          name: SAKM-61-encrypted-backup
           path: |
-            ${{ runner.temp }}/SAKM-61-database-backup.tar.gz.enc
-            ${{ runner.temp }}/SAKM-61-database-backup.tar.gz.enc.sha256
+            ${{ runner.temp }}/SAKM-61-backup.tar.gz.enc
+            ${{ runner.temp }}/SAKM-61-backup.tar.gz.enc.sha256
           if-no-files-found: error
           retention-days: 14
 
-      - name: Remove temporary encrypted files
+      - name: Remove temporary files
         if: always()
         shell: bash
         run: |
-          rm -rf "$RUNNER_TEMP/sakm61-backup"
-          rm -f "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc" "$RUNNER_TEMP/SAKM-61-database-backup.tar.gz.enc.sha256"
+          rm -rf "$RUNNER_TEMP/sakm61-backup" "$RUNNER_TEMP/node_modules"
+          rm -f "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc" "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc.sha256"
