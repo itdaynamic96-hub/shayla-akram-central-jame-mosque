@@ -231,3 +231,5 @@ assert (ROOT/'sitemap.xml').exists(), 'SEO: sitemap.xml must exist'
 assert (ROOT/'robots.txt').exists(), 'SEO: robots.txt must exist'
 
 # CI run for 50 MB site-media upload caps.
+
+# CI run for sitemap and noindex updates.
