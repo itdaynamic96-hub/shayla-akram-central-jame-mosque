@@ -126,7 +126,8 @@ drop policy if exists "contribution reminder log read by accounts" on public.con
 create policy "contribution reminder log read by accounts" on public.contribution_reminder_log for select to authenticated
 using(exists(select 1 from public.contribution_members m where m.id=member_id and public.can_manage_contributions(m.institution,false)));
 
-grant select,insert,update on public.contribution_members to authenticated;
+revoke insert,update,delete on public.contribution_members from authenticated;
+grant select on public.contribution_members to authenticated;
 grant select on public.contribution_rates,public.contribution_payments,public.contribution_payment_allocations,public.contribution_reminder_log to authenticated;
 
 create or replace function public.save_contribution_member(
