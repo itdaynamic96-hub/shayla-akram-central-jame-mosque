@@ -211,3 +211,5 @@ modules_js = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert "kind==='video'?52428800" in modules_js and "kind==='video'?104857600" not in modules_js, 'Module uploads: video upload must be capped at 50 MB'
 
 # CI run for read-only auditor/viewer scope.
+
+# CI run for 50 MB site-media upload caps.
