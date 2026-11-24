@@ -154,3 +154,5 @@ print('Phase 1 regression checks passed: institution-aware staff edit, 61-module
 # Trigger CI after phase 1 regression-fix commit.
 
 # Re-run CI against the corrected phase 1 patch.
+
+# CI run for mosque-only m61 policy guard.
