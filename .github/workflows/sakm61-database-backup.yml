@@ -20,7 +20,6 @@ jobs:
       SUPABASE_URL: https://lmwczibsipczfymhyqba.supabase.co
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
-      BACKUP_DIR: ${{ runner.temp }}/sakm61-backup
     steps:
       - name: Validate required secrets
         shell: bash
@@ -47,6 +46,7 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
+          BACKUP_DIR="$RUNNER_TEMP/sakm61-backup"
           mkdir -p "$BACKUP_DIR/database"
           cd "$BACKUP_DIR/database"
           supabase db dump --remote="$SUPABASE_DB_URL" -f roles.sql --role-only
@@ -61,6 +61,7 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
+          BACKUP_DIR="$RUNNER_TEMP/sakm61-backup"
           cp scripts/backup-supabase-assets.mjs "$RUNNER_TEMP/backup-supabase-assets.mjs"
           cd "$RUNNER_TEMP"
           npm install --no-save --no-package-lock @supabase/supabase-js@2.49.1
