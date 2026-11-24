@@ -153,6 +153,25 @@ $$;
 revoke all on function public.replace_admin_module_permissions(uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.replace_admin_module_permissions(uuid,jsonb) to service_role;
 
+
+-- Trigger-only SECURITY DEFINER functions are not public RPC endpoints.
+revoke all on function public.create_profile_for_new_user() from public, anon, authenticated;
+revoke all on function public.guard_module_record_publication() from public, anon, authenticated;
+revoke all on function public.log_ledger_change() from public, anon, authenticated;
+revoke all on function public.log_module_record_change() from public, anon, authenticated;
+
+-- Keep anonymous published-content reads independent of the privileged role helper.
+drop policy if exists "public can read published site content" on public.site_content;
+drop policy if exists "authenticated can read published site content" on public.site_content;
+create policy "public can read published site content" on public.site_content
+  for select to anon using (status='published');
+create policy "authenticated can read published site content" on public.site_content
+  for select to authenticated
+  using (status='published' or public.has_access(array['super_admin','admin','website_admin'],null));
+
+revoke all on function public.has_access(text[],text) from public, anon;
+grant execute on function public.has_access(text[],text) to authenticated;
+
 commit;
 );
 
