@@ -177,8 +177,8 @@ hardening_sql = (ROOT/'supabase/phase1-security-hardening.sql').read_text(encodi
 assert 'receipt_is_unlinked' in hardening_sql and 'module_record_access' in hardening_sql and 'replace_admin_module_permissions' in hardening_sql, 'Security: incremental Phase 1 hardening migration is incomplete'
 assert 'drop constraint if exists module_records_mosque_basic_module_key_check' in hardening_sql, 'Security: remove legacy mosque-only basic-module constraint'
 assert 'module_records_module_institution_check' in hardening_sql, 'Security: add explicit module-to-institution constraint'
-assert "module_key !~ '^m(2[1-9]|30|61)" in hardening_sql, 'Security: mosque modules m21-m30 and m61 must remain mosque-only'
-assert "module_key !~ '^m(3[1-9]|40)" in hardening_sql, 'Security: foundation modules m31-m40 must remain foundation-only'
+assert "module_key not in ('m21','m22','m23','m24','m25','m26','m27','m28','m29','m30','m61')" in hardening_sql, 'Security: mosque modules and m61 must remain mosque-only'
+assert "module_key not in ('m31','m32','m33','m34','m35','m36','m37','m38','m39','m40')" in hardening_sql, 'Security: foundation modules must remain foundation-only'
 for trigger_fn in ('create_profile_for_new_user','guard_module_record_publication','log_ledger_change','log_module_record_change'):
     assert f'revoke all on function public.{trigger_fn}()' in hardening_sql, f'Security: trigger-only function {trigger_fn} must not be exposed as RPC'
 assert 'for select to anon using (status=' in hardening_sql, 'Security: anonymous content reads must only use published status'
