@@ -140,6 +140,10 @@ assert 'jsonb_array_length(permission_rows) > 61' in permissions_sql, 'Permissio
 assert "role='custom_admin'" in permissions_sql, 'Permissions RPC: verify the target is a custom_admin'
 assert 'count(distinct item.value->>\'module_key\')' in permissions_sql, 'Permissions RPC: reject duplicate module keys'
 
+assert permissions_sql.count("target_key <> 'm61' or target_institution='mosque'") >= 2, 'Permissions SQL: m61 access must remain mosque-only'
+enhancements_sql = (ROOT/'supabase/admin-panel-enhancements.sql').read_text(encoding='utf-8')
+assert enhancements_sql.count("target_key <> 'm61' or target_institution='mosque'") >= 2, 'Enhancements SQL: m61 access must remain mosque-only'
+
 for migration_name in ('schema.sql', 'admin-modules.sql'):
     migration_sql = (ROOT/'supabase'/migration_name).read_text(encoding='utf-8')
     receipt_fn = migration_sql.split('create or replace function public.receipt_is_unlinked', 1)[1].split('$receipt$;', 1)[0]

@@ -22,6 +22,7 @@ as $$
     p.role='super_admin'
     or (p.role='custom_admin'
       and (p.institution='both' or p.institution=target_institution)
+      and (target_key <> 'm61' or target_institution='mosque')
       and exists(select 1 from public.admin_module_permissions mp
         where mp.user_id=p.id and mp.module_key=target_key and mp.can_view
           and (not write_access or mp.can_write)))
@@ -32,7 +33,8 @@ as $$
     or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager')
         and p.institution in ('both','foundation') and target_institution='foundation')
     or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant')
-        and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
+        and (p.institution='both' or p.institution=target_institution)
+      and (target_key <> 'm61' or target_institution='mosque') and target_institution in ('mosque','foundation'))
     or (substring(target_key from 2)::integer between 51 and 60 and p.role='admin')
     or (target_key='m61' and p.role in ('admin','mosque_admin','manager')
         and p.institution in ('both','mosque') and target_institution='mosque')
@@ -51,11 +53,13 @@ as $$
     p.role='super_admin'
     or (p.role='custom_admin'
       and (p.institution='both' or p.institution=target_institution)
+      and (target_key <> 'm61' or target_institution='mosque')
       and exists(select 1 from public.admin_module_permissions mp
         where mp.user_id=p.id and mp.module_key=target_key and mp.can_view and mp.can_write and mp.can_approve))
     or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque'))
     or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin') and p.institution in ('both','foundation'))
-    or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution))
+    or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution)
+      and (target_key <> 'm61' or target_institution='mosque'))
     or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin'))
     or (target_key='m61' and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque') and target_institution='mosque')
    )
