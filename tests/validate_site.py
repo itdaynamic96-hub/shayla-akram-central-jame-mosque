@@ -170,3 +170,5 @@ assert "substring(target_key from 2)::integer not between 21 and 30 or target_in
 assert "substring(target_key from 2)::integer not between 31 and 40 or target_institution='foundation'" in permissions_sql, 'Record access helpers: m31-m40 must remain foundation-only'
 
 # CI run for mosque-only m61 policy guard.
+
+# CI run for institution-scoped permission validation.
