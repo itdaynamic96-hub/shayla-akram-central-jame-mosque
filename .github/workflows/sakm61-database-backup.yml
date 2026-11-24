@@ -66,7 +66,7 @@ jobs:
           npm install --no-save --no-package-lock @supabase/supabase-js@2.49.1
           node "$RUNNER_TEMP/backup-supabase-assets.mjs"
           mkdir -p "$BACKUP_DIR/edge-functions"
-          if [ -d supabase/functions ]; then cp -R supabase/functions/. "$BACKUP_DIR/edge-functions/"; fi
+          if [ -d "$GITHUB_WORKSPACE/supabase/functions" ]; then cp -R "$GITHUB_WORKSPACE/supabase/functions/." "$BACKUP_DIR/edge-functions/"; fi
           cat > "$BACKUP_DIR/BACKUP-SCOPE.txt" <<'EOF'
           Included:
           - PostgreSQL roles, public schema and data from Supabase CLI dump.
