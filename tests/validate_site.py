@@ -198,3 +198,5 @@ for sql_name in ('admin-modules.sql','module-permissions.sql','admin-panel-enhan
     assert "p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution)" not in access_fn, f'{sql_name}: broad institution-only auditor/viewer access is unsafe'
 
 # Correct current-user null-safe assertion.
+
+# CI run for read-only auditor/viewer scope.
