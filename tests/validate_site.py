@@ -232,4 +232,7 @@ assert (ROOT/'robots.txt').exists(), 'SEO: robots.txt must exist'
 
 # CI run for 50 MB site-media upload caps.
 
+# The SEO module's robots selector must be applied to the public homepage.
+assert 'seoRecord.robots' in index_html and 'meta[name="robots"]' in index_html, 'SEO: apply the configured robots directive on the homepage'
+
 # CI run for sitemap and noindex updates.
