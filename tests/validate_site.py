@@ -238,3 +238,5 @@ assert 'seoRecord.robots' in index_html and 'meta[name="robots"]' in index_html,
 # CI run for sitemap and noindex updates.
 
 # CI run for real browser desktop/mobile smoke tests.
+
+# Final CI run for the complete audit-fix branch.
