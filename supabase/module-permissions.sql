@@ -53,8 +53,7 @@ as $$
       or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
       or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
       or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and p.institution in ('both','foundation') and target_institution='foundation')
-      or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution)
-      and (target_key <> 'm61' or target_institution='mosque') and target_institution in ('mosque','foundation'))
+      or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
       or (substring(target_key from 2)::integer between 51 and 60 and p.role='admin')
     )
     and (not write_access or p.role not in ('auditor','viewer'))
@@ -78,8 +77,7 @@ as $$
     )
     or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque'))
     or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin') and p.institution in ('both','foundation'))
-    or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution)
-      and (target_key <> 'm61' or target_institution='mosque'))
+    or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution))
     or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin'))
    )
  );
@@ -144,7 +142,6 @@ as $$
   join public.admin_module_permissions mp on mp.user_id=p.id
   where p.id=auth.uid() and p.role='custom_admin'
     and (p.institution='both' or p.institution=target_institution)
-      and (target_key <> 'm61' or target_institution='mosque')
     and mp.module_key=any(target_modules) and mp.can_view
     and (not write_access or mp.can_write)
     and (not approve_access or mp.can_approve)
