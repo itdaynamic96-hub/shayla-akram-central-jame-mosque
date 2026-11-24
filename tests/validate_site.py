@@ -175,6 +175,7 @@ enhancements_sql = (ROOT/'supabase/admin-panel-enhancements.sql').read_text(enco
 assert 'file_size_limit=52428800' in enhancements_sql and '104857600' not in enhancements_sql, 'Storage: site-media bucket must respect the 50 MB Free-plan limit'
 hardening_sql = (ROOT/'supabase/phase1-security-hardening.sql').read_text(encoding='utf-8')
 assert 'receipt_is_unlinked' in hardening_sql and 'module_record_access' in hardening_sql and 'replace_admin_module_permissions' in hardening_sql, 'Security: incremental Phase 1 hardening migration is incomplete'
+assert 'drop policy if exists "basic mosque media public read" on storage.objects' in hardening_sql, 'Storage: remove anonymous object listing from public mosque media bucket'
 assert 'drop constraint if exists module_records_mosque_basic_module_key_check' in hardening_sql, 'Security: remove legacy mosque-only basic-module constraint'
 assert 'module_records_module_institution_check' in hardening_sql, 'Security: add explicit module-to-institution constraint'
 assert "module_key not in ('m21','m22','m23','m24','m25','m26','m27','m28','m29','m30','m61')" in hardening_sql, 'Security: mosque modules and m61 must remain mosque-only'
