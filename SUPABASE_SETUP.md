@@ -62,7 +62,9 @@ In Authentication → URL Configuration, set the Site URL to:
 `https://itdaynamic96-hub.github.io/shayla-akram-central-jame-mosque`
 Add the same site URL and the two page URLs ending in `/admin.html` and `/accounts.html` to the allowed redirect URLs if your project settings require them.
 
-## 9. Test before using real financial data
+## 9. Acceptance test checklist (perform after steps 6–11)
+Complete the schema, permissions, enhancements, hardening, and public-module SQL steps before running these tests. Do not use real financial data for the test entries.
+
 1. Sign in at /admin.html with the Super Admin.
 2. Add one test article, one test photo URL, and one YouTube video URL; publish and verify each on the homepage.
 3. Create separate mosque and foundation accountant users and confirm each can only see their own institution.
@@ -95,7 +97,7 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 ## 10B. Apply the Phase 1 security hardening migration
 1. After steps 6, 10, and 10A, open Supabase → SQL Editor → New query.
 2. Run the complete `supabase/phase1-security-hardening.sql` file.
-3. It tightens receipt-path checks, enforces mosque/foundation module boundaries, and validates the 61-module permission grants at the database level.
+3. It tightens receipt-path checks, enforces mosque/foundation module boundaries, restricts Auditor/Viewer to read-only module ranges, and validates the 61-module permission grants at the database level.
 4. This migration changes security functions and constraints only; it does not edit existing user, receipt, or financial records. It is safe to re-run.
 
 ## 11. Publish module-specific Admin Panel records to the matching website section
