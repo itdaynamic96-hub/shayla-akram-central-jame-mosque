@@ -189,4 +189,12 @@ assert 'p.id!==currentUserId' in admin_html, 'Admin: do not offer self role chan
 
 # CI run for incremental hardening migration and Free bucket cap.
 
+# Auditor and viewer must have narrowly scoped read-only module access at the database layer.
+for sql_name in ('admin-modules.sql','module-permissions.sql','admin-panel-enhancements.sql','phase1-security-hardening.sql'):
+    sql_text = (ROOT/'supabase'/sql_name).read_text(encoding='utf-8')
+    access_fn = sql_text.split('create or replace function public.module_record_access',1)[1].split('create or replace function public.module_record_approval_access',1)[0]
+    assert "p.role='auditor'" in access_fn and "p.role='viewer'" in access_fn, f'{sql_name}: auditor/viewer access rules are missing'
+    assert "target_key='m03'" in access_fn and 'not write_access' in access_fn, f'{sql_name}: auditor access must be read-only and limited'
+    assert "p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution)" not in access_fn, f'{sql_name}: broad institution-only auditor/viewer access is unsafe'
+
 # Correct current-user null-safe assertion.
