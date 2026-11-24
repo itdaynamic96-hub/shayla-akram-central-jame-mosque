@@ -236,3 +236,5 @@ assert (ROOT/'robots.txt').exists(), 'SEO: robots.txt must exist'
 assert 'seoRecord.robots' in index_html and 'meta[name="robots"]' in index_html, 'SEO: apply the configured robots directive on the homepage'
 
 # CI run for sitemap and noindex updates.
+
+# CI run for real browser desktop/mobile smoke tests.
