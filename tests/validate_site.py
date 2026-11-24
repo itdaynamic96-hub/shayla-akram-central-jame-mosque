@@ -146,3 +146,5 @@ for migration_name in ('schema.sql', 'admin-modules.sql'):
     assert 'storage.objects' in receipt_fn and 'owner_id=auth.uid()::text' in receipt_fn, f'{migration_name}: receipt lookup must be scoped to the caller-owned private receipt'
 
 print('Phase 1 regression checks passed: institution-aware staff edit, 61-module validation, and caller-scoped receipt lookup.')
+
+# Trigger CI after phase 1 regression-fix commit.
