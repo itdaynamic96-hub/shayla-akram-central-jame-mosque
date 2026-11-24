@@ -171,6 +171,11 @@ assert "substring(target_key from 2)::integer not between 31 and 40 or target_in
 
 # CI run for mosque-only m61 policy guard.
 
+enhancements_sql = (ROOT/'supabase/admin-panel-enhancements.sql').read_text(encoding='utf-8')
+assert 'file_size_limit=52428800' in enhancements_sql and '104857600' not in enhancements_sql, 'Storage: site-media bucket must respect the 50 MB Free-plan limit'
+hardening_sql = (ROOT/'supabase/phase1-security-hardening.sql').read_text(encoding='utf-8')
+assert 'receipt_is_unlinked' in hardening_sql and 'module_record_access' in hardening_sql and 'replace_admin_module_permissions' in hardening_sql, 'Security: incremental Phase 1 hardening migration is incomplete'
+
 # CI run for institution-scoped permission validation.
 
 # Re-run after correcting m61 assertion.

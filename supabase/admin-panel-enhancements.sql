@@ -73,11 +73,11 @@ grant execute on function public.module_record_access(text,text,boolean) to auth
 grant execute on function public.module_record_approval_access(text,text) to authenticated;
 
 -- Public media bucket: images, PDFs and short educational videos.
--- Maximum object size is 100 MB; actual quota/plan limits still apply.
+-- Maximum object size is 50 MB, compatible with the Supabase Free project limit.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('site-media','site-media',true,104857600,
+values('site-media','site-media',true,52428800,
  array['image/jpeg','image/png','image/webp','image/gif','application/pdf','video/mp4','video/webm','video/ogg'])
-on conflict(id) do update set public=true,file_size_limit=104857600,
+on conflict(id) do update set public=true,file_size_limit=52428800,
  allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif','application/pdf','video/mp4','video/webm','video/ogg'];
 
 -- Existing website approvers retain access. Module editors can upload only

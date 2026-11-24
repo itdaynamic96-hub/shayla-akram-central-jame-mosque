@@ -71,7 +71,7 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 - GitHub Pages serves the static website; Supabase provides authentication, database and private storage.
 - No live Admin/Accounts login can work until a real Supabase project is connected and the SQL is run.
 
-\n## 10. Enable Super Admin-created staff accounts and per-module permissions
+## 10. Enable Super Admin-created staff accounts and per-module permissions
 1. Run the complete `supabase/module-permissions.sql` file in Supabase SQL Editor after the existing schema and Admin module SQL migrations.
 2. In Supabase Dashboard → Edge Functions, deploy the function in `supabase/functions/admin-create-user/index.ts` with the name `admin-create-user`.
 3. Ensure the Edge Function has the server secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Supabase normally supplies these; if adding a secret manually, add it only in Edge Function Secrets, never in GitHub Pages or browser code.
@@ -79,8 +79,20 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 5. The selected module grants read access by default. Optional checkboxes grant editing and approval. Permissions are also enforced by database RLS; hiding a menu alone is not the security boundary.
 6. Existing non-Super-Admin accounts keep their current role-based permissions. New staff accounts use the restricted `custom_admin` role and can access only selected modules.
 
+## 10A. Apply Admin Panel enhancements (required for all 61 modules)
+1. After step 10, open Supabase → SQL Editor → New query.
+2. Open `supabase/admin-panel-enhancements.sql` in GitHub and run the complete SQL.
+3. This adds the 61st Muslim-registration module, applies its mosque-only access rules, configures the `site-media` bucket, and enables the approved module-record features. The SQL is safe to re-run.
+4. Keep the `site-media` bucket at or below 50 MB per file on the Supabase Free plan. Do not raise the project-wide upload limit.
+
+## 10B. Apply the Phase 1 security hardening migration
+1. After steps 6, 10, and 10A, open Supabase → SQL Editor → New query.
+2. Run the complete `supabase/phase1-security-hardening.sql` file.
+3. It tightens receipt-path checks, enforces mosque/foundation module boundaries, and validates the 61-module permission grants at the database level.
+4. This migration changes security functions and constraints only; it does not edit existing user, receipt, or financial records. It is safe to re-run.
+
 ## 11. Publish module-specific Admin Panel records to the matching website section
-1. First complete steps 6 and 10 above. The `module_records` table and module-permission policies must already exist.
+1. First complete steps 6, 10, 10A, and 10B above. The `module_records` table and module-permission policies must already exist.
 2. Open Supabase → SQL Editor → New query.
 3. Open `supabase/public-module-records.sql` in GitHub, copy the entire file, paste it into SQL Editor, and press Run.
 4. This grants public read access only to records that are explicitly marked for public display, have status `published`, and belong to the approved public module allowlist. Drafts, pending approvals, and private staff/beneficiary/financial records remain unavailable to visitors.
