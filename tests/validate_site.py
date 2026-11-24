@@ -216,4 +216,8 @@ assert "kind==='video'?52428800" in modules_js and "kind==='video'?104857600" no
 approval_handler = accounts_html.split("$('entries').addEventListener('click'",1)[1].split("$('entryForm').addEventListener",1)[0]
 assert 'await loadEntries();await loadBudgets()' in approval_handler, 'Accounts: refresh budget totals after approving or rejecting a ledger entry'
 
+# Private-only module records must never upload documents into the public site-media bucket.
+assert "if(privateOnlyModules.has(m.n))throw new Error" in modules_js, 'Modules: block public-bucket uploads from private-only modules'
+assert "const privateOnlyModules=new Set" in modules_js and "61" in modules_js.split("const privateOnlyModules=new Set",1)[1].split(");",1)[0], 'Modules: Muslim registration must remain private-only'
+
 # CI run for 50 MB site-media upload caps.
