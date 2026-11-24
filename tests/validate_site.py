@@ -175,6 +175,139 @@ enhancements_sql = (ROOT/'supabase/admin-panel-enhancements.sql').read_text(enco
 assert 'file_size_limit=52428800' in enhancements_sql and '104857600' not in enhancements_sql, 'Storage: site-media bucket must respect the 50 MB Free-plan limit'
 hardening_sql = (ROOT/'supabase/phase1-security-hardening.sql').read_text(encoding='utf-8')
 assert 'receipt_is_unlinked' in hardening_sql and 'module_record_access' in hardening_sql and 'replace_admin_module_permissions' in hardening_sql, 'Security: incremental Phase 1 hardening migration is incomplete'
+assert 'drop constraint if exists module_records_mosque_basic_module_key_check' in hardening_sql, 'Security: remove legacy mosque-only basic-module constraint that blocks mosque admin modules'
+assert "module_key !~ '^m(2[1-9]|30|61)
+# CI run for institution-scoped permission validation.
+
+# Re-run after correcting m61 assertion.
+
+# All intended operational roles must reach the Admin module shell; prevent self-demotion.
+admin_html = (ROOT/'admin.html').read_text(encoding='utf-8')
+for role in ('mosque_admin','foundation_admin','manager','viewer','accountant','accounts_manager'):
+    assert "'"+role+"'" in admin_html.split("if(!['",1)[1].split("].includes(p.role)",1)[0], f'Admin: {role} must be allowed to enter the module shell'
+assert 'currentUserId=user?.id||null' in admin_html, 'Admin: retain the signed-in user ID for self-protection'
+assert 'p.id!==currentUserId' in admin_html, 'Admin: do not offer self role changes to the current Super Admin'
+
+# CI run for incremental hardening migration and Free bucket cap.
+
+# Auditor and viewer must have narrowly scoped read-only module access at the database layer.
+for sql_name in ('admin-modules.sql','module-permissions.sql','admin-panel-enhancements.sql','phase1-security-hardening.sql'):
+    sql_text = (ROOT/'supabase'/sql_name).read_text(encoding='utf-8')
+    access_fn = sql_text.split('create or replace function public.module_record_access',1)[1].split('create or replace function public.module_record_approval_access',1)[0]
+    assert "p.role='auditor'" in access_fn and "p.role='viewer'" in access_fn, f'{sql_name}: auditor/viewer access rules are missing'
+    assert "target_key='m03'" in access_fn and 'not write_access' in access_fn, f'{sql_name}: auditor access must be read-only and limited'
+    assert "p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution)" not in access_fn, f'{sql_name}: broad institution-only auditor/viewer access is unsafe'
+
+# Correct current-user null-safe assertion.
+
+# A saved financial entry must not be reported as failed just because the follow-up refresh fails.
+accounts_html = (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'id="formSuccess"' in accounts_html, 'Accounts: show explicit success after a ledger entry is saved'
+assert 'লেনদেনটি সফলভাবে জমা হয়েছে' in accounts_html, 'Accounts: distinguish a saved entry from a failed refresh'
+assert "showError($('listError'),new Error('লেনদেন সংরক্ষিত হয়েছে" in accounts_html, 'Accounts: report refresh errors separately after successful insert'
+
+# Every site-media video upload path must obey the 50 MB Free-tier cap.
+assert 'videoFile.size>52428800' in admin_html and '104857600' not in admin_html, 'Admin content: video upload must be capped at 50 MB'
+modules_js = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert "kind==='video'?52428800" in modules_js and "kind==='video'?104857600" not in modules_js, 'Module uploads: video upload must be capped at 50 MB'
+
+# CI run for read-only auditor/viewer scope.
+
+# Approval/rejection must refresh both the ledger list and budget totals.
+approval_handler = accounts_html.split("$('entries').addEventListener('click'",1)[1].split("$('entryForm').addEventListener",1)[0]
+assert 'await loadEntries();await loadBudgets()' in approval_handler, 'Accounts: refresh budget totals after approving or rejecting a ledger entry'
+
+# Private-only module records must never upload documents into the public site-media bucket.
+assert "if(privateOnlyModules.has(m.n))throw new Error" in modules_js, 'Modules: block public-bucket uploads from private-only modules'
+assert "const privateOnlyModules=new Set" in modules_js and "61" in modules_js.split("const privateOnlyModules=new Set",1)[1].split(");",1)[0], 'Modules: Muslim registration must remain private-only'
+
+# Public SEO crawl controls: keep admin surfaces out of indexes and publish a homepage sitemap.
+index_html = (ROOT/'index.html').read_text(encoding='utf-8')
+admin_html = (ROOT/'admin.html').read_text(encoding='utf-8')
+accounts_html = (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'rel="canonical"' in index_html, 'SEO: homepage needs a canonical URL'
+assert 'name="robots" content="noindex,nofollow"' in admin_html, 'SEO: admin page must not be indexed'
+assert 'name="robots" content="noindex,nofollow"' in accounts_html, 'SEO: accounts page must not be indexed'
+assert (ROOT/'sitemap.xml').exists(), 'SEO: sitemap.xml must exist'
+assert (ROOT/'robots.txt').exists(), 'SEO: robots.txt must exist'
+
+# CI run for 50 MB site-media upload caps.
+
+# The SEO module's robots selector must be applied to the public homepage.
+assert 'seoRecord.robots' in index_html and 'meta[name="robots"]' in index_html, 'SEO: apply the configured robots directive on the homepage'
+
+# CI run for sitemap and noindex updates.
+
+# CI run for real browser desktop/mobile smoke tests.
+
+# Final CI run for the complete audit-fix branch.
+ or institution='mosque'" in hardening_sql, 'Security: mosque modules m21-m30 and m61 must remain mosque-only'
+assert "module_key !~ '^m(3[1-9]|40)
+# CI run for institution-scoped permission validation.
+
+# Re-run after correcting m61 assertion.
+
+# All intended operational roles must reach the Admin module shell; prevent self-demotion.
+admin_html = (ROOT/'admin.html').read_text(encoding='utf-8')
+for role in ('mosque_admin','foundation_admin','manager','viewer','accountant','accounts_manager'):
+    assert "'"+role+"'" in admin_html.split("if(!['",1)[1].split("].includes(p.role)",1)[0], f'Admin: {role} must be allowed to enter the module shell'
+assert 'currentUserId=user?.id||null' in admin_html, 'Admin: retain the signed-in user ID for self-protection'
+assert 'p.id!==currentUserId' in admin_html, 'Admin: do not offer self role changes to the current Super Admin'
+
+# CI run for incremental hardening migration and Free bucket cap.
+
+# Auditor and viewer must have narrowly scoped read-only module access at the database layer.
+for sql_name in ('admin-modules.sql','module-permissions.sql','admin-panel-enhancements.sql','phase1-security-hardening.sql'):
+    sql_text = (ROOT/'supabase'/sql_name).read_text(encoding='utf-8')
+    access_fn = sql_text.split('create or replace function public.module_record_access',1)[1].split('create or replace function public.module_record_approval_access',1)[0]
+    assert "p.role='auditor'" in access_fn and "p.role='viewer'" in access_fn, f'{sql_name}: auditor/viewer access rules are missing'
+    assert "target_key='m03'" in access_fn and 'not write_access' in access_fn, f'{sql_name}: auditor access must be read-only and limited'
+    assert "p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution)" not in access_fn, f'{sql_name}: broad institution-only auditor/viewer access is unsafe'
+
+# Correct current-user null-safe assertion.
+
+# A saved financial entry must not be reported as failed just because the follow-up refresh fails.
+accounts_html = (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'id="formSuccess"' in accounts_html, 'Accounts: show explicit success after a ledger entry is saved'
+assert 'লেনদেনটি সফলভাবে জমা হয়েছে' in accounts_html, 'Accounts: distinguish a saved entry from a failed refresh'
+assert "showError($('listError'),new Error('লেনদেন সংরক্ষিত হয়েছে" in accounts_html, 'Accounts: report refresh errors separately after successful insert'
+
+# Every site-media video upload path must obey the 50 MB Free-tier cap.
+assert 'videoFile.size>52428800' in admin_html and '104857600' not in admin_html, 'Admin content: video upload must be capped at 50 MB'
+modules_js = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert "kind==='video'?52428800" in modules_js and "kind==='video'?104857600" not in modules_js, 'Module uploads: video upload must be capped at 50 MB'
+
+# CI run for read-only auditor/viewer scope.
+
+# Approval/rejection must refresh both the ledger list and budget totals.
+approval_handler = accounts_html.split("$('entries').addEventListener('click'",1)[1].split("$('entryForm').addEventListener",1)[0]
+assert 'await loadEntries();await loadBudgets()' in approval_handler, 'Accounts: refresh budget totals after approving or rejecting a ledger entry'
+
+# Private-only module records must never upload documents into the public site-media bucket.
+assert "if(privateOnlyModules.has(m.n))throw new Error" in modules_js, 'Modules: block public-bucket uploads from private-only modules'
+assert "const privateOnlyModules=new Set" in modules_js and "61" in modules_js.split("const privateOnlyModules=new Set",1)[1].split(");",1)[0], 'Modules: Muslim registration must remain private-only'
+
+# Public SEO crawl controls: keep admin surfaces out of indexes and publish a homepage sitemap.
+index_html = (ROOT/'index.html').read_text(encoding='utf-8')
+admin_html = (ROOT/'admin.html').read_text(encoding='utf-8')
+accounts_html = (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'rel="canonical"' in index_html, 'SEO: homepage needs a canonical URL'
+assert 'name="robots" content="noindex,nofollow"' in admin_html, 'SEO: admin page must not be indexed'
+assert 'name="robots" content="noindex,nofollow"' in accounts_html, 'SEO: accounts page must not be indexed'
+assert (ROOT/'sitemap.xml').exists(), 'SEO: sitemap.xml must exist'
+assert (ROOT/'robots.txt').exists(), 'SEO: robots.txt must exist'
+
+# CI run for 50 MB site-media upload caps.
+
+# The SEO module's robots selector must be applied to the public homepage.
+assert 'seoRecord.robots' in index_html and 'meta[name="robots"]' in index_html, 'SEO: apply the configured robots directive on the homepage'
+
+# CI run for sitemap and noindex updates.
+
+# CI run for real browser desktop/mobile smoke tests.
+
+# Final CI run for the complete audit-fix branch.
+ or institution='foundation'" in hardening_sql, 'Security: foundation modules m31-m40 must remain foundation-only'
 
 # CI run for institution-scoped permission validation.
 
