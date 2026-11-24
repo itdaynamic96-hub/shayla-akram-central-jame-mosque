@@ -121,3 +121,28 @@ assert 'admin.rpc("replace_admin_module_permissions"' in (ROOT/'supabase/functio
 assert 'hasAccountModule' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts panel must honor per-module grants'
 assert "account_module_permission(institution,array['m48'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Budget writes must require the budget module grant'
 assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Receipt uploads must require the receipt module grant'
+
+
+# Phase 1 regression checks: staff permissions and receipt-path privacy.
+staff_users = (ROOT/'admin-users.js').read_text(encoding='utf-8')
+edit_handler = staff_users.split('if (edit) {', 1)[1].split('} else if (toggle)', 1)[0]
+institution_assignment = edit_handler.index('$("staffInstitution").value')
+render_position = edit_handler.index('renderChecks(data || [])')
+assert institution_assignment < render_position, 'Admin: set the selected staff institution before rendering its module permissions'
+
+edge = (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8')
+assert re.search(r'\^m\(0\[1-9\]\|\[1-5\]\[0-9\]\|60\|61\)\$', edge), 'Edge Function: m61 must be supported consistently'
+assert 'keys.length > 61' in edge, 'Edge Function: allow at most 61 unique modules'
+
+permissions_sql = (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8')
+assert "[1-5][0-9]|60|61" in permissions_sql, 'Permissions SQL: allow m61 in the permission key constraint'
+assert 'jsonb_array_length(permission_rows) > 61' in permissions_sql, 'Permissions SQL: allow at most 61 module permissions'
+assert 'target_profile.role' in permissions_sql, 'Permissions RPC: verify the target is a custom_admin'
+assert 'count(distinct item.value->>\'module_key\')' in permissions_sql, 'Permissions RPC: reject duplicate module keys'
+
+for migration_name in ('schema.sql', 'admin-modules.sql'):
+    migration_sql = (ROOT/'supabase'/migration_name).read_text(encoding='utf-8')
+    receipt_fn = migration_sql.split('create or replace function public.receipt_is_unlinked', 1)[1].split('$receipt$;', 1)[0]
+    assert 'storage.objects' in receipt_fn and 'owner_id=auth.uid()::text' in receipt_fn, f'{migration_name}: receipt lookup must be scoped to the caller-owned private receipt'
+
+print('Phase 1 regression checks passed: institution-aware staff edit, 61-module validation, and caller-scoped receipt lookup.')
