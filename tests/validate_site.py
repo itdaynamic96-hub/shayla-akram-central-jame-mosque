@@ -148,3 +148,5 @@ for migration_name in ('schema.sql', 'admin-modules.sql'):
 print('Phase 1 regression checks passed: institution-aware staff edit, 61-module validation, and caller-scoped receipt lookup.')
 
 # Trigger CI after phase 1 regression-fix commit.
+
+# Re-run CI against the corrected phase 1 patch.
