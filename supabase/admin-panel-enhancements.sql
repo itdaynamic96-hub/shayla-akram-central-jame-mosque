@@ -20,6 +20,21 @@ as $$
   where p.id=auth.uid()
    and (
     p.role='super_admin'
+   or (
+   not write_access and p.role='auditor' and (
+     (target_key='m03' and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
+ or (
+   not write_access and p.role='viewer' and (
+     (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
     or (p.role='custom_admin'
       and (p.institution='both' or p.institution=target_institution)
       and (target_key <> 'm61' or target_institution='mosque')

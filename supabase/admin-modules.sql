@@ -49,7 +49,21 @@ as $$
  select exists(select 1 from public.profiles p
  where p.id=auth.uid() and (
    p.role='super_admin'
-   or (not write_access and p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution))
+   or (
+   not write_access and p.role='auditor' and (
+     (target_key='m03' and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
+ or (
+   not write_access and p.role='viewer' and (
+     (substring(target_key from 2)::integer between 11 and 20 and (p.institution='both' or p.institution=target_institution))
+     or (substring(target_key from 2)::integer between 21 and 30 and p.institution in ('both','mosque') and target_institution='mosque')
+     or (substring(target_key from 2)::integer between 31 and 40 and p.institution in ('both','foundation') and target_institution='foundation')
+   )
+ )
    or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
    or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
    or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and (p.institution in ('both','mosque')) and target_institution='mosque')
