@@ -322,7 +322,7 @@
     menu.hidden = true;
     menu.setAttribute('role','group');
     menu.setAttribute('aria-label','শেয়ার করার মাধ্যম');
-    menu.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;max-width:min(320px,85vw);padding:8px;border:1px solid #aab4c0;border-radius:9px;background:Canvas;color:CanvasText;box-shadow:0 3px 12px #0002;';
+    menu.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;max-width:min(320px,85vw);padding:8px;border:1px solid #aab4c0;border-radius:9px;background:Canvas;color:CanvasText;box-shadow:0 3px 12px #0002;';
     const addLink = (label,href) => {
       const link = document.createElement('a');
       link.textContent = label;
@@ -380,6 +380,7 @@
     menu.append(copy,shareStatus);
     toggle.addEventListener('click', () => {
       menu.hidden = !menu.hidden;
+      menu.style.display = menu.hidden ? 'none' : 'flex';
       toggle.setAttribute('aria-expanded',menu.hidden ? 'false' : 'true');
     });
     root.append(toggle,menu);
