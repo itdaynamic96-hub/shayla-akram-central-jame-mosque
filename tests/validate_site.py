@@ -199,7 +199,8 @@ assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messa
 
 # SAKM-61 Accounts dashboard: ensure the new external module is syntax-checked and wired.
 dashboard_js=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
-subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True,check=True)
+dashboard_check=subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True)
+assert dashboard_check.returncode==0, dashboard_check.stderr
 assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet is missing'
 assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
@@ -208,11 +209,15 @@ assert module_block, 'Accounts dashboard module list is missing'
 module_labels=re.findall(r"'([^']*)'",module_block.group(1))
 assert len(module_labels)==24, f'Accounts dashboard must contain exactly 24 approved modules, found {len(module_labels)}'
 assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' in module_labels and 'বার্তা ও নোটিফিকেশন' in module_labels, 'Monthly chanda and messaging must be separate modules'
-for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderReports","renderAdvancedSearch","renderReconciliation","resetAdPage","adLegacyBin","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderCashbookJournal","renderReceipts","renderFinancialReports","renderTrialBalance","account_submit_manual_journal","renderReports","renderAdvancedSearch","renderReconciliation","account_add_reconciliation_item","renderMessageCenter","renderMonthlyChanda","resetAdPage","adLegacyBin","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
-assert 'ব্যালান্স শিট সারসংক্ষেপ' in dashboard_js, 'Trial balance module must include a balance-sheet summary'
+assert 'account_balance_sheet' in dashboard_js, 'Trial balance module must include a full balance sheet'
+assert 'account_donors' in dashboard_js and 'donor_id' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Donor registry must link to ledger entries'
+assert 'document_no' in dashboard_js, 'Automatic receipt/voucher numbers must be surfaced'
+assert 'account_reverse_journal' in dashboard_js, 'Posted journals must be reversed rather than edited or deleted'
+assert "0:'m62'" in dashboard_js and "21:'m83'" in dashboard_js, 'Dashboard module access must use granular m62-m85 permissions'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
 print('SAKM-61 Accounts dashboard checks passed: syntax, 24 approved modules, separate institution views, chanda integration and financial tools.')
 
@@ -235,10 +240,10 @@ assert (ROOT/'supabase/accounts-dashboard-quality-and-index-fixes.sql').exists()
 
 assert 'async function renderCashbookJournal()' in dashboard_js and 'account_submit_manual_journal' in dashboard_js, 'Cashbook module must expose the balanced manual journal workflow'
 
-assert 'duplicates.map(x=>x.member_name)' in dashboard_js, 'Chanda member form must warn before reusing a phone number'
+assert 'duplicates.map(x=>x.member_name)' in (ROOT/'chanda-admin.js').read_text(encoding='utf-8'), 'Chanda member form must warn before reusing a phone number'
 
 recon_fix=(ROOT/'supabase/fix-bank-reconciliation-generated-column-and-item-grants.sql').read_text(encoding='utf-8')
-assert 'book_balance,status,notes,created_by' in recon_fix and 'grant insert,delete on table public.account_bank_reconciliation_items to authenticated' in recon_fix, 'Bank reconciliation must omit generated difference and grant RLS-governed item actions'
+assert 'book_balance,status,notes,created_by' in recon_fix and 'grant select,delete on table public.account_bank_reconciliation_items to authenticated' in recon_fix and 'revoke insert,update on public.account_bank_reconciliation_items from authenticated' in recon_fix, 'Reconciliation statement lines must be inserted through the validated server RPC'
 
 assert "if(i===22){renderMessageCenter().catch(showError);return}" in dashboard_js and "if(i===23){renderMonthlyChanda().catch(showError);return}" in dashboard_js, 'Messaging and monthly chanda must have dedicated navigation routes'
 assert "const panel=el('accountsMessaging')" in dashboard_js and 'await loadChanda()' in dashboard_js, 'Messaging and monthly chanda modules must load their dedicated panels'
@@ -253,3 +258,9 @@ assert 'm84' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(
 assert 'max-width:none' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8'), 'Accounts dashboard must use full available width'
 assert 'main{width:100%;max-width:none' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts outer page must not constrain the dashboard width'
 assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view)" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin dashboard Accounts shortcut must use the new granular permissions'
+
+privilege_fix=(ROOT/'supabase/accounts-final-workflow-privilege-lockdown.sql').read_text(encoding='utf-8')
+assert 'revoke insert,update,delete,truncate,references,trigger on public.account_bank_accounts' in privilege_fix, 'Bank account writes must be RPC-only'
+
+granular_rls=(ROOT/'supabase/accounts-granular-24-module-rls-alignment.sql').read_text(encoding='utf-8')
+assert "'m76'" in granular_rls and "'m80'" in granular_rls and "account_detail_ledger" not in granular_rls, 'Granular RLS must enforce manual journal and approval permissions'
