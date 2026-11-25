@@ -344,3 +344,36 @@ begin
   return new;
 end;
 $$;
+
+create or replace function public.account_bank_reconciliation_candidates(p_bank_account uuid,p_statement_date date)
+returns table (
+  id uuid,
+  transaction_date date,
+  journal_no bigint,
+  line_description text,
+  debit numeric,
+  credit numeric
+)
+language sql
+stable
+security definer
+set search_path=public,pg_temp
+as $$
+  select l.id,j.journal_date,j.journal_no,coalesce(nullif(l.description,''),j.description),l.debit,l.credit
+    from public.account_bank_accounts b
+    join public.account_journal_lines l on l.account_code=b.account_code and l.institution=b.institution
+    join public.account_journal_entries j on j.id=l.journal_id and j.institution=b.institution
+   where (select auth.uid()) is not null
+     and b.id=p_bank_account and b.is_active
+     and p_statement_date is not null
+     and public.accounts_feature_access(b.institution,'m46',false)
+     and j.status='posted' and j.journal_date<=p_statement_date
+     and not exists (
+       select 1 from public.account_bank_reconciliation_items ri
+       where ri.matched_journal_line_id=l.id
+     )
+   order by j.journal_date desc,j.journal_no desc,l.created_at desc
+   limit 1000;
+$$;
+revoke all on function public.account_bank_reconciliation_candidates(uuid,date) from public,anon;
+grant execute on function public.account_bank_reconciliation_candidates(uuid,date) to authenticated;
