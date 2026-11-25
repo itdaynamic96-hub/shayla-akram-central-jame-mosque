@@ -124,12 +124,22 @@ jobs:
             -out "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc" \
             -pass env:BACKUP_ENCRYPTION_KEY
           test -s "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc"
+          # Verify the encrypted archive can be decrypted and its required payload is present.
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+            -in "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc" \
+            -out "$RUNNER_TEMP/SAKM-61-backup-verify.tar.gz" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          tar -tzf "$RUNNER_TEMP/SAKM-61-backup-verify.tar.gz" > "$RUNNER_TEMP/SAKM-61-backup-files.txt"
+          grep -q 'sakm61-backup/database/roles.sql' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
+          grep -q 'sakm61-backup/database/schema.sql' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
+          grep -q 'sakm61-backup/database/data.sql' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
+          grep -q 'sakm61-backup/BACKUP-SCOPE.txt' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
           cd "$RUNNER_TEMP"
           sha256sum SAKM-61-backup.tar.gz.enc > SAKM-61-backup.tar.gz.enc.sha256
-          rm -rf "$BACKUP_DIR" "$RUNNER_TEMP/node_modules" "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz"
+          rm -rf "$BACKUP_DIR" "$RUNNER_TEMP/node_modules" "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-backup-verify.tar.gz" "$RUNNER_TEMP/SAKM-61-backup-files.txt"
 
       - name: Upload encrypted backup only
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: SAKM-61-encrypted-backup
           path: |
