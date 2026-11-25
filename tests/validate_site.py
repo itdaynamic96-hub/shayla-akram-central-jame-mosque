@@ -339,7 +339,7 @@ assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)
 media_js=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
 assert "mosque_360_panorama" in media_js and "mosque360Start" in media_js, '360 panorama setting and homepage launch control are missing'
 assert all(k in media_js for k in ("mosque_360_video","mosque_360_video_muted","uploadTourVideo","setTourVideoMuted","applyTourVideo")), '360 video upload and administrator mute controls are missing'
-assert 'file.size>50*1024*1024' in media_js and 'supportedVideoExtensions' in media_js and "'mkv'" in media_js and "'mov'" in media_js and "application/octet-stream" in media_js, '360 video must accept common video extensions and enforce the Free-plan 50 MB limit'
+assert 'file.size>50*1024*1024' in media_js and 'supportedVideoExtensions' in media_js and "'mkv'" in media_js and "'mov'" in media_js and "application/octet-stream" in media_js and 'hasVideoMime' in media_js, '360 video must accept browser-recognized video MIME types, common extensions, and enforce the Free-plan 50 MB limit'
 assert 'id="mosque360VideoForm"' in admin_html and 'id="mosque360VideoMuted"' in admin_html and 'accept="video/*' in admin_html and 'data-mosque-360-video' in html, 'Admin broad video upload/mute controls and homepage video player are required'
 independent_media_migration=(ROOT/'supabase/migrations/20261125143000_independent_mosque_media_surfaces.sql').read_text(encoding='utf-8')
 assert all(k in independent_media_migration for k in ('mosque_homepage','mosque_accounts','mosque_admin','mosque_360_panorama')), 'Media: database must allow three independent image keys and the 360 panorama'
