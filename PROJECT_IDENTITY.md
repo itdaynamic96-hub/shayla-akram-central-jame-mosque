@@ -21,7 +21,7 @@ This repository and Supabase project are the **SAKM-61** 61-module Enterprise we
 - Module 61 (Muslim registration) is mosque-only and private; never expose it through public module publishing.
 - Never insert sample staff, donor, member, or financial records into production without explicit authorization.
 - Prayer times, committee members, phone numbers, financial amounts, and project progress must not be presented as verified facts until an authorized person confirms them.
-- WhatsApp/SMS providers remain credential-dependent. The dispatch and status-webhook functions are deployed, but live delivery is not verified until provider credentials and webhook configuration are supplied and a real test is performed. WhatsApp is primary; SMS is fallback only after WhatsApp failure.
+- Messaging provider selection is Meta WhatsApp Cloud API first and eSMS Bangladesh second. The dispatch function uses the eSMS form-encoded API; the webhook supports Meta's GET verification challenge and HMAC-SHA256 POST signature. No external messages are sent until credentials are supplied. Live delivery and eSMS delivery-status polling remain unverified; see MESSAGING_SETUP.md. An approved WhatsApp Utility template with one body parameter is required for out-of-session reminders.
 - Encrypted backups are best-effort recovery bundles, not guaranteed one-click project clones. They exclude password hashes, active sessions, provider credentials, Supabase project secrets, dashboard-only settings, and a verified fresh-project restore.
 
 ## Operational references
@@ -33,7 +33,7 @@ This repository and Supabase project are the **SAKM-61** 61-module Enterprise we
 - Supabase project status observed as `ACTIVE_HEALTHY`.
 - All inspected public-schema tables had RLS enabled.
 - Storage buckets observed: `private-receipts` (private), `mosque-media` (public), and `site-media` (public).
-- Edge Functions observed as active: `message-dispatch`, `message-status-webhook`, and `admin-create-user`.
+- Edge Functions observed as active: `message-dispatch` (v4), `message-status-webhook` (v4), and `admin-create-user`. `receipt_is_unlinked` now requires authenticated institution/module access before checking receipt references.
 - Backup workflow Run #15 succeeded and uploaded one encrypted artifact. Restore into a fresh Supabase project has not been tested.
 - Supabase Security Advisor still reported SECURITY DEFINER function warnings and disabled leaked-password protection at the time of inspection.
 - Full end-to-end testing of all 61 modules, authenticated role permutations, real WhatsApp/SMS delivery, and restore has not yet been completed.
