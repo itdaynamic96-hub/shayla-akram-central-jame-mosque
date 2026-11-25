@@ -129,7 +129,7 @@ async function loadAll(){
   if(!['cash','bank','bkash','nagad','other'].includes(method)){alert('সঠিক পেমেন্ট পদ্ধতি লিখুন।');return}
   const ref=prompt('রেফারেন্স/ট্রানজেকশন নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';
   const memo=prompt('জমার বিবরণ (ঐচ্ছিক)','')||'';
-  try{btn.disabled=true;const{error}=await supabase.rpc('record_chanda_payment_months',{target_dues:selectedDues.map(d=>d.id),p_paid_amount:n,paid_on:todayDhaka(),method,reference:ref,memo});if(error)throw error;await loadAll()}
+  try{btn.disabled=true;const{error}=await supabase.rpc('record_chanda_payment_months',{target_dues:selectedDues.map(d=>d.id),p_p_paid_amount:n,paid_on:todayDhaka(),method,reference:ref,memo});if(error)throw error;await loadAll()}
   catch(ex){if(err)showError(err,ex);btn.disabled=false}
  }
  const combined=[
