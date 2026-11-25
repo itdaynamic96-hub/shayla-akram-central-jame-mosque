@@ -44,6 +44,7 @@ The following migrations were applied directly to the project:
 - `accounts_reconciliation_allow_zero_activity`
 - `accounts_final_workflow_privilege_lockdown`
 - `accounts_granular_24_module_rls_alignment`
+- `accounts_payroll_approval_granular_access`
 
 Core RPCs used by the dashboard:
 
@@ -59,9 +60,9 @@ Core RPCs used by the dashboard:
 ## Financial controls
 
 - Mosque and Foundation data are scoped separately.
-- Bank-account opening balances are represented by opening journals.
+- Bank-account opening balances are represented by opening journals. The legacy cashbook is a `security_invoker` view over ledger entries and is protected by the cashbook module's RLS grant.
 - Manual journals must contain at least two lines and equal debit/credit totals before entering the approval queue.
-- A requester cannot approve their own request.
+- A requester cannot approve their own request. Payroll editing uses m70, while payroll approval requires the separate m80 approval grant.
 - Posted journal lines cannot be edited or deleted. Corrections use a reversal journal.
 - Reconciliation book balances are calculated server-side. Each statement line must match a posted journal line for the same account, date, direction and amount; the closing balance must equal the book balance.
 - Receipt and voucher document numbers are assigned by a database trigger as `RCPT-YYYY-######` and `VCH-YYYY-######`.

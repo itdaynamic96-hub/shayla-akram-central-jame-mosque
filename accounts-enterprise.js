@@ -26,7 +26,7 @@ async function init(){
    const {data,error}=await supabase.from('admin_module_permissions').select('module_key,can_view,can_write,can_approve').eq('user_id',user.id);
    if(error)throw error;permissions=data||[];
   }
-  const payroll=allowed('m70'),books=allowed('m66'),obligations=allowed('m69'),assets=allowed('m72'),audit=allowed('m79');
+  const payroll=allowed('m70'),books=allowed('m68'),obligations=allowed('m69'),assets=allowed('m72'),audit=allowed('m79')||allowed('m81');
   setPanel('payrollPanel',payroll);setPanel('cashBankPanel',books);setPanel('obligationsPanel',obligations);setPanel('assetsPanel',assets);setPanel('accountAuditPanel',audit);
   if(!payroll&&!books&&!extra&&!audit){$('enterpriseAccounts').hidden=true;return}
   $('enterpriseAccounts').hidden=false;
@@ -58,7 +58,7 @@ async function loadAll(){
   $('payrollStaff').onchange=syncSalary;if(staff.length)syncSalary();
   $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m70',true)&&canApprove('m70'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m70',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
  }
- if(allowed('m66'))await loadBooks();
+ if(allowed('m68'))await loadBooks();
  if(allowed('m69')||allowed('m72')){
   const [ob,assets]=await Promise.all([
    supabase.from('account_obligations').select('*').eq('institution',inst).order('due_date',{ascending:true}).limit(300),
@@ -68,7 +68,7 @@ async function loadAll(){
   $('obligationRows').innerHTML=(ob.data||[]).map(x=>'<tr><td>'+(x.obligation_type==='receivable'?'পাওনা':'দেনা')+'</td><td>'+escapeHtml(x.party_name)+'</td><td>'+escapeHtml(x.description||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.settled_amount)+'</td><td>'+money(Number(x.amount)-Number(x.settled_amount))+'</td><td>'+escapeHtml(x.status)+'</td><td>'+(x.status!=='settled'&&x.status!=='cancelled'&&allowed('m69',true)?'<button type="button" data-settle="'+x.id+'" data-amount="'+x.amount+'" data-settled="'+x.settled_amount+'">আপডেট</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="8">পাওনা/দেনার রেকর্ড নেই।</td></tr>';
   $('assetRows').innerHTML=(assets.data||[]).map(x=>'<tr><td>'+escapeHtml(x.asset_name)+'</td><td>'+escapeHtml(x.asset_category)+'</td><td>'+escapeHtml(x.acquisition_date||'—')+'</td><td>'+money(x.acquisition_cost)+'</td><td>'+escapeHtml(x.location||'—')+'</td><td>'+escapeHtml(x.asset_status)+'</td></tr>').join('')||'<tr><td colspan="6">সম্পদের রেকর্ড নেই।</td></tr>';
  }
- if(allowed('m79'))await loadAudit();
+ if(allowed('m79')||allowed('m81'))await loadAudit();
 }
 async function loadBooks(){
  let data=[],offset=0;

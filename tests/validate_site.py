@@ -149,7 +149,8 @@ for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
 
 assert 'data-payroll-slip' in enterprise_js, 'Accounts: printable salary slip action is missing'
 assert 'range(offset,offset+499)' in enterprise_js, 'Accounts: cash/bank report pagination is missing'
-assert "allowed('m43')" in enterprise_js and "allowed('m46')" in enterprise_js and "allowed('m50')" in enterprise_js, 'Accounts: enterprise modules must honor the existing expense, bank/cash and audit grants'
+assert "allowed('m70')" in enterprise_js and "allowed('m68')" in enterprise_js and "allowed('m79')" in enterprise_js and "allowed('m81')" in enterprise_js, 'Accounts: payroll, cashbook and audit panels must honor granular module grants'
+assert "if(!allowed('m70',true))" in enterprise_js and "if(!allowed('m69',true))" in enterprise_js and "if(approve&&!allowed('m80',true))" in enterprise_js, 'Payroll, obligations and approvals must use their own granular permissions'
 # The 61st mosque-member register must be valid but remain private.
 assert "m61" in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin users: module 61 is missing from permission assignment'
 assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database permissions must accept module 61'
@@ -264,3 +265,6 @@ assert 'revoke insert,update,delete,truncate,references,trigger on public.accoun
 
 granular_rls=(ROOT/'supabase/accounts-granular-24-module-rls-alignment.sql').read_text(encoding='utf-8')
 assert "'m76'" in granular_rls and "'m80'" in granular_rls and "account_detail_ledger" not in granular_rls, 'Granular RLS must enforce manual journal and approval permissions'
+
+payroll_rls=(ROOT/'supabase/accounts-payroll-approval-granular-access.sql').read_text(encoding='utf-8')
+assert "account_module_permission(institution,array['m80'],true,true)" in payroll_rls, 'Payroll approval must require the separate m80 approval permission'
