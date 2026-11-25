@@ -4,7 +4,7 @@
 
   const ENGINE_URL = 'https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/legacy/spellophone.iife.js';
   const selectors = [
-    '.article-card', '.published-content', '.content-slot.article-card',
+    '.article-card', '.published-content', '.content-slot.article-card',\n    '.video-card', '.content-slot.video-card',
     '.quran-ayah', '.hadith-card', '.knowledge-card', '.tafsir-card',
     '.detailcard', '.noticebox'
   ].join(',');
