@@ -304,20 +304,37 @@ create index if not exists module_records_key_updated_idx on public.module_recor
 create index if not exists module_records_institution_idx on public.module_records(institution,status);
 alter table public.module_records enable row level security;
 create or replace function public.module_record_access(target_key text,target_institution text,write_access boolean default false)
-returns boolean language sql stable security definer set search_path=public
+returns boolean language sql stable security definer set search_path=public, pg_temp
 as $$
- select exists(select 1 from public.profiles p
- where p.id=auth.uid() and (
-   p.role='super_admin'
-   or (not write_access and p.role in ('auditor','viewer') and (p.institution='both' or target_institution='both' or p.institution=target_institution))
-   or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
-   or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
-   or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and (p.institution in ('both','mosque')) and target_institution='mosque')
-   or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and (p.institution in ('both','foundation')) and target_institution='foundation')
-   or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
-   or (substring(target_key from 2)::integer between 51 and 60 and p.role='admin')
- ) and (not write_access or p.role not in ('auditor','viewer')));
+ select exists(
+  select 1 from public.profiles p
+  where p.id=auth.uid()
+    and (
+      p.role='super_admin'
+      or (
+        p.role='custom_admin'
+        and (p.institution='both' or p.institution=target_institution)
+        and exists(
+          select 1 from public.admin_module_permissions mp
+          where mp.user_id=p.id and mp.module_key=target_key
+            and mp.can_view
+            and (not write_access or mp.can_write)
+        )
+      )
+      or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
+      or (target_key='m04' and p.role in ('admin','website_admin','editor') and p.institution in ('both','mosque') and target_institution='mosque')
+      or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
+      or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
+      or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and p.institution in ('both','foundation') and target_institution='foundation')
+      or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
+      or (target_key='m51' and p.role in ('admin','mosque_admin','accounts_manager','accountant') and p.institution in ('both','mosque') and target_institution='mosque' and (not write_access or p.role='admin'))
+      or (substring(target_key from 2)::integer between 52 and 60 and p.role='admin')
+      or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
+    )
+    and (not write_access or p.role not in ('auditor','viewer'))
+ );
 $$;
+
 create or replace function public.module_record_approval_access(target_key text,target_institution text)
 returns boolean language sql stable security definer set search_path=public
 as $$
