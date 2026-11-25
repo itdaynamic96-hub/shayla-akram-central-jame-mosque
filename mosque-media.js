@@ -28,14 +28,6 @@ const ensureDashboardImages=()=>{
   img.style.cssText='display:block;width:118px;height:84px;flex:0 0 auto;object-fit:cover;border:1px solid #b8944e;border-radius:12px';
   wrap.append(img,adminIntro);adminHead.prepend(wrap);
  }
- const accountsHead=document.querySelector('#accountsDashboard .main>.top');
- const accountsIntro=accountsHead?.firstElementChild;
- if(accountsHead&&accountsIntro&&!accountsHead.querySelector('[data-mosque-image="accounts"]')){
-  const img=document.createElement('img');img.dataset.mosqueImage='accounts';img.src=fallback;img.alt='মসজিদের ছবি';
-  img.style.cssText='display:block;width:104px;height:76px;flex:0 0 auto;object-fit:cover;border:1px solid #d8c795;border-radius:11px;margin-inline-end:12px';
-  accountsIntro.style.cssText+=';display:flex;align-items:center;gap:10px;min-width:0';
-  accountsIntro.prepend(img);
- }
 };
 const applyNewImages=node=>{
  if(!(node instanceof Element))return;
