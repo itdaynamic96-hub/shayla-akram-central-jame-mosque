@@ -108,6 +108,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     .eq("id", messageId).in("status", ["queued", "failed"]).select("*").maybeSingle();
   if (claimError || !claimed) return json({ error: "Message is already being processed or is not retryable." }, 409);
 
+  let attemptCount = Number(claimed.attempt_count || 0);
   const recordAttempt = async (channel: "whatsapp" | "sms", status: "accepted" | "failed",
     providerId = "", code = "", detail = "") => {
     const { error } = await admin.from("accounts_message_attempts").insert({
@@ -115,8 +116,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       error_code: code, error_message: detail,
     });
     if (error) console.error("Could not write message attempt:", error.message);
+    attemptCount += 1;
     await admin.from("accounts_message_queue").update({
-      attempt_count: Number(claimed.attempt_count || 0) + 1,
+      attempt_count: attemptCount,
       updated_at: new Date().toISOString(),
     }).eq("id", messageId);
   };
