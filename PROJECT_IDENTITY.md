@@ -27,7 +27,7 @@ This repository and Supabase project are the **SAKM-61** 61-module Enterprise we
 ## Accounts Panel scope
 - The approved Accounts Panel has **22 core modules** and separate Mosque/Foundation institution views, scoped by the signed-in profile and module permissions.
 - Monthly chanda collection is integrated inside **Donors & Donations**; it is not a separate top-level module. Messaging and notification management is available inside **Settings**.
-- The 22 modules include income, expenses, donors/donations, bank/cash, transfers, cashbook/ledger, receivables/bills, payroll, budgets, funds, receipts/vouchers, financial reports, PDF/Excel, trial balance/balance sheet, search, bank reconciliation, audit/verification, approvals, audit trail, users/permissions, and settings.
+- The 22 modules include dashboard, income, expenses, donors/donations, bank/cash, transfers, cashbook/ledger, receivables/bills, payroll, budgets, funds, receipts/vouchers, financial reports, PDF/Excel, trial balance/balance sheet, search, bank reconciliation, audit/verification, approvals, audit trail, users/permissions, and settings.
 - Bank reconciliation creation calculates book balance server-side. Statement lines must match posted journal lines for the same bank account, amount, direction, institution, and statement date; draft records can be removed by their creator.
 - Bank account numbers are masked server-side; only the last four digits are retained in the masked field.
 
