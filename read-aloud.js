@@ -15,7 +15,7 @@
   const pageRoot = () => document.querySelector('main:not(.hidden)') || document.querySelector('#home:not(.hidden),#detail:not(.hidden),#islamicLibrary:not(.hidden),#app:not([hidden])') || document.body;
   const selectors = [
     '.article-card', '.published-content', '.content-slot.article-card',
-    '.quran-ayah', '.hadith-card', '.knowledge-card', '.tafsir-card'
+    '.quran-ayah', '.hadith-card', '.knowledge-card', '.tafsir-card', '.detailcard', '.noticebox'
   ].join(',');
   let active = null;
   let currentButtons = null;
@@ -75,11 +75,12 @@
     stop.disabled = state !== 'playing' && state !== 'paused';
   };
   const finish = message => {
+    const target = active?.statusTarget;
     active = null;
     chunks = [];
     chunkIndex = 0;
     setControls('idle');
-    statusText(message);
+    statusText(message, target);
   };
   const stop = (message = 'পড়া বন্ধ করা হয়েছে।') => {
     if (synth) synth.cancel();
