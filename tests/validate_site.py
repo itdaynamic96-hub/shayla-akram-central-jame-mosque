@@ -222,3 +222,5 @@ assert (ROOT/'MESSAGING_SETUP.md').exists(), 'Provider-specific messaging setup 
 recon_sql=(ROOT/'supabase/account-bank-reconciliation-ui.sql').read_text(encoding='utf-8')
 assert 'account_create_bank_reconciliation' in recon_sql and 'account_bank_reconciliation_candidates' in recon_sql, 'Secure reconciliation RPC source is missing'
 assert 'validate_account_bank_reconciliation_item' in recon_sql and 'account_bank_reconciliation_items_delete' in recon_sql, 'Reconciliation matching security controls are missing'
+bank_mask_sql=(ROOT/'supabase/accounts-bank-account-mask-hardening.sql').read_text(encoding='utf-8')
+assert 'masked_number:=' in bank_mask_sql and 'right(digits,4)' in bank_mask_sql, 'Bank account number must be masked server-side'
