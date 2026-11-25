@@ -211,7 +211,7 @@ function form(m,r=null){
      const kind=type==='video'?'video':(type==='file'||type==='private-file')?'file':'image';
      const rules=kind==='video'?{'video/mp4':'mp4','video/webm':'webm','video/ogg':'ogv'}:kind==='file'?{'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'}:{'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
      if(!rules[file.type])throw new Error('এই ফাইলের ধরন সমর্থিত নয়: '+label);
-     const max=kind==='video'?104857600:kind==='file'?26214400:10485760;
+     const max=kind==='video'?52428800:kind==='file'?26214400:10485760;
      if(file.size>max)throw new Error('ফাইলের আকার সীমা অতিক্রম করেছে: '+label);
      const bucket=type==='private-file'?'private-module-files':'site-media';
      const path='modules/'+m.key+'/'+institution(m)+'/'+user.id+'/'+crypto.randomUUID()+'.'+rules[file.type];
