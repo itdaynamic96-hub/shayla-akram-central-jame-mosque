@@ -29,7 +29,7 @@ create policy "super admins manage module permissions" on public.admin_module_pe
 grant select,insert,update,delete on public.admin_module_permissions to authenticated;
 
 create or replace function public.module_record_access(target_key text,target_institution text,write_access boolean default false)
-returns boolean language sql stable security definer set search_path=public
+returns boolean language sql stable security definer set search_path=public, pg_temp
 as $$
  select exists(
   select 1 from public.profiles p
