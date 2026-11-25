@@ -10,6 +10,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: "svara-engine.js",
+      preserveEntrySignatures: "strict",
       output: {
         entryFileNames: "engine.js",
         chunkFileNames: "chunk-[hash].js",

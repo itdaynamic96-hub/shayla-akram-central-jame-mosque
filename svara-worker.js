@@ -15,8 +15,8 @@ import {
   LogitsProcessor,
   LogitsProcessorList,
   Tensor,
-} from "@huggingface/transformers";
-import * as ort from "onnxruntime-web/webgpu";
+} from "https://esm.sh/@huggingface/transformers@4.0.0";
+import * as ort from "https://esm.sh/onnxruntime-web@1.20.0/webgpu";
 
 // ORT-Web's .wasm/.mjs files aren't served by Vite by default; vite.config.js
 // copies them from node_modules to /ort-wasm/ via vite-plugin-static-copy.

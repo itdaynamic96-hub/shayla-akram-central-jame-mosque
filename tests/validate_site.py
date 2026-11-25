@@ -171,7 +171,9 @@ worker_source=(ROOT/'svara-worker.js').read_text(encoding='utf-8')
 assert 'Bengali (Male)' not in worker_source or 'speaker_id' in worker_source, 'Read Aloud: worker must accept the selected speaker ID'
 assert 'onnxruntime-web@1.20.0/dist/' in worker_source, 'Read Aloud: ONNX Runtime Web assets must have a stable CDN location'
 assert (ROOT/'assets/svara-build/engine.js').exists(), 'Read Aloud: bundled engine must be generated in CI before deployment'
-assert list((ROOT/'assets/svara-build').glob('*worker*.js')) or list((ROOT/'assets/svara-build').glob('*svara-worker*.js')), 'Read Aloud: bundled WebGPU worker must be generated in CI'
+assert list((ROOT/'assets/svara-build').rglob('*worker*.js')) or list((ROOT/'assets/svara-build').rglob('*svara-worker*.js')), 'Read Aloud: bundled WebGPU worker must be generated in CI'
+engine_bundle=(ROOT/'assets/svara-build/engine.js').read_text(encoding='utf-8')
+assert 'new Worker' in engine_bundle and 'svara-worker' in engine_bundle, 'Read Aloud: engine entry must retain its worker factory export'
 assert 'createSvaraEngine' in reader_js and "speaker_id:'Bengali (Male)'" in reader_js and 'new Audio(audioUrl)' in reader_js, 'Read Aloud: local Svāra Bengali male synthesis and playback must be wired'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
