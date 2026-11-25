@@ -150,5 +150,10 @@ for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
 assert 'data-payroll-slip' in enterprise_js, 'Accounts: printable salary slip action is missing'
 assert 'range(offset,offset+499)' in enterprise_js, 'Accounts: cash/bank report pagination is missing'
 assert "allowed('m43')" in enterprise_js and "allowed('m46')" in enterprise_js and "allowed('m50')" in enterprise_js, 'Accounts: enterprise modules must honor the existing expense, bank/cash and audit grants'
+# The 61st mosque-member register must be valid but remain private.
+assert "m61" in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin users: module 61 is missing from permission assignment'
+assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database permissions must accept module 61'
+assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database module access must explicitly authorize mosque member register'
+assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and '61' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Module 61 must stay private'
 assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: daily/monthly/yearly book filters are missing'
 print('Enterprise Accounts checks passed: external JS syntax, payroll, cash/bank books, obligations, assets and migration markers.')
