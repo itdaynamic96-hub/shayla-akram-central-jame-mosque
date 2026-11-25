@@ -151,7 +151,7 @@ create table if not exists public.site_content (id uuid primary key default gen_
 create index if not exists site_content_public_idx on public.site_content(category,slot_number) where status='published';
 alter table public.site_content enable row level security;
 drop policy if exists "public can read published site content" on public.site_content;
-create policy "public can read published site content" on public.site_content for select to anon,authenticated using(status='published' or public.has_access(array['super_admin','admin','website_admin','editor'],null));
+create policy "public can read published site content" on public.site_content for select to anon,authenticated using(status='published');
 drop policy if exists "website admins manage site content" on public.site_content;
 create policy "website admins manage site content" on public.site_content for all to authenticated using(public.has_access(array['super_admin','admin','website_admin','editor'],null)) with check(public.has_access(array['super_admin','admin','website_admin','editor'],null));
 grant select on public.site_content to anon,authenticated;
