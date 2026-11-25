@@ -124,6 +124,19 @@ assert "account_module_permission(institution,array['m48'],true)" in (ROOT/'supa
 assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Receipt uploads must require the receipt module grant'
 
 # Enterprise Premium additions: Bengali read-aloud and monthly chanda workflow.
+reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
+reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture_output=True)
+assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
+for page_name in ('index.html','admin.html','accounts.html'):
+    page_source=(ROOT/page_name).read_text(encoding='utf-8')
+    assert './read-aloud.js?v=20261125-universal' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
+    assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
+for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
+    assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
+assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Read Aloud: Arabic text must not be passed to Bengali TTS as if it were Bengali'
+assert 'if (!chooseVoice())' in reader_js and 'utterance.voice = voice' in reader_js, 'Read Aloud: must require an available Bengali voice instead of silently falling back to another language'
+assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
+assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 assert 'SpeechSynthesisUtterance' in (ROOT/'read-aloud.js').read_text(encoding='utf-8')
 assert 'bn-BD' in (ROOT/'read-aloud.js').read_text(encoding='utf-8')
