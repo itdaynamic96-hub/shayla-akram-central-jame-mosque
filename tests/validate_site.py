@@ -122,6 +122,9 @@ assert 'can_write: true' in permission_edge and 'can_approve: true' in permissio
 permission_migration=(ROOT/'supabase/migrations/20261125111114_accounts_permission_cap_85_and_missing_fk_indexes.sql').read_text(encoding='utf-8')
 assert 'jsonb_array_length(permission_rows) > 85' in permission_migration, 'Permissions: database RPC limit must match the 85 module UI'
 assert 'account_obligation_payments_obligation_id_idx' in permission_migration and 'ledger_entries_bank_account_id_idx' in permission_migration, 'Accounts: missing foreign-key indexes must be covered'
+reversal_migration=(ROOT/'supabase/migrations/20261125111837_accounts_single_operator_can_reverse_own_journal.sql').read_text(encoding='utf-8')
+assert 'journal creator cannot approve their own reversal' not in reversal_migration.lower(), 'Accounts: the assigned single operator must be allowed to reverse their own journal'
+assert 'source_id' in reversal_migration and "set status='reversed'" in reversal_migration, 'Accounts: journal reversal must retain its audit link and original status history'
 assert 'replace_admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Permissions must be replaced atomically by a server-only RPC'
 assert 'admin.rpc("replace_admin_module_permissions"' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Edge Function must use the atomic permission RPC'
 
