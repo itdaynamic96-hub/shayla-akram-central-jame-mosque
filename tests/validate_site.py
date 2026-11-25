@@ -306,7 +306,7 @@ assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)
 # Mosque homepage layout and shared image management.
 assert 'class="mosque-hero"' in html and 'data-mosque-image' in html, 'Homepage: user-supplied mosque hero image is missing'
 assert 'id="intro-notices-column"' in html and 'arrangeHomepageColumns' in html, 'Homepage: three-column notices/video layout is missing'
-assert 'class="tour-cover"' in html, 'Homepage: mosque photo must be used as the 360-degree tour cover'
+assert 'class="tour-cover"' in html, 'Homepage: mosque photo must be used as the 360-degree tour cover'\nassert 'content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important' in html, 'Homepage: 10-card photo/knowledge grids must display in three desktop rows'
 assert 'grid-template-columns:minmax(220px,3in) minmax(300px,1fr) minmax(220px,3in)' in html, 'Homepage: history and bani columns must be 3 inches wide'
 assert 'id="mosqueMediaAdmin"' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: shared mosque image editor is missing'
 assert 'id="mosqueMediaAdmin"' in accounts and 'mosque-media.js' in accounts, 'Accounts: shared mosque image editor/loader is missing'
