@@ -137,3 +137,13 @@ for marker in ('create table if not exists public.chanda_members','create table 
 admin_html=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert 'chanda-admin.js' in admin_html, 'Admin: monthly chanda module script is not loaded'
 print('Enterprise additions checks passed: Read Aloud and chanda dues/payment/reminder modules.')
+
+# Enterprise Accounts additions.
+enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
+subprocess.run(['node','--check','--input-type=module'],input=enterprise_js,text=True,capture_output=True,check=True)
+assert 'accounts-enterprise.js' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: enterprise feature script is not loaded'
+for marker in ('account_staff','payroll_records','account_obligations','account_assets','account_cash_bank_book','mark_payroll_paid','guard_payroll_record_changes'):
+    assert marker in (ROOT/'supabase/accounts-enterprise-extensions.sql').read_text(encoding='utf-8'), f'Accounts enterprise migration missing: {marker}'
+for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
+    assert marker in (ROOT/'accounts.html').read_text(encoding='utf-8'), f'Accounts UI missing: {marker}'
+print('Enterprise Accounts checks passed: external JS syntax, payroll, cash/bank books, obligations, assets and migration markers.')
