@@ -54,7 +54,7 @@ assert 'source_url,media_credit,updated_at' in html
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
-assert 'const accountCache={entries:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: cache must initialize before async boot'
+assert 'const accountCache={entries:[],bankAccounts:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: entry and bank-account caches must initialize before async boot'
 admin_modules_source=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert "a.href='./accounts.html'" in admin_modules_source and 'if(m.g===4)return false' in admin_modules_source, 'Admin: Accounts must be a separate panel'
 assert 'option value="both"' not in admin_modules_source, 'Admin: website forms must not offer institution=both as a selectable option'
@@ -239,6 +239,13 @@ enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
 assert "canApprove('m80')" in enterprise_js, 'Payroll approval must use the central approval module permission'
 assert "if(allowed('m69')||allowed('m76'))" in enterprise_js, 'Obligation and asset register access must match module permissions'
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
+assert 'account_submit_obligation_payment' in enterprise_js and 'account_obligation_payments' in enterprise_js, 'Obligation payments must enter the ledger approval flow'
+assert 'data-pending' in enterprise_js and 'অনুমোদনের অপেক্ষায়' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Pending obligation payments must be tracked separately'
+assert 'bank_account_id' in accounts_html and 'id="bankAccount"' in accounts_html, 'Ledger entries must support a selected bank/cash account'
+assert 'data-ledger-decision' in dashboard_js, 'Central approvals must include pending ledger entries'
+obligation_sql=(ROOT/'supabase/accounts-obligation-payments-and-bank-link.sql').read_text(encoding='utf-8')
+assert 'sync_obligation_payment_from_ledger' in obligation_sql and 'post_approved_ledger_entry_to_journal' in obligation_sql, 'Obligation approval must sync balances and double-entry journals'
+
 assert 'accounts_detail_audit_all_accounts_read' in (ROOT/'supabase/accounts-complete-audit-trail.sql').read_text(encoding='utf-8')
 assert 'accounts_detail_assets_read' in (ROOT/'supabase/accounts-asset-register-permissions.sql').read_text(encoding='utf-8')
 print('SAKM-61 Accounts dashboard checks passed: syntax, 24 modules, journal accounting, reversal, full statements, exports, search and audit access.')

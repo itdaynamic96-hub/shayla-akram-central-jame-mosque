@@ -40,5 +40,7 @@ Encrypted Supabase backups are scheduled daily at 02:45 Bangladesh time and can 
 
 For a fresh database after the base schema and Accounts permission repair, run supabase/accounts-enterprise-extensions.sql in the Supabase SQL Editor. Never add sample financial or staff data to production without authorization.
 
+For a complete Accounts deployment, also apply `supabase/accounts-double-entry.sql`, `supabase/accounts-asset-register-permissions.sql`, `supabase/accounts-complete-audit-trail.sql`, and `supabase/accounts-obligation-payments-and-bank-link.sql` in that order after the base Accounts schema. The last migration links ledger entries to selected cash/bank accounts and routes receivable/payable settlements through pending ledger approval before updating outstanding balances. The browser never receives a service-role key.
+
 ## Project identity and live verification
 This repository is the **SAKM-61** (61-module) mosque and foundation website. It is not the separate `shayla-akram-mosque-basic` project. See [PROJECT_IDENTITY.md](PROJECT_IDENTITY.md) for the canonical repository, deployment, Supabase project reference, and operational boundaries. A successful encrypted backup is not the same as a verified restore; password hashes, sessions, provider secrets, dashboard-only settings, and a fresh-project restore are explicitly outside the current backup guarantee.

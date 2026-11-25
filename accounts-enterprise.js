@@ -60,12 +60,14 @@ async function loadAll(){
  }
  if(allowed('m66'))await loadBooks();
  if(allowed('m69')||allowed('m76')){
-  const [ob,assets]=await Promise.all([
+  const [ob,assets,payments]=await Promise.all([
    supabase.from('account_obligations').select('*').eq('institution',inst).order('due_date',{ascending:true}).limit(300),
-   supabase.from('account_assets').select('*').eq('institution',inst).order('created_at',{ascending:false}).limit(300)
+   supabase.from('account_assets').select('*').eq('institution',inst).order('created_at',{ascending:false}).limit(300),
+   supabase.from('account_obligation_payments').select('obligation_id,amount,status,ledger_entry_id').eq('institution',inst).order('created_at',{ascending:false}).limit(1000)
   ]);
-  if(ob.error)throw ob.error;if(assets.error)throw assets.error;
-  $('obligationRows').innerHTML=(ob.data||[]).map(x=>'<tr><td>'+(x.obligation_type==='receivable'?'পাওনা':'দেনা')+'</td><td>'+escapeHtml(x.party_name)+'</td><td>'+escapeHtml(x.description||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.settled_amount)+'</td><td>'+money(Number(x.amount)-Number(x.settled_amount))+'</td><td>'+escapeHtml(x.status)+'</td><td>'+(x.status!=='settled'&&x.status!=='cancelled'&&allowed('m69',true)?'<button type="button" data-settle="'+x.id+'" data-amount="'+x.amount+'" data-settled="'+x.settled_amount+'">আপডেট</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="8">পাওনা/দেনার রেকর্ড নেই।</td></tr>';
+  if(ob.error)throw ob.error;if(assets.error)throw assets.error;if(payments.error)throw payments.error;
+  const pendingByObligation=new Map();(payments.data||[]).filter(x=>x.status==='pending').forEach(x=>pendingByObligation.set(x.obligation_id,(pendingByObligation.get(x.obligation_id)||0)+Number(x.amount||0)));
+  $('obligationRows').innerHTML=(ob.data||[]).map(x=>{const pending=pendingByObligation.get(x.id)||0,remaining=Math.max(0,Number(x.amount)-Number(x.settled_amount)-pending);return '<tr><td>'+(x.obligation_type==='receivable'?'পাওনা':'দেনা')+'</td><td>'+escapeHtml(x.party_name)+'</td><td>'+escapeHtml(x.description||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.settled_amount)+'</td><td>'+money(pending)+'</td><td>'+money(remaining)+'</td><td>'+escapeHtml(x.status)+'</td><td>'+(x.status!=='settled'&&x.status!=='cancelled'&&remaining>0&&allowed('m69',true)?'<button type="button" data-settle="'+x.id+'" data-amount="'+x.amount+'" data-settled="'+x.settled_amount+'" data-pending="'+pending+'">পেমেন্ট জমা</button>':'—')+'</td></tr>'}).join('')||'<tr><td colspan="9">পাওনা/দেনার রেকর্ড নেই।</td></tr>';
   $('assetRows').innerHTML=(assets.data||[]).map(x=>'<tr><td>'+escapeHtml(x.asset_name)+'</td><td>'+escapeHtml(x.asset_category)+'</td><td>'+escapeHtml(x.acquisition_date||'—')+'</td><td>'+money(x.acquisition_cost)+'</td><td>'+escapeHtml(x.location||'—')+'</td><td>'+escapeHtml(x.asset_status)+'</td></tr>').join('')||'<tr><td colspan="6">সম্পদের রেকর্ড নেই।</td></tr>';
  }
  if(allowed('m79'))await loadAudit();
@@ -128,7 +130,18 @@ async function saveObligation(e){
 }
 async function settleObligation(e){
  const id=e.target.dataset.settle;if(!id)return;
- try{const total=Number(e.target.dataset.amount),old=Number(e.target.dataset.settled),left=total-old;const answer=prompt('এ পর্যন্ত মোট কত টাকা আদায়/পরিশোধ হয়েছে? বাকি '+money(left),String(old));if(answer===null)return;const settled=Number(answer);if(!Number.isFinite(settled)||settled<0||settled>total)throw new Error('সঠিক পরিমাণ দিন।');const status=settled===total?'settled':settled>0?'partial':'open';const {error}=await supabase.from('account_obligations').update({settled_amount:settled,status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await loadAll()}catch(ex){fail(ex)}
+ try{
+  const total=Number(e.target.dataset.amount),old=Number(e.target.dataset.settled),pending=Number(e.target.dataset.pending||0),left=total-old-pending;
+  if(left<=0)throw new Error('অনুমোদনের অপেক্ষায় থাকা পেমেন্টসহ আর কোনো বকেয়া নেই।');
+  const answer=prompt('এইবার কত টাকা আদায়/পরিশোধ করবেন? অনুমোদনের অপেক্ষায় '+money(pending)+'; বর্তমানে বাকি '+money(left),String(left));if(answer===null)return;
+  const amount=Number(answer);if(!Number.isFinite(amount)||amount<=0||amount>left)throw new Error('পেমেন্টের পরিমাণ বকেয়ার মধ্যে হতে হবে।');
+  const method=prompt('পেমেন্ট মাধ্যম লিখুন: cash, bank অথবা mobile_banking','cash');if(method===null)return;if(!['cash','bank','mobile_banking'].includes(method))throw new Error('cash, bank অথবা mobile_banking লিখুন।');
+  let bankId=null;const {data:accounts,error:accountError}=await supabase.from('account_bank_accounts').select('id,account_name').eq('institution',institution()).eq('account_kind',method).eq('is_active',true).order('account_name');if(accountError)throw accountError;
+  if((accounts||[]).length===1)bankId=accounts[0].id;else if((accounts||[]).length>1){const choice=prompt('কোন হিসাব ব্যবহার করবেন? নম্বর লিখুন:\n'+accounts.map((x,i)=>(i+1)+'. '+x.account_name).join('\n'),'1');if(choice===null)return;const selected=accounts[Number(choice)-1];if(!selected)throw new Error('সঠিক হিসাব নির্বাচন করুন।');bankId=selected.id}
+  const reference=prompt('রেফারেন্স নম্বর (ঐচ্ছিক)','')||'',note=prompt('পেমেন্টের বিবরণ (ঐচ্ছিক)','')||'';
+  const {data,error}=await supabase.rpc('account_submit_obligation_payment',{p_institution:institution(),p_obligation:id,p_amount:amount,p_payment_date:today(),p_payment_method:method,p_bank_account_id:bankId,p_reference_no:reference,p_note:note});if(error)throw error;
+  alert('পেমেন্ট লেজারে অনুমোদনের অপেক্ষায় যুক্ত হয়েছে। অনুমোদনের পর পাওনা/দেনার বাকি স্বয়ংক্রিয়ভাবে সমন্বয় হবে। লেনদেন ID: '+data);await loadAll();
+ }catch(ex){fail(ex)}
 }
 async function saveAsset(e){
  e.preventDefault();if(!allowed('m76',true)){fail(new Error('সম্পদ যোগ করার অনুমতি নেই।'));return}
