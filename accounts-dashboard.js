@@ -23,14 +23,20 @@ async function loadModuleVisibility(){
 function refreshNav(){
  document.querySelectorAll('#adNav button').forEach(b=>{const i=Number(b.dataset.i);b.hidden=!visibleModules.includes(i);b.classList.toggle('active',i===activeModule)});
 }
+function resetAdPage(html=''){
+ const page=el('adPage'),bin=el('adLegacyBin');
+ [...page.children].forEach(node=>{if(node.classList.contains('ad-legacy-panel'))bin.appendChild(node);else node.remove()});
+ if(html)page.innerHTML=html;
+}
 function movePanel(id){
+ resetAdPage();
  const target=el(id);if(!target){el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[activeModule])+'</h2><p>এই অংশের পুরোনো প্যানেল পাওয়া যায়নি।</p></section>';return}
- const panel=target.closest('.panel')||target;el('adPage').replaceChildren(panel);panel.hidden=false;panel.classList.remove('ad-legacy');
+ const panel=target.closest('.panel')||target;panel.hidden=false;panel.classList.add('ad-legacy-panel');el('adPage').appendChild(panel);
 }
 function mount(){
  if(el('accountsDashboard'))return;
  const root=document.createElement('section');root.id='accountsDashboard';
- root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div><b>SAKM-61 Accounts</b><div style="font-size:11px;color:#657b97">মসজিদ ও ফাউন্ডেশনের পৃথক হিসাব</div></div><select id="adInstitution" aria-label="প্রতিষ্ঠান"></select><select id="adMonth" aria-label="মাস"></select><div id="adUser" style="font-size:13px;text-align:right"></div></header><section class="hero"><div><h1 id="adTitle">ড্যাশবোর্ড</h1><p id="adSub">প্রতিষ্ঠানভিত্তিক আর্থিক সারসংক্ষেপ</p></div><div><button class="action green" id="adAdd" hidden>＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport" hidden>▥ রিপোর্ট</button></div></section><div id="adPage"></div></main></div>';
+ root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div><b>SAKM-61 Accounts</b><div style="font-size:11px;color:#657b97">মসজিদ ও ফাউন্ডেশনের পৃথক হিসাব</div></div><select id="adInstitution" aria-label="প্রতিষ্ঠান"></select><select id="adMonth" aria-label="মাস"></select><div id="adUser" style="font-size:13px;text-align:right"></div></header><section class="hero"><div><h1 id="adTitle">ড্যাশবোর্ড</h1><p id="adSub">প্রতিষ্ঠানভিত্তিক আর্থিক সারসংক্ষেপ</p></div><div><button class="action green" id="adAdd" hidden>＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport" hidden>▥ রিপোর্ট</button></div></section><div id="adPage"></div><div id="adLegacyBin" hidden></div></main></div>';
  const app=el('app');app.prepend(root);[...app.children].filter(x=>x!==root).forEach(x=>{x.hidden=true});
  el('adNav').innerHTML=modules.map((m,i)=>'<button type="button" data-i="'+i+'"><span class="num">'+(i+1)+'</span>'+m+'</button>').join('');
  el('adNav').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)openModule(+b.dataset.i)};
@@ -66,20 +72,20 @@ function openModule(i){
 }
 function showError(e){const p=el('adPage');if(p)p.insertAdjacentHTML('afterbegin','<div class="note" style="color:#a11">'+escapeHtml(e?.message||String(e))+'</div>');else console.error(e)}
 async function renderDashboard(){
- const p=el('adPage'),inst=currentInstitution();p.innerHTML='<div class="panel"><div class="empty">লাইভ হিসাব লোড হচ্ছে…</div></div>';
+ const p=el('adPage'),inst=currentInstitution();resetAdPage('<div class="panel"><div class="empty">লাইভ হিসাব লোড হচ্ছে…</div></div>');
  const {data,error}=await supabase.from('ledger_entries').select('entry_type,amount,status,entry_date').eq('institution',inst).order('entry_date',{ascending:false}).limit(1000);if(error)throw error;
  const rows=data||[],approved=rows.filter(x=>x.status==='approved'),pending=rows.filter(x=>x.status==='pending');
  const income=approved.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount||0),0),expense=approved.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount||0),0);
  p.innerHTML='<div class="stats"><div class="stat greenstat"><div><small>অনুমোদিত মোট আয়</small><strong>'+money(income)+'</strong></div></div><div class="stat redstat"><div><small>অনুমোদিত মোট ব্যয়</small><strong>'+money(expense)+'</strong></div></div><div class="stat bluestat"><div><small>বর্তমান স্থিতি</small><strong>'+money(income-expense)+'</strong></div></div><div class="stat yellowstat"><div><small>অনুমোদনের অপেক্ষায়</small><strong>'+fmt(pending.length)+'টি</strong></div></div></div><section class="panel"><div class="head"><h2>'+(inst==='mosque'?'মসজিদ':'ফাউন্ডেশন')+' — সাম্প্রতিক হিসাব</h2></div><div class="body tablewrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>খাত</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead><tbody>'+rows.slice(0,20).map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.entry_type)+'</td><td>—</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.status)+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
 async function renderDonations(){
- const p=el('adPage');p.innerHTML='<section class="panel"><div class="head"><h2>দাতা, অনুদান ও মাসিক চাঁদা</h2></div><div class="body" id="adChandaContent"><div class="empty">তথ্য লোড হচ্ছে…</div></div></section>';
+ const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>দাতা, অনুদান ও মাসিক চাঁদা</h2></div><div class="body" id="adChandaContent"><div class="empty">তথ্য লোড হচ্ছে…</div></div></section>');
  const {data:fundAccess}=await supabase.rpc('accounts_feature_access',{target_institution:currentInstitution(),target_module:'m44',write_access:false});const fund=el('fundRows');if(fund&&fundAccess)p.appendChild(fund.closest('.panel'));
  if(currentInstitution()==='mosque'&&chandaCanView)await loadChanda();
  else el('adChandaContent').innerHTML='<div class="note">এই প্রতিষ্ঠানের জন্য মাসিক চাঁদা অংশ প্রযোজ্য নয় অথবা আপনার অনুমতি নেই। সাধারণ অনুদান ও ফান্ডের হিসাব নিচে দেখুন।</div>';
 }
 async function renderBankAccounts(){
- const p=el('adPage'),inst=currentInstitution();p.innerHTML='<section class="panel"><div class="head"><h2>ব্যাংক ও নগদ হিসাব</h2></div><div class="body"><div id="adBankAccounts"></div></div></section>';
+ const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>ব্যাংক ও নগদ হিসাব</h2></div><div class="body"><div id="adBankAccounts"></div></div></section>');
  const host=el('adBankAccounts');
  const {data:canWrite,error:permError}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m46',write_access:true});if(permError)throw permError;
  const {data:accounts,error}=await supabase.from('account_bank_accounts').select('id,account_name,institution_name,account_number_masked,account_kind,account_code,opening_balance,is_active').eq('institution',inst).order('account_name');if(error)throw error;
@@ -88,7 +94,7 @@ async function renderBankAccounts(){
  const cash=el('cashBankPanel');if(cash){const panel=cash.closest('.panel')||cash;panel.hidden=false;p.appendChild(panel)}
 }
 async function renderTransfers(){
- const p=el('adPage'),inst=currentInstitution();p.innerHTML='<section class="panel"><div class="head"><h2>হিসাব স্থানান্তর</h2></div><div class="body"><div class="empty">ব্যাংক হিসাব লোড হচ্ছে…</div></div></section>';
+ const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>হিসাব স্থানান্তর</h2></div><div class="body"><div class="empty">ব্যাংক হিসাব লোড হচ্ছে…</div></div></section>');
  const [a,perm]=await Promise.all([supabase.from('account_bank_accounts').select('id,account_name,account_code').eq('institution',inst).eq('is_active',true).order('account_name'),supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m46',write_access:true})]);
  if(a.error)throw a.error;if(perm.error)throw perm.error;
  const opts=(a.data||[]).map(x=>'<option value="'+x.id+'">'+escapeHtml(x.account_name)+' ('+escapeHtml(x.account_code)+')</option>').join('');
@@ -96,7 +102,7 @@ async function renderTransfers(){
  if(perm.data)el('adTransferForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{const {data,error}=await supabase.rpc('account_submit_bank_transfer',{p_institution:inst,p_from:String(f.get('from')),p_to:String(f.get('to')),p_amount:Number(f.get('amount')),p_date:String(f.get('date')),p_description:String(f.get('description')||'')});if(error)throw error;alert('স্থানান্তর অনুরোধ জমা হয়েছে। অনুরোধ ID: '+data);await renderTransfers()}catch(err){alert(err.message||String(err))}};
 }
 async function renderTrialBalance(){
- const p=el('adPage'),inst=currentInstitution();p.innerHTML='<section class="panel"><div class="empty">ট্রায়াল ব্যালান্স তৈরি হচ্ছে…</div></section>';
+ const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="empty">ট্রায়াল ব্যালান্স তৈরি হচ্ছে…</div></section>');
  const [chart,lines]=await Promise.all([
   supabase.from('account_chart_of_accounts').select('account_code,account_name,account_type').eq('institution',inst).eq('is_active',true).order('account_code'),
   supabase.from('account_journal_lines').select('account_code,debit,credit,account_journal_entries!inner(journal_date,institution,status)').eq('institution',inst).eq('account_journal_entries.institution',inst).eq('account_journal_entries.status','posted').limit(10000)
@@ -108,12 +114,12 @@ async function renderTrialBalance(){
 }
 async function renderAdvancedSearch(){
  const p=el('adPage'),inst=currentInstitution();
- p.innerHTML='<section class="panel"><div class="head"><h2>উন্নত অনুসন্ধান</h2></div><div class="body"><form class="toolbar" id="adSearchForm"><input name="q" placeholder="খাত, দাতা/প্রাপক, রেফারেন্স বা বিবরণ"><select name="type"><option value="">সব ধরন</option><option value="income">আয়</option><option value="expense">ব্যয়</option></select><input name="from" type="date" aria-label="শুরুর তারিখ"><input name="to" type="date" aria-label="শেষ তারিখ"><button class="action">খুঁজুন</button></form><div id="adSearchResults" class="tablewrap"></div></div></section>';
+ resetAdPage('<section class="panel"><div class="head"><h2>উন্নত অনুসন্ধান</h2></div><div class="body"><form class="toolbar" id="adSearchForm"><input name="q" placeholder="খাত, দাতা/প্রাপক, রেফারেন্স বা বিবরণ"><select name="type"><option value="">সব ধরন</option><option value="income">আয়</option><option value="expense">ব্যয়</option></select><input name="from" type="date" aria-label="শুরুর তারিখ"><input name="to" type="date" aria-label="শেষ তারিখ"><button class="action">খুঁজুন</button></form><div id="adSearchResults" class="tablewrap"></div></div></section>';
  const run=async()=>{const f=new FormData(el('adSearchForm')),q=String(f.get('q')||'').trim().replace(/[,%()]/g,' ');let query=supabase.from('ledger_entries').select('id,entry_date,entry_type,category,amount,payer_or_payee,reference_no,status,note').eq('institution',inst).order('entry_date',{ascending:false}).limit(500);if(q)query=query.or('category.ilike.%'+q+'%,payer_or_payee.ilike.%'+q+'%,reference_no.ilike.%'+q+'%,note.ilike.%'+q+'%');if(f.get('type'))query=query.eq('entry_type',String(f.get('type')));if(f.get('from'))query=query.gte('entry_date',String(f.get('from')));if(f.get('to'))query=query.lte('entry_date',String(f.get('to')));const {data,error}=await query;if(error)throw error;el('adSearchResults').innerHTML='<table><thead><tr><th>তারিখ</th><th>ধরন</th><th>খাত</th><th>দাতা/প্রাপক</th><th>রেফারেন্স</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead><tbody>'+(data||[]).map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.entry_type)+'</td><td>'+escapeHtml(x.category)+'</td><td>'+escapeHtml(x.payer_or_payee||'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.status)+'</td></tr>').join('')+'</tbody></table>'};
  el('adSearchForm').onsubmit=async e=>{e.preventDefault();try{await run()}catch(err){showError(err)}};await run();
 }
 async function renderReconciliation(){
- const p=el('adPage'),inst=currentInstitution();
+ const p=el('adPage'),inst=currentInstitution();resetAdPage();
  const [accounts,perm,drafts]=await Promise.all([
   supabase.from('account_bank_accounts').select('id,account_name,account_code,opening_balance').eq('institution',inst).eq('is_active',true).order('account_name'),
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m46',write_access:true}),
@@ -149,7 +155,7 @@ async function renderReconciliation(){
  if(!(drafts.data||[]).length)host.innerHTML='<section class="panel empty">এখনো কোনো Reconciliation Draft নেই।</section>';
 }
 async function renderApprovals(){
- const p=el('adPage'),inst=currentInstitution();p.innerHTML='<section class="panel"><div class="empty">অনুমোদনের অনুরোধ লোড হচ্ছে…</div></section>';
+ const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="empty">অনুমোদনের অনুরোধ লোড হচ্ছে…</div></section>');
  const {data,error}=await supabase.from('account_approval_requests').select('id,institution,request_type,request_data,status,created_by,created_at,decision_note').eq('institution',inst).order('created_at',{ascending:false}).limit(200);if(error)throw error;
  let canApprove=['super_admin','accounts_manager','mosque_admin','foundation_admin'].includes(profile?.role);
  if(profile?.role==='custom_admin'){const {data:grant,error:grantError}=await supabase.from('admin_module_permissions').select('can_view,can_write,can_approve').eq('user_id',user.id).eq('module_key','m50').maybeSingle();if(grantError)throw grantError;canApprove=!!(grant?.can_view&&grant?.can_write&&grant?.can_approve)}
@@ -157,12 +163,12 @@ async function renderApprovals(){
  p.querySelectorAll('[data-decision]').forEach(b=>b.onclick=async()=>{const note=prompt('সিদ্ধান্তের নোট (ঐচ্ছিক)','')??'';try{const {error}=await supabase.rpc('account_decide_request',{p_request:b.dataset.id,p_decision:b.dataset.decision,p_note:note});if(error)throw error;alert('সিদ্ধান্ত সংরক্ষিত হয়েছে।');await renderApprovals()}catch(err){alert(err.message||String(err))}});
 }
 async function renderUserPermissions(){
- const p=el('adPage');p.innerHTML='<section class="panel"><div class="head"><h2>ব্যবহারকারী ও অনুমতি</h2></div><div class="body"><p>ব্যবহারকারী তৈরি, মডিউলভিত্তিক অনুমতি এবং Super Admin নিয়ন্ত্রণ Admin Panel-এ পরিচালিত হয়।</p><a class="action" href="./admin.html">Admin Panel খুলুন</a></div></section>';
+ const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>ব্যবহারকারী ও অনুমতি</h2></div><div class="body"><p>ব্যবহারকারী তৈরি, মডিউলভিত্তিক অনুমতি এবং Super Admin নিয়ন্ত্রণ Admin Panel-এ পরিচালিত হয়।</p><a class="action" href="./admin.html">Admin Panel খুলুন</a></div></section>';
  if(profile?.role==='custom_admin'){const {data,error}=await supabase.from('admin_module_permissions').select('module_key,can_view,can_write,can_approve').eq('user_id',user.id).order('module_key');if(error)throw error;p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>আপনার মডিউল অনুমতি</h2></div><div class="body tablewrap"><table><thead><tr><th>মডিউল</th><th>দেখা</th><th>লেখা</th><th>অনুমোদন</th></tr></thead><tbody>'+(data||[]).map(x=>'<tr><td>'+escapeHtml(x.module_key)+'</td><td>'+(x.can_view?'হ্যাঁ':'না')+'</td><td>'+(x.can_write?'হ্যাঁ':'না')+'</td><td>'+(x.can_approve?'হ্যাঁ':'না')+'</td></tr>').join('')+'</tbody></table></div></section>')}
 }
 async function renderSettings(){
  const p=el('adPage'),inst=currentInstitution();
- p.innerHTML='<section class="panel"><div class="head"><h2>Accounts Settings</h2></div><div class="body"><p><b>প্রতিষ্ঠান:</b> '+(inst==='mosque'?'মসজিদ':'ফাউন্ডেশন')+'</p><p><b>ব্যবহারকারীর ভূমিকা:</b> '+escapeHtml(profile?.role||'')+'</p><p><b>বার্তা সেবা:</b> Provider Secrets Supabase Edge Functions → Secrets থেকে পরিচালিত হয়। কোনো API Key এখানে দেখানো হয় না।</p><a class="action" href="https://supabase.com/dashboard/project/lmwczibsipczfymhyqba/functions/secrets">Supabase Edge Function Secrets</a></div></section>';
+ resetAdPage('<section class="panel"><div class="head"><h2>Accounts Settings</h2></div><div class="body"><p><b>প্রতিষ্ঠান:</b> '+(inst==='mosque'?'মসজিদ':'ফাউন্ডেশন')+'</p><p><b>ব্যবহারকারীর ভূমিকা:</b> '+escapeHtml(profile?.role||'')+'</p><p><b>বার্তা সেবা:</b> Provider Secrets Supabase Edge Functions → Secrets থেকে পরিচালিত হয়। কোনো API Key এখানে দেখানো হয় না।</p><a class="action" href="https://supabase.com/dashboard/project/lmwczibsipczfymhyqba/functions/secrets">Supabase Edge Function Secrets</a></div></section>';
  const {data:messageAccess}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m41',write_access:false});const panel=el('accountsMessaging');if(panel&&messageAccess){panel.hidden=false;p.appendChild(panel)}
 }
 function stateOf(m,d,day,upcoming,today){if(d&&Number(d.paid_amount)>=Number(d.amount))return ['paid','✓','আদায় সম্পন্ন'];if(d&&Number(d.paid_amount)>0)return ['partial','◒','আংশিক আদায়'];if(upcoming&&day>=20&&day<=24)return ['warning','◷','সময় ঘনিয়ে এসেছে'];if(upcoming&&day>=25)return ['overdue','!','চাঁদা বকেয়া'];if(d&&today>d.due_date)return ['overdue','!','বকেয়া'];return ['neutral','·','অপেক্ষমাণ']}
