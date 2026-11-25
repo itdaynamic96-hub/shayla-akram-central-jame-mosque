@@ -371,7 +371,7 @@ subprocess.run(['node','--check','--input-type=module'],input=(ROOT/'mosque-medi
 assert "panel.classList.add('ad-legacy-panel','message-module')" in dashboard_js, 'Accounts messaging must mount as one self-contained dashboard panel'
 assert "async function renderAuditReview()" in dashboard_js and "async function renderAuditTrail()" in dashboard_js, 'Audit review and audit trail must have separate implementations'
 assert "canApprove=!!(grant?.can_view&&grant?.can_write&&grant?.can_approve)" in dashboard_js, 'Custom Accounts approvers must have explicit view, write and approve grants'
-assert ".range(offset,offset+999)" in dashboard_js, 'Accounts dashboard totals must paginate beyond the first 1,000 ledger rows'
+assert ".order('id',{ascending:true}).range(offset,offset+999)" in dashboard_js, 'Accounts dashboard totals must paginate beyond the first 1,000 ledger rows'
 message_css=(ROOT/'accounts-dashboard.css').read_text(encoding='utf-8')
 assert '#accountsDashboard #accountsMessaging.message-module' in message_css and '@media(max-width:600px)' in message_css, 'Accounts messaging must have scoped responsive layout'
 admin_css=(ROOT/'admin.html').read_text(encoding='utf-8')
