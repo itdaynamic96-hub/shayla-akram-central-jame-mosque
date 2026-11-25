@@ -15,7 +15,7 @@
 ## 3. Connect the website
 1. Open Project Settings → API.
 2. Copy the Project URL and the publishable/anon public key (not the secret/service_role key).
-3. Replace the two placeholder values in `supabase-config.js`:
+3. For a new Supabase project only, replace the two values in `supabase-config.js`. The live SAKM-61 site is already connected to project `lmwczibsipczfymhyqba`; do not replace its working configuration unless you are deliberately moving the site to another project.
    - `url`: Project URL
    - `anonKey`: publishable/anon public key
 4. Commit the config change to the repository. The anon/publishable key is designed for browser use; Row Level Security is what protects data.
@@ -69,15 +69,16 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 - The public homepage reads only published content. Drafts remain private to authorized website administrators.
 - Financial data and receipt files are private and institution-scoped by database policies.
 - GitHub Pages serves the static website; Supabase provides authentication, database and private storage.
-- No live Admin/Accounts login can work until a real Supabase project is connected and the SQL is run.
+- The live SAKM-61 site is connected to Supabase project `lmwczibsipczfymhyqba`. Admin/Accounts login additionally requires a valid Auth user, a matching `profiles` row with the correct role/institution, deployed Edge Functions where used, and the current migrations.
 
 \n## 10. Enable Super Admin-created staff accounts and per-module permissions
-1. Run the complete `supabase/module-permissions.sql` file in Supabase SQL Editor after the existing schema and Admin module SQL migrations.
-2. In Supabase Dashboard → Edge Functions, deploy the function in `supabase/functions/admin-create-user/index.ts` with the name `admin-create-user`.
-3. Ensure the Edge Function has the server secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Supabase normally supplies these; if adding a secret manually, add it only in Edge Function Secrets, never in GitHub Pages or browser code.
-4. Sign in as the existing Super Admin and open `/admin.html`. Use “সুপার অ্যাডমিন — কর্মী অ্যাকাউন্ট ও মডিউল অনুমতি” to create a worker with name, email, password, institution, and selected modules.
-5. The selected module grants read access by default. Optional checkboxes grant editing and approval. Permissions are also enforced by database RLS; hiding a menu alone is not the security boundary.
-6. Existing non-Super-Admin accounts keep their current role-based permissions. New staff accounts use the restricted `custom_admin` role and can access only selected modules.
+1. Run `supabase/module-permissions.sql` after the base schema and Admin module SQL. This file now accepts the complete 85-module permission payload.
+2. Run `supabase/accounts-granular-module-access.sql` to extend the permission-key range and apply the separate Accounts module policies. For the latest 85-module permission validation and index fixes, also apply `supabase/migrations/20261125111114_accounts_permission_cap_85_and_missing_fk_indexes.sql`.
+3. In Supabase Dashboard → Edge Functions, deploy the function in `supabase/functions/admin-create-user/index.ts` with the name `admin-create-user`.
+4. Ensure the Edge Function has the server secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Supabase normally supplies these; if adding a secret manually, add it only in Edge Function Secrets, never in GitHub Pages or browser code.
+5. Sign in as the existing Super Admin and open `/admin.html`. Use “সুপার অ্যাডমিন — কর্মী অ্যাকাউন্ট ও মডিউল অনুমতি” to create a worker with name, email, password, institution, and selected modules.
+6. Each selected module grants the assigned worker full view, write and approval control. Permissions are also enforced by database RLS; hiding a menu alone is not the security boundary.
+7. Existing non-Super-Admin accounts keep their current role-based permissions. New staff accounts use the restricted `custom_admin` role and can access only selected modules.
 
 ## 11. Publish module-specific Admin Panel records to the matching website section
 1. First complete steps 6 and 10 above. The `module_records` table and module-permission policies must already exist.
