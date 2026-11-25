@@ -188,8 +188,9 @@ $("staffRows").addEventListener("click", async e => {
       const { data, error } = await supabase.from("admin_module_permissions").select("module_key,can_write,can_approve").eq("user_id", edit);
       if (error) throw error;
       selectedUserId = edit;
+      $("staffInstitution").value = profiles.find(p => p.id === edit)?.institution || "mosque";
       renderChecks(data || []);
-      $("staffName").disabled = true; $("staffJobTitle").disabled = true; $("staffEmail").disabled = true; $("staffPassword").required = false; $("staffPassword").disabled = true; $("staffInstitution").disabled = true; $("staffInstitution").value = profiles.find(p => p.id === edit)?.institution || "mosque";
+      $("staffName").disabled = true; $("staffJobTitle").disabled = true; $("staffEmail").disabled = true; $("staffPassword").required = false; $("staffPassword").disabled = true; $("staffInstitution").disabled = true;
       $("staffSubmit").textContent = "মডিউল অনুমতি সংরক্ষণ";
       $("staffMessage").textContent = "নির্বাচিত কর্মীর অনুমতি সম্পাদনা করছেন।";
       $("staffMessage").hidden = false;
