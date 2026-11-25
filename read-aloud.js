@@ -1,4 +1,4 @@
-/* Free Bengali voice through TTS.ai Piper; no provider API key required. */
+/* Free Bengali voice through Google Translate TTS; no provider API key required. */
 (() => {
   'use strict';
 
