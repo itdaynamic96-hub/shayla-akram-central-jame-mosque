@@ -79,8 +79,13 @@ print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepag
 admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 module_data = admin_modules.split('const data=[', 1)[1].split('];' + chr(10) + 'const groups=', 1)[0]
 module_count = len(re.findall(r"\['[^']+','[^']+'\]", module_data))
-assert module_count == 85, f'Admin Panel: expected 85 module definitions including 24 detailed Accounts modules, found {module_count}'
+assert module_count == 86, f'Admin Panel: expected 86 module definitions including 24 detailed Accounts modules and the independent media module, found {module_count}'
 subprocess.run(['node','--check','--input-type=module'],input=admin_modules,text=True,capture_output=True,check=True)
+media_module=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
+subprocess.run(['node','--check','--input-type=module'],input=media_module,text=True,capture_output=True,check=True)
+assert all(k in media_module for k in ('mosque_homepage','mosque_accounts','mosque_admin')), 'Media: all three surfaces must have independent settings keys'
+assert 'id="mosqueMediaAdmin"' in (ROOT/'admin.html').read_text(encoding='utf-8') and 'id="mosqueMediaAdmin"' not in accounts, 'Media: controls must live only in the Admin module'
+assert 'id="staffManager"' in (ROOT/'admin.html').read_text(encoding='utf-8') and "legacyPanels.users=existing.find(x=>x.id==='staffManager')" in admin_modules, 'Admin: staff management must be routed to its own module'
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
 assert 'alter table public.profiles add constraint profiles_role_check' in migration
