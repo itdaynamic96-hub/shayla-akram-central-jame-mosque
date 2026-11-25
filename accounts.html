@@ -39,8 +39,8 @@
  <div><label>ধরন</label><select id="obType"><option value="receivable">পাওনা</option><option value="payable">দেনা</option></select></div><div><label>ব্যক্তি/প্রতিষ্ঠান</label><input id="obParty" required maxlength="160"></div>
  <div><label>বিবরণ</label><input id="obDescription" maxlength="500"></div><div><label>মোট টাকা</label><input id="obAmount" type="number" min="0.01" step="0.01" required></div>
  <div><label>শেষ তারিখ</label><input id="obDue" type="date"></div><div><label>রেফারেন্স</label><input id="obReference" maxlength="100"></div></div><p><button type="submit">পাওনা/দেনা সংরক্ষণ</button></p></form>
- <div class="tablewrap"><table><thead><tr><th>ধরন</th><th>পক্ষ</th><th>বিবরণ</th><th>মোট</th><th>আদায়/পরিশোধ</th><th>বাকি</th><th>অবস্থা</th><th>কাজ</th></tr></thead><tbody id="obligationRows"></tbody></table></div>
- <p class="muted">আদায়/পরিশোধের নগদ বা ব্যাংক লেনদেন মূল লেজারেও আলাদাভাবে জমা দিন।</p></section>
+ <div class="tablewrap"><table><thead><tr><th>ধরন</th><th>পক্ষ</th><th>বিবরণ</th><th>মোট</th><th>আদায়/পরিশোধ</th><th>অনুমোদনের অপেক্ষায়</th><th>বাকি</th><th>অবস্থা</th><th>কাজ</th></tr></thead><tbody id="obligationRows"></tbody></table></div>
+ <p class="muted">পেমেন্ট জমা দিলে তা লেজারে অনুমোদনের অপেক্ষায় যাবে; অনুমোদনের পর ডাবল-এন্ট্রি জার্নাল ও বাকি স্বয়ংক্রিয়ভাবে সমন্বয় হবে।</p></section>
  <section class="panel" id="assetsPanel"><h4>সম্পদ ও সরঞ্জাম ব্যবস্থাপনা</h4><form id="assetForm"><div class="formgrid">
  <div><label>সম্পদের নাম</label><input id="assetName" required maxlength="160"></div><div><label>ধরন</label><input id="assetCategory" maxlength="100"></div>
  <div><label>ক্রয়ের তারিখ</label><input id="assetDate" type="date"></div><div><label>ক্রয়মূল্য</label><input id="assetCost" type="number" min="0" step="0.01" required></div>
