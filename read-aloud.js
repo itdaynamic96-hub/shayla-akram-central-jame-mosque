@@ -24,6 +24,15 @@
   let generationQueue = Promise.resolve();
   let requestSequence = 0;
   let modelConsent = false;
+  const resetSvaraRuntime = () => {
+    try { svaraEngine?.terminate(); } catch (_) {}
+    svaraEngine = null;
+    runtimePromise = null;
+    modelPromise = null;
+    modelReady = false;
+    modelResolve = null;
+    modelReject = null;
+  };
   let active = null;
   let currentButtons = null;
   let speed = 1;
@@ -103,7 +112,14 @@
         svaraEngine = createSvaraEngine(message => {
           if (message.status === 'feature-success') resolve();
           else if (message.status === 'feature-error' || message.status === 'fatal-error') {
-            reject(new Error(message.data || 'এই ব্রাউজারে WebGPU চালু করা যায়নি।'));
+            const error = new Error(message.data || 'এই ব্রাউজারে WebGPU চালু করা যায়নি।');
+            const rejectLoad = modelReject;
+            const pending = pendingGeneration;
+            pendingGeneration = null;
+            resetSvaraRuntime();
+            pending?.reject(error);
+            rejectLoad?.(error);
+            reject(error);
           } else if (message.status === 'loading') {
             statusText('বাংলা পুরুষ কণ্ঠের মডেল প্রস্তুত হচ্ছে…', active?.statusTarget);
           } else if (message.status === 'ready') {
@@ -121,10 +137,10 @@
               pendingGeneration = null;
               pending.reject(new Error(message.data || 'বাংলা অডিও তৈরি করা যায়নি।'));
             } else if (modelReject) {
-              modelReject(new Error(message.data || 'ভয়েস মডেল লোড করা যায়নি।'));
-              modelResolve = null;
-              modelReject = null;
-              modelPromise = null;
+              const error = new Error(message.data || 'ভয়েস মডেল লোড করা যায়নি।');
+              const rejectLoad = modelReject;
+              resetSvaraRuntime();
+              rejectLoad(error);
             }
           }
         });
