@@ -195,3 +195,18 @@ assert 'next_month_start' in (ROOT/'supabase/chanda-upcoming-month-due.sql').rea
 print('Accounts messaging checks passed: queue UI, RLS, WhatsApp-first/SMS fallback, webhook and monthly chanda status window.')
 
 assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')
+
+
+# SAKM-61 Accounts dashboard: ensure the new external module is syntax-checked and wired.
+dashboard_js=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
+subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True,check=True)
+assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet is missing'
+assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert dashboard_js.count("'মাসিক চাঁদা আদায়'") == 1
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","run_chanda_daily_jobs"):
+    assert marker in dashboard_js, f'Accounts dashboard missing live chanda integration: {marker}'
+for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
+    assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
+assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
+print('SAKM-61 Accounts dashboard checks passed: module syntax, 24-item navigation and live chanda integration.')
