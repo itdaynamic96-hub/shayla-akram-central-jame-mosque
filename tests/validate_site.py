@@ -206,13 +206,13 @@ assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf
 module_block=re.search(r"const modules=\[(.*?)\];",dashboard_js,re.S)
 assert module_block, 'Accounts dashboard module list is missing'
 module_labels=re.findall(r"'([^']*)'",module_block.group(1))
-assert len(module_labels)==22, f'Accounts dashboard must contain exactly 22 approved modules, found {len(module_labels)}'
-assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' not in module_labels, 'Monthly chanda must be integrated into Donations, not a separate module'
-for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderAdvancedSearch","renderReconciliation","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
+assert len(module_labels)==24, f'Accounts dashboard must contain exactly 24 approved modules, found {len(module_labels)}'
+assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' in module_labels, 'Donor management and monthly chanda must be separate modules'
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderReceipts","renderFinancialReports","renderTrialBalance","account_submit_manual_journal","renderAdvancedSearch","renderReconciliation","account_add_reconciliation_item","renderApprovals","renderUserPermissions","renderSettings","renderMessages","renderChanda","account_balance_sheet","account_donors","adInstitution","accounts_feature_access"):
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
-assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
+assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'\nassert 'document_no' in dashboard_js, 'Automatic receipt/voucher document number is not shown in Accounts modules'\nassert 'account_reverse_journal' in dashboard_js, 'Journal reversal control is missing'
 print('SAKM-61 Accounts dashboard checks passed: syntax, 22 approved modules, separate institution views, chanda integration and financial tools.')
 
 assert 'ensure_chanda_dues_for_month' in dashboard_js, 'Accounts dashboard must create dues for the selected month using authenticated access'
