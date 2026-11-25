@@ -69,6 +69,8 @@ function openModule(i){
  if(i===18){renderApprovals().catch(showError);return}
  if(i===20){renderUserPermissions().catch(showError);return}
  if(i===21){renderSettings().catch(showError);return}
+ if(i===22){renderMessageCenter().catch(showError);return}
+ if(i===23){renderMonthlyChanda().catch(showError);return}
  const map={1:'entryForm',2:'entryForm',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',13:'entries',17:'accountAuditPanel',19:'accountAuditPanel'};
  const id=map[i];if(id){movePanel(id);if((i===1||i===2)&&el('type'))el('type').value=i===1?'income':'expense';return}
  el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলটি এই প্রতিষ্ঠানের জন্য এখনো সংযুক্ত নয়।</p></section>';
