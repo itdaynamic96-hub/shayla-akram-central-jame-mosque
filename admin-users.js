@@ -61,7 +61,31 @@ const modules = [
   { key: "m58", name: "ব্যাকআপ ও রিস্টোর" },
   { key: "m59", name: "সিস্টেম সেটিংস" },
   { key: "m60", name: "সাহায্য ও সাপোর্ট" },
-  { key: "m61", name: "মুসল্লী নিবন্ধন" }
+  { key: "m61", name: "মুসল্লী নিবন্ধন" },
+  { key: "m62", name: "Accounts — ড্যাশবোর্ড" },
+  { key: "m63", name: "Accounts — আয় ব্যবস্থাপনা" },
+  { key: "m64", name: "Accounts — ব্যয় ব্যবস্থাপনা" },
+  { key: "m65", name: "Accounts — দাতা ও অনুদান" },
+  { key: "m66", name: "Accounts — ব্যাংক ও ক্যাশ" },
+  { key: "m67", name: "Accounts — ট্রান্সফার" },
+  { key: "m68", name: "Accounts — ক্যাশবুক ও লেজার" },
+  { key: "m69", name: "Accounts — বকেয়া ও বিল" },
+  { key: "m70", name: "Accounts — কর্মচারী ও বেতন" },
+  { key: "m71", name: "Accounts — বাজেট ব্যবস্থাপনা" },
+  { key: "m72", name: "Accounts — তহবিল ব্যবস্থাপনা" },
+  { key: "m73", name: "Accounts — রসিদ ও ভাউচার" },
+  { key: "m74", name: "Accounts — আর্থিক রিপোর্ট" },
+  { key: "m75", name: "Accounts — PDF ও Excel" },
+  { key: "m76", name: "Accounts — ট্রায়াল ব্যালান্স ও ব্যালান্স শিট" },
+  { key: "m77", name: "Accounts — সার্চ" },
+  { key: "m78", name: "Accounts — ব্যাংক রিকনসিলিয়েশন" },
+  { key: "m79", name: "Accounts — অডিট ও যাচাই" },
+  { key: "m80", name: "Accounts — অনুমোদন ব্যবস্থাপনা" },
+  { key: "m81", name: "Accounts — অডিট ট্রেইল" },
+  { key: "m82", name: "Accounts — ব্যবহারকারী ও অনুমতি" },
+  { key: "m83", name: "Accounts — সেটিংস" },
+  { key: "m84", name: "Accounts — বার্তা ও নোটিফিকেশন" },
+  { key: "m85", name: "Accounts — মাসিক চাঁদা আদায়" }
 ];
 let selectedUserId = null;
 let profiles = [];
@@ -83,7 +107,7 @@ function renderChecks(selected = []) {
   const institution = $("staffInstitution").value;
   const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return (n !== 61 || institution !== "foundation") && (n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31)); });
   const heading = $("staffModuleHeading");
-  if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৬১টি)`;
+  if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৮৫টি)`;
   $("staffModules").innerHTML = visibleModules.map(m => {
     const old = selectedMap.get(m.key) || {};
     return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
