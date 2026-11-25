@@ -104,3 +104,11 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 - ফ্রি API সীমা বা তৃতীয় পক্ষের সার্ভিস বন্ধ থাকলে অডিও সাময়িকভাবে তৈরি নাও হতে পারে।
 - ফ্রি ভয়েসের লাইসেন্স ব্যক্তিগত/অ-বাণিজ্যিক ব্যবহারের জন্য; বাণিজ্যিক ব্যবহারের আগে TTS.ai-এর বর্তমান শর্ত যাচাই করতে হবে।
 
+
+## Private Admin report files and module write permissions
+
+- The private report module (m06) stores uploaded reports in the private `private-module-files` bucket. Downloads are issued as five-minute signed URLs only after the module access check.
+- The public `site-media` bucket rejects `modules/m06/*` uploads. Public photos/videos remain in `site-media`.
+- Custom Admin writes require both `can_view` and `can_write`; approval separately requires `can_approve`.
+- The private bucket is limited to PDF/JPEG/PNG/WebP files up to 25 MB. Public site videos are limited to 50 MB to match the bucket cap.
+
