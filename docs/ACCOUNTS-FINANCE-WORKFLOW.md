@@ -42,6 +42,7 @@ The following migrations were applied directly to the project:
 - `accounts_finance_security_and_reversal`
 - `accounts_reverse_journal_approval_guard`
 - `accounts_reconciliation_allow_zero_activity`
+- `accounts_final_workflow_privilege_lockdown`
 
 Core RPCs used by the dashboard:
 

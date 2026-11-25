@@ -66,6 +66,7 @@ async function render(workspace) {
   if(!canWrite()){showError(err,new Error('আপনার সদস্য ব্যবস্থাপনায় সম্পাদনার অনুমতি নেই।'));return}
   const payload={member_name:$('cmName').value.trim(),father_name:$('cmFather').value.trim(),phone:$('cmPhone').value.trim(),monthly_amount:Number($('cmAmount').value),due_day:Number($('cmDay').value),address:$('cmAddress').value.trim(),reminder_channel:$('cmChannel').value,contact_consent:$('cmConsent').value==='true',notes:$('cmNotes').value.trim(),created_by:signedInUser.id};
   if(!payload.member_name||!Number.isFinite(payload.monthly_amount)||payload.monthly_amount<=0||payload.due_day<1||payload.due_day>28){showError(err,new Error('নাম, সঠিক মাসিক চাঁদা এবং ১–২৮ দিনের মধ্যে নির্ধারিত তারিখ দিন।'));return}
+  if(payload.phone){const {data:duplicates,error:duplicateError}=await supabase.from('chanda_members').select('member_name').eq('phone',payload.phone).limit(10);if(duplicateError){showError(err,duplicateError);return}if(duplicates?.length&&!confirm('এই ফোন নম্বরটি আগে '+duplicates.map(x=>x.member_name).join(', ')+' সদস্যের নামে আছে। তারপরও নতুন সদস্য যোগ করবেন?'))return}
   const btn=$('cmSubmit');btn.disabled=true;
   try{const{error}=await supabase.from('chanda_members').insert(payload);if(error)throw error;e.target.reset();$('cmDay').value='10';await loadAll()}
   catch(ex){showError(err,ex)}finally{btn.disabled=!canWrite()}

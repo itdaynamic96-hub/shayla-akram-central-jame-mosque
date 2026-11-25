@@ -239,7 +239,10 @@ assert (ROOT/'supabase/accounts-dashboard-quality-and-index-fixes.sql').exists()
 
 assert 'async function renderCashbookJournal()' in dashboard_js and 'account_submit_manual_journal' in dashboard_js, 'Cashbook module must expose the balanced manual journal workflow'
 
-assert 'duplicates.map(x=>x.member_name)' in dashboard_js, 'Chanda member form must warn before reusing a phone number'
+assert 'duplicates.map(x=>x.member_name)' in (ROOT/'chanda-admin.js').read_text(encoding='utf-8'), 'Chanda member form must warn before reusing a phone number'
 
 recon_fix=(ROOT/'supabase/fix-bank-reconciliation-generated-column-and-item-grants.sql').read_text(encoding='utf-8')
-assert 'book_balance,status,notes,created_by' in recon_fix and 'grant insert,delete on table public.account_bank_reconciliation_items to authenticated' in recon_fix, 'Bank reconciliation must omit generated difference and grant RLS-governed item actions'
+assert 'book_balance,status,notes,created_by' in recon_fix and 'grant select,delete on table public.account_bank_reconciliation_items to authenticated' in recon_fix and 'revoke insert,update on public.account_bank_reconciliation_items from authenticated' in recon_fix, 'Reconciliation statement lines must be inserted through the validated server RPC'
+
+privilege_fix=(ROOT/'supabase/accounts-final-workflow-privilege-lockdown.sql').read_text(encoding='utf-8')
+assert 'revoke insert,update,delete,truncate,references,trigger on public.account_bank_accounts' in privilege_fix, 'Bank account writes must be RPC-only'
