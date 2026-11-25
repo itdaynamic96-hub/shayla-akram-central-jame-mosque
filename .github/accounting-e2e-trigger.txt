@@ -1,1 +1,0 @@
-Run temporary Custom Admin and Viewer UI tests, verify all 24 modules and real Excel/PDF output. Test accounts are deleted at the end.
