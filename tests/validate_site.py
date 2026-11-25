@@ -302,3 +302,16 @@ assert 'max-width:none' in (ROOT/'accounts-dashboard.css').read_text(encoding='u
 assert "hasAccountModule('m71','can_write')" in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Budget form must use its dedicated Accounts permission'
 assert 'main{width:100%;max-width:none' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts outer page must not constrain the dashboard width'
 assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view)" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin dashboard Accounts shortcut must use the new granular permissions'
+
+# Mosque homepage layout and shared image management.
+assert 'class="mosque-hero"' in html and 'data-mosque-image' in html, 'Homepage: user-supplied mosque hero image is missing'
+assert 'id="intro-notices-column"' in html and 'arrangeHomepageColumns' in html, 'Homepage: three-column notices/video layout is missing'
+assert 'class="tour-cover"' in html, 'Homepage: mosque photo must be used as the 360-degree tour cover'
+assert 'content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important' in html, 'Homepage: 10-card photo/knowledge grids must display in three desktop rows'
+assert 'grid-template-columns:minmax(220px,3in) minmax(300px,1fr) minmax(220px,3in)' in html, 'Homepage: history and bani columns must be 3 inches wide'
+assert 'id="mosqueMediaAdmin"' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: shared mosque image editor is missing'
+assert 'id="mosqueMediaAdmin"' in accounts and 'mosque-media.js' in accounts, 'Accounts: shared mosque image editor/loader is missing'
+assert (ROOT/'mosque-media.js').exists(), 'Shared mosque media manager script is missing'
+assert (ROOT/'assets/mosque-hero.webp').exists(), 'User-provided mosque image fallback is missing'
+assert (ROOT/'supabase/central-mosque-brand-image-settings.sql').exists(), 'Central mosque media RLS migration source is missing'
+subprocess.run(['node','--check','--input-type=module'],input=(ROOT/'mosque-media.js').read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
