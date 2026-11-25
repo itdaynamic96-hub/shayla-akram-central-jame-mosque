@@ -8,7 +8,7 @@ const money = n => '৳ '+Number(n||0).toLocaleString('bn-BD',{maximumFractionDi
 const canUse = () => {
  if (!signedInProfile) return false;
  if (['super_admin','admin','mosque_admin','accounts_manager','accountant'].includes(signedInProfile.role)) return signedInProfile.institution==='both'||signedInProfile.institution==='mosque';
- return signedInProfile.role==='custom_admin' && permissions.some(p=>p.module_key==='m51'&&p.can_view);
+ return signedInProfile.role==='custom_admin' && permissions.some(p=>p.module_key==='m85'&&p.can_view);
 };
 const canWrite = () => ['super_admin','admin','mosque_admin','accounts_manager','accountant'].includes(signedInProfile?.role)
  ? (signedInProfile.institution==='both'||signedInProfile.institution==='mosque')
@@ -16,10 +16,10 @@ const canWrite = () => ['super_admin','admin','mosque_admin','accounts_manager',
 
 function mount() {
  const workspace=$('adminWorkspace');
- if (!workspace || !location.hash.includes('admin=m51')) { lastViewKey=''; return; }
+ if (!workspace || !location.hash.includes('admin=m85')) { lastViewKey=''; return; }
  if (!canUse()) return;
  if (lastViewKey==='m51') return;
- lastViewKey='m51';
+ lastViewKey='m85';
  render(workspace);
 }
 async function render(workspace) {
