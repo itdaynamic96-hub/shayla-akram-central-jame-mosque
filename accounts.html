@@ -9,7 +9,31 @@
 @media(max-width:700px){.read-aloud{right:10px;bottom:10px}}
 
 
-</style><link rel="stylesheet" href="./accounts-dashboard.css?v=20261125-4"></head><body><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Accounts Management</h1><p class="muted">শুধু অনুমোদিত হিসাব বিভাগের জন্য · Public Website থেকে পৃথক</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<button id="logout" hidden>লগআউট</button></div></div>
+</style><link rel="stylesheet" href="./accounts-dashboard.css?v=20261125-4">
+<style id="modern-refresh">
+:root{color-scheme:light;--bg:#f4f5ef;--panel:#fffefa;--line:#e2e7dc;--gold:#a9853d;--text:#20372b;--muted:#66756b;--red:#b42318}
+body{background:radial-gradient(ellipse at 8% 0%,#fffdf6 0,transparent 40%),linear-gradient(145deg,#f6f5ef,#edf2eb);color:var(--text);font-family:'Noto Sans Bengali',sans-serif;line-height:1.65}
+main{max-width:1480px;margin:0 auto;padding:24px clamp(14px,3vw,38px)}
+.top{padding:18px 20px;background:linear-gradient(120deg,#0d3526,#1d6043);border:1px solid #b8944e;border-radius:18px;color:#fff8e8;box-shadow:0 14px 32px #123b2c1a}
+.top h1,.top h2{color:#fff4d5;margin:8px 0 3px}.top .muted{color:#d9e5dc}.brand{color:#f2d895;font-size:16px}
+a{color:#176344}button{background:linear-gradient(120deg,#123b2c,#1e6043);color:#fff5dc;border:1px solid #b8944e;border-radius:10px;padding:10px 16px;box-shadow:0 4px 10px #123b2c12;transition:transform .18s,box-shadow .18s}
+button:hover{transform:translateY(-1px);box-shadow:0 8px 18px #123b2c20}
+input,select,textarea{background:#fff;color:#20372b;border:1px solid #d8dfd4;border-radius:10px;padding:11px 12px}
+label{color:#53665a;font-weight:600}
+.panel,.stat{background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 10px 26px rgba(24,57,38,.055);color:var(--text)}
+.panel h2,.panel h3,.panel h4{color:#164a34}
+.grid{gap:14px}.stat{background:linear-gradient(145deg,#fffefa,#f0f5ed);border-top:3px solid #b8944e;font-weight:600}
+.stat strong{color:#176344;font-size:27px}
+.tag{background:#edf4ec;border-color:#d4e2d3;color:#24563d;padding:5px 11px}
+table{background:#fffefa;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;padding:11px 12px;color:#31483a}
+.muted{color:#66756b}.error{color:#b42318}
+#mosqueMediaAdmin img{box-shadow:0 8px 20px #123b2c18}
+:focus-visible{outline:3px solid #c5a45b!important;outline-offset:2px}
+@media(max-width:700px){main{padding:12px}.top{padding:15px;border-radius:14px}.panel,.stat{padding:15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat strong{font-size:21px}}
+@media(max-width:390px){.grid{grid-template-columns:1fr}}
+</style>
+</head><body><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Accounts Management</h1><p class="muted">শুধু অনুমোদিত হিসাব বিভাগের জন্য · Public Website থেকে পৃথক</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। সেটআপ নির্দেশিকা README-তে দেওয়া আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" autocomplete="username" required><label>পাসওয়ার্ড</label><input id="password" type="password" autocomplete="current-password" required><p><button>লগইন</button></p></form><p class="muted">অ্যাকাউন্ট তৈরি করবেন Supabase-এর অনুমোদিত Auth ব্যবস্থাপক। এখানে Public Sign-up নেই।</p><p id="loginError" class="error" hidden></p></section>
 <section id="app" hidden><div class="top"><div><img data-mosque-image src="./assets/mosque-hero.webp" alt="মসজিদের ছবি" style="display:block;width:min(100%,340px);height:96px;object-fit:cover;border-radius:10px;margin-bottom:8px"><h2 id="welcome">Accounts Admin Panel — হিসাব ও আর্থিক ব্যবস্থাপনা</h2></div><span class="tag" id="role"></span></div><section class="panel" id="mosqueMediaAdmin" hidden><h3>মসজিদের ছবি ও ৩৬০° ভ্রমণ ব্যবস্থাপনা</h3><p class="muted">প্রধান ছবি পরিবর্তন করলে হোমপেজ, Accounts ও Admin Panel-এ একসঙ্গে পরিবর্তন হবে। ৩৬০° প্যানোরামা আলাদাভাবে আপলোড করলে ভার্চুয়াল ভ্রমণ চালু হবে।</p><h4>১. মসজিদের প্রধান ছবি</h4><img data-mosque-image src="./assets/mosque-hero.webp" alt="বর্তমান মসজিদের প্রধান ছবি" style="display:block;width:min(100%,560px);max-height:240px;object-fit:cover;border-radius:10px"><form id="mosqueMediaForm"><label>নতুন প্রধান ছবি (JPG, PNG, WebP · সর্বোচ্চ ১০ MB)</label><input id="mosqueMediaFile" type="file" accept="image/jpeg,image/png,image/webp" required><p><button type="submit">প্রধান ছবি পরিবর্তন ও সংরক্ষণ</button></p></form><p id="mosqueMediaError" class="error" hidden></p><p id="mosqueMediaStatus" class="muted" aria-live="polite"></p><hr><h4>২. ৩৬০° প্যানোরামা ছবি</h4><p class="muted">সম্পূর্ণ ৩৬০° দৃশ্যের প্যানোরামা ছবি দিন (প্রস্থ ও উচ্চতার অনুপাত প্রায় ২:১)। সর্বোচ্চ ৫০ MB।</p><img id="mosquePanoramaPreview" alt="বর্তমান ৩৬০° প্যানোরামা প্রিভিউ" hidden style="display:block;width:min(100%,560px);max-height:180px;object-fit:cover;border-radius:10px"><p id="mosquePanoramaEmpty" class="muted">এখনো ৩৬০° প্যানোরামা ছবি যুক্ত করা হয়নি।</p><form id="mosquePanoramaForm"><label>৩৬০° প্যানোরামা ছবি (JPG, PNG, WebP · সর্বোচ্চ ৫০ MB)</label><input id="mosquePanoramaFile" type="file" accept="image/jpeg,image/png,image/webp" required><p><button type="submit">৩৬০° ছবি আপলোড ও চালু করুন</button> <button type="button" id="mosquePanoramaRemove" hidden>৩৬০° ছবি অপসারণ</button></p></form><p id="mosquePanoramaError" class="error" hidden></p><p id="mosquePanoramaStatus" class="muted" aria-live="polite"></p></section><p class="panel"><a href="./admin.html">ওয়েবসাইট Admin Panel</a>　|　<a href="./index.html">মূল ওয়েবসাইট</a></p><div class="panel"><label>হিসাবের বিভাগ</label><select id="institution"><option value="mosque">মসজিদ</option><option value="foundation">ফাউন্ডেশন</option></select></div>
