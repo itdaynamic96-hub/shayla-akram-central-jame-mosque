@@ -3,6 +3,15 @@
   'use strict';
   const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
   const Utterance = window.SpeechSynthesisUtterance;
+  const readerStyle = document.createElement('style');
+  readerStyle.textContent = `
+    .nexora-read-aloud{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 0;padding:8px;border:1px solid #d8c58e;border-radius:9px;background:#fbf8ee}
+    .nexora-read-aloud button{border:1px solid #bba66c;border-radius:7px;background:#17452f;color:#fff;padding:6px 9px;font:inherit;font-size:12px;cursor:pointer}
+    .nexora-read-aloud button:disabled{opacity:.45;cursor:not-allowed}
+    .nexora-read-aloud .nexora-tts-status{font-size:11px;color:#455b4b}
+    #readAloud .read-aloud-actions select{max-width:100px;padding:5px;border:1px solid #cdbb8a;border-radius:6px;background:white;color:#173d2b}
+  `;
+  document.head.appendChild(readerStyle);
   const pageRoot = () => document.querySelector('main:not(.hidden)') || document.querySelector('#home:not(.hidden),#detail:not(.hidden),#islamicLibrary:not(.hidden),#app:not([hidden])') || document.body;
   const selectors = [
     '.article-card', '.published-content', '.content-slot.article-card',
