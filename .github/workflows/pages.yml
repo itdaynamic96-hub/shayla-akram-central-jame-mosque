@@ -1,7 +1,7 @@
 name: Validate and deploy static site to GitHub Pages
 on:
   push:
-    branches: ["main", "accounts-finalization-v12-20261125"]
+    branches: ["main", "accounts-finalization-v13-20261125"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
