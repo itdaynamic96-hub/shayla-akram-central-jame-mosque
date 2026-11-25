@@ -260,3 +260,40 @@ using (
  and public.receipt_is_unlinked(name)
  and public.account_module_permission(split_part(name,'/',1),array['m73'],true)
 );
+
+
+-- Income/expense receipt attachments and dedicated budget permissions.
+drop policy if exists accounts_detail_upload_receipts on storage.objects;
+create policy accounts_detail_upload_receipts on storage.objects for insert to authenticated
+with check (
+ bucket_id='private-receipts' and owner_id=(select auth.uid())::text
+ and public.account_module_permission(split_part(name,'/',1),array['m63','m64','m65','m73'],true)
+);
+drop policy if exists accounts_detail_read_receipts on storage.objects;
+create policy accounts_detail_read_receipts on storage.objects for select to authenticated
+using (
+ bucket_id='private-receipts'
+ and public.account_module_permission(split_part(name,'/',1),array['m63','m64','m65','m73','m74','m75','m77'])
+);
+drop policy if exists accounts_detail_delete_receipts on storage.objects;
+create policy accounts_detail_delete_receipts on storage.objects for delete to authenticated
+using (
+ bucket_id='private-receipts' and owner_id=(select auth.uid())::text
+ and public.receipt_is_unlinked(name)
+ and public.account_module_permission(split_part(name,'/',1),array['m63','m64','m65','m73'],true)
+);
+
+drop policy if exists accounts_detail_budgets_read on public.budgets;
+create policy accounts_detail_budgets_read on public.budgets for select to authenticated using(
+ accounts_feature_access(institution,'m71',false)
+ or accounts_feature_access(institution,'m74',false)
+ or accounts_feature_access(institution,'m75',false)
+);
+drop policy if exists accounts_detail_budgets_insert on public.budgets;
+create policy accounts_detail_budgets_insert on public.budgets for insert to authenticated with check(
+ created_by=(select auth.uid()) and accounts_feature_access(institution,'m71',true)
+);
+drop policy if exists accounts_detail_budgets_update on public.budgets;
+create policy accounts_detail_budgets_update on public.budgets for update to authenticated
+using(accounts_feature_access(institution,'m71',true))
+with check(accounts_feature_access(institution,'m71',true));
