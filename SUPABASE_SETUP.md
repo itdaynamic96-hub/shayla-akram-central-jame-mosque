@@ -115,7 +115,7 @@ The assigned worker can create income and expense entries directly as approved o
 
 ## Migration archive status
 
-The live Supabase project currently records 65 applied migration versions. The repository currently contains 16 timestamped migration SQL files; 49 older migration bodies are not present in the Git history available here. This does not affect the already-running live project, but the timestamped migration folder alone is not a complete clean-room replay of the historical database. Do not invent or blindly replay missing versions. Use the setup steps and current standalone SQL files for a new project until the historical migration archive is reconstructed.
+The live Supabase project currently records 66 applied migration versions. The repository currently contains 16 timestamped migration SQL files; 50 older migration bodies are not present in the Git history available here. This does not affect the already-running live project, but the timestamped migration folder alone is not a complete clean-room replay of the historical database. Do not invent or blindly replay missing versions. Use the setup steps and current standalone SQL files for a new project until the historical migration archive is reconstructed.
 
 
 ## Multi-month Chanda collection
