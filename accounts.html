@@ -30,7 +30,7 @@
  <div><label>কর্তন</label><input id="payrollDeduction" type="number" min="0" step="0.01" value="0"></div></div><p><button type="submit">বেতন রেকর্ড তৈরি</button></p></form>
  <div class="tablewrap"><table><thead><tr><th>মাস</th><th>কর্মচারী</th><th>নিট বেতন</th><th>অবস্থা</th><th>কাজ</th></tr></thead><tbody id="payrollRows"></tbody></table></div>
  <p class="muted">বেতন পরিশোধ করলে সংশ্লিষ্ট ব্যয় লেজারে অনুমোদনের অপেক্ষায় যুক্ত হবে।</p></section>
- <section class="panel" id="cashBankPanel"><h4>ক্যাশবুক ও ব্যাংকবুক</h4><label>হিসাবের ধরন</label><select id="bookType"><option value="cash">ক্যাশবুক</option><option value="bank">ব্যাংকবুক</option><option value="mobile_banking">মোবাইল ব্যাংকিং</option></select>
+ <section class="panel" id="cashBankPanel"><h4>ক্যাশবুক ও ব্যাংকবুক</h4><label>হিসাবের ধরন</label><select id="bookType"><option value="cash">ক্যাশবুক</option><option value="bank">ব্যাংকবুক</option><option value="mobile_banking">মোবাইল ব্যাংকিং</option></select><label>রিপোর্টের সময়</label><select id="bookPeriod"><option value="all">সব সময়</option><option value="today">আজ</option><option value="month">এই মাস</option><option value="year">এই বছর</option></select>
  <div class="grid"><div class="stat">মোট আয়<strong id="bookIncome">৳০</strong></div><div class="stat">মোট ব্যয়<strong id="bookExpense">৳০</strong></div><div class="stat">নিট প্রবাহ<strong id="bookBalance">৳০</strong></div></div>
  <div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>খাত</th><th>বিবরণ</th><th>আয়</th><th>ব্যয়</th><th>রেফারেন্স</th></tr></thead><tbody id="bookRows"></tbody></table></div></section>
  <section class="panel" id="obligationsPanel"><h4>পাওনা ও দেনা ব্যবস্থাপনা</h4><form id="obligationForm"><div class="formgrid">
