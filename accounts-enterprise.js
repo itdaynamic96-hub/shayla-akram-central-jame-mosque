@@ -7,9 +7,14 @@ const institution=()=> $('institution').value;
 const writeRoles=['super_admin','admin','accounts_manager','accountant','mosque_admin','foundation_admin'];
 const readRoles=[...writeRoles,'auditor'];
 const has=(key,cap='can_view')=>permissions.some(p=>p.module_key===key&&p[cap]);
-const canApprove=key=>allowed(key,true);
+const canApprove=key=>profile?.role==='custom_admin'
+ ? has(key,'can_view')&&has(key,'can_write')&&has(key,'can_approve')
+ : ['super_admin','accounts_manager','mosque_admin','foundation_admin'].includes(profile?.role)
+   &&(profile?.institution==='both'||profile?.institution===institution())
+   &&(profile?.role!=='mosque_admin'||institution()==='mosque')
+   &&(profile?.role!=='foundation_admin'||institution()==='foundation');
 const allowed=(key,write=false)=>{
- if(profile?.role==='custom_admin') return has(key,'can_view');
+ if(profile?.role==='custom_admin') return has(key,write?'can_write':'can_view');
  if(write) return writeRoles.includes(profile?.role)&&(profile?.institution==='both'||profile?.institution===institution())&&(profile?.role!=='mosque_admin'||institution()==='mosque')&&(profile?.role!=='foundation_admin'||institution()==='foundation');
  return readRoles.includes(profile?.role)&&(profile?.institution==='both'||profile?.institution===institution())&&(profile?.role!=='mosque_admin'||institution()==='mosque')&&(profile?.role!=='foundation_admin'||institution()==='foundation');
 };
@@ -59,16 +64,24 @@ async function loadAll(){
   $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m70',true)&&canApprove('m70'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m70',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
  }
  if(allowed('m66'))await loadBooks();
- if(allowed('m69')||allowed('m76')){
+ const canObligations=allowed('m69'),canAssets=allowed('m76');
+ if(canObligations||canAssets){
   const [ob,assets,payments]=await Promise.all([
-   supabase.from('account_obligations').select('*').eq('institution',inst).order('due_date',{ascending:true}).limit(300),
-   supabase.from('account_assets').select('*').eq('institution',inst).order('created_at',{ascending:false}).limit(300),
-   supabase.from('account_obligation_payments').select('obligation_id,amount,status,ledger_entry_id').eq('institution',inst).order('created_at',{ascending:false}).limit(1000)
+   canObligations?supabase.from('account_obligations').select('*').eq('institution',inst).order('due_date',{ascending:true}).limit(300):Promise.resolve({data:[],error:null}),
+   canAssets?supabase.from('account_assets').select('*').eq('institution',inst).order('created_at',{ascending:false}).limit(300):Promise.resolve({data:[],error:null}),
+   canObligations?supabase.from('account_obligation_payments').select('obligation_id,amount,status,ledger_entry_id').eq('institution',inst).order('created_at',{ascending:false}).limit(1000):Promise.resolve({data:[],error:null})
   ]);
-  if(ob.error)throw ob.error;if(assets.error)throw assets.error;if(payments.error)throw payments.error;
-  const pendingByObligation=new Map();(payments.data||[]).filter(x=>x.status==='pending').forEach(x=>pendingByObligation.set(x.obligation_id,(pendingByObligation.get(x.obligation_id)||0)+Number(x.amount||0)));
-  $('obligationRows').innerHTML=(ob.data||[]).map(x=>{const pending=pendingByObligation.get(x.id)||0,remaining=Math.max(0,Number(x.amount)-Number(x.settled_amount)-pending);return '<tr><td>'+(x.obligation_type==='receivable'?'পাওনা':'দেনা')+'</td><td>'+escapeHtml(x.party_name)+'</td><td>'+escapeHtml(x.description||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.settled_amount)+'</td><td>'+money(pending)+'</td><td>'+money(remaining)+'</td><td>'+escapeHtml(x.status)+'</td><td>'+(x.status!=='settled'&&x.status!=='cancelled'&&remaining>0&&allowed('m69',true)?'<button type="button" data-settle="'+x.id+'" data-amount="'+x.amount+'" data-settled="'+x.settled_amount+'" data-pending="'+pending+'">পেমেন্ট জমা</button>':'—')+'</td></tr>'}).join('')||'<tr><td colspan="9">পাওনা/দেনার রেকর্ড নেই।</td></tr>';
-  $('assetRows').innerHTML=(assets.data||[]).map(x=>'<tr><td>'+escapeHtml(x.asset_name)+'</td><td>'+escapeHtml(x.asset_category)+'</td><td>'+escapeHtml(x.acquisition_date||'—')+'</td><td>'+money(x.acquisition_cost)+'</td><td>'+escapeHtml(x.location||'—')+'</td><td>'+escapeHtml(x.asset_status)+'</td></tr>').join('')||'<tr><td colspan="6">সম্পদের রেকর্ড নেই।</td></tr>';
+  if(canObligations&&ob.error)throw ob.error;
+  if(canAssets&&assets.error)throw assets.error;
+  if(canObligations&&payments.error)throw payments.error;
+  if(canObligations){
+   const pendingByObligation=new Map();
+   (payments.data||[]).filter(x=>x.status==='pending').forEach(x=>pendingByObligation.set(x.obligation_id,(pendingByObligation.get(x.obligation_id)||0)+Number(x.amount||0)));
+   $('obligationRows').innerHTML=(ob.data||[]).map(x=>{const pending=pendingByObligation.get(x.id)||0,remaining=Math.max(0,Number(x.amount)-Number(x.settled_amount)-pending);return '<tr><td>'+(x.obligation_type==='receivable'?'পাওনা':'দেনা')+'</td><td>'+escapeHtml(x.party_name)+'</td><td>'+escapeHtml(x.description||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.settled_amount)+'</td><td>'+money(pending)+'</td><td>'+money(remaining)+'</td><td>'+escapeHtml(x.status)+'</td><td>'+(x.status!=='settled'&&x.status!=='cancelled'&&remaining>0&&allowed('m69',true)?'<button type="button" data-settle="'+x.id+'" data-amount="'+x.amount+'" data-settled="'+x.settled_amount+'" data-pending="'+pending+'">পেমেন্ট জমা</button>':'—')+'</td></tr>'}).join('')||'<tr><td colspan="9">পাওনা/দেনার রেকর্ড নেই।</td></tr>';
+  }
+  if(canAssets){
+   $('assetRows').innerHTML=(assets.data||[]).map(x=>'<tr><td>'+escapeHtml(x.asset_name)+'</td><td>'+escapeHtml(x.asset_category)+'</td><td>'+escapeHtml(x.acquisition_date||'—')+'</td><td>'+money(x.acquisition_cost)+'</td><td>'+escapeHtml(x.location||'—')+'</td><td>'+escapeHtml(x.asset_status)+'</td></tr>').join('')||'<tr><td colspan="6">সম্পদের রেকর্ড নেই।</td></tr>';
+  }
  }
  if(allowed('m79'))await loadAudit();
 }
