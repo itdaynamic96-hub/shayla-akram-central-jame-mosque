@@ -21,7 +21,7 @@ create table if not exists public.admin_module_permissions (
 alter table public.admin_module_permissions enable row level security;
 drop policy if exists "users read own module permissions" on public.admin_module_permissions;
 create policy "users read own module permissions" on public.admin_module_permissions
- for select to authenticated using(user_id=auth.uid() or public.has_access(array['super_admin'],null));
+ for select to authenticated using(user_id=(select auth.uid()) or public.has_access(array['super_admin'],null));
 drop policy if exists "super admins manage module permissions" on public.admin_module_permissions;
 create policy "super admins manage module permissions" on public.admin_module_permissions
  for all to authenticated using(public.has_access(array['super_admin'],null))
@@ -141,7 +141,7 @@ using (
 drop policy if exists "accounts staff create pending" on public.ledger_entries;
 create policy "accounts staff create pending" on public.ledger_entries for insert to authenticated
 with check (
- status='pending' and created_by=auth.uid() and (
+ status='pending' and created_by=(select auth.uid()) and (
   public.has_access(array['super_admin','accounts_manager','accountant'],institution)
   or (entry_type='income' and (
     (fund_category in ('zakat','sadaqah') and public.account_module_permission(institution,array['m45'],true))
@@ -209,7 +209,7 @@ with check (
 drop policy if exists "accounts upload own institution receipts" on storage.objects;
 create policy "accounts upload own institution receipts" on storage.objects for insert to authenticated
 with check (
- bucket_id='private-receipts' and owner_id=auth.uid()::text and (
+ bucket_id='private-receipts' and owner_id=(select auth.uid())::text and (
   public.has_access(array['super_admin','accounts_manager','accountant'],split_part(name,'/',1))
   or public.account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)
  )
@@ -252,10 +252,18 @@ drop policy if exists "users read own module permissions" on public.admin_module
 create policy "users read own module permissions" on public.admin_module_permissions
  for select to authenticated using(user_id=(select auth.uid()) or public.has_access(array['super_admin'],null));
 drop policy if exists "super admins manage module permissions" on public.admin_module_permissions;
+drop policy if exists "super admins insert module permissions" on public.admin_module_permissions;
 create policy "super admins insert module permissions" on public.admin_module_permissions
  for insert to authenticated with check(public.has_access(array['super_admin'],null));
+drop policy if exists "super admins update module permissions" on public.admin_module_permissions;
 create policy "super admins update module permissions" on public.admin_module_permissions
  for update to authenticated using(public.has_access(array['super_admin'],null))
  with check(public.has_access(array['super_admin'],null));
+drop policy if exists "super admins delete module permissions" on public.admin_module_permissions;
 create policy "super admins delete module permissions" on public.admin_module_permissions
  for delete to authenticated using(public.has_access(array['super_admin'],null));
+
+alter table public.module_records drop constraint if exists module_records_module_key_check;
+alter table public.module_records add constraint module_records_module_key_check check (module_key ~ '^m(0[1-9]|[1-5][0-9]|6[01])$');
+alter table public.admin_module_permissions drop constraint if exists admin_module_permissions_module_key_check;
+alter table public.admin_module_permissions add constraint admin_module_permissions_module_key_check check (module_key ~ '^m(0[1-9]|[1-5][0-9]|6[01])$');
