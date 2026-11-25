@@ -12,7 +12,7 @@
 - কুরআন/হাদিসের রেফারেন্স এবং ছবি/ভিডিওর উৎস ও কৃতিত্ব উল্লেখ করুন। Super Admin/Website Admin সর্বোচ্চ ১০ MB-এর ছবি সরাসরি আপলোড করতে পারবেন; ভিডিও YouTube বা নির্ভরযোগ্য উৎসের লিংক দিয়ে যোগ হবে।
 
 ## Backend
-Accounts ও Admin-এর authentication এবং persistent data storage-এর জন্য Supabase ব্যবহার করা হয়েছে। SQL schema: `supabase/schema.sql`; connection config: `supabase-config.js`. Supabase project URL ও anon/public key না বসানো পর্যন্ত login ও database operation চালু হবে না। সেটআপের পূর্ণ নির্দেশিকা: `SUPABASE_SETUP.md`.
+Accounts ও Admin-এর authentication এবং persistent data storage-এর জন্য Supabase project `lmwczibsipczfymhyqba` সংযুক্ত আছে; browser configuration `supabase-config.js`-এ publishable key ব্যবহার করা হয়েছে। লাইভ লগইনের জন্য Supabase Auth-এ সক্রিয় user, `profiles` role/institution এবং প্রয়োজনীয় database migrations থাকতে হবে। নতুন project স্থাপন ও বিদ্যমান live project রক্ষণাবেক্ষণের নির্দেশিকা: `SUPABASE_SETUP.md`.
 
 **গুরুত্বপূর্ণ:** service_role key কখনো browser code বা GitHub-এ রাখবেন না। Public sign-up বন্ধ রাখুন। প্রথম Super Admin তৈরি ও role assignment Supabase Dashboard থেকে করতে হবে। RLS policy মসজিদ ও ফাউন্ডেশনের হিসাব আলাদা রাখে।
 
