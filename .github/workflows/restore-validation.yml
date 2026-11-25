@@ -1,0 +1,100 @@
+name: SAKM-61 Isolated Restore Validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/restore-trigger.txt"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: sakm-61-restore-validation
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    name: Restore encrypted backup into isolated local Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download latest successful encrypted backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$BACKUP_ENCRYPTION_KEY" || { echo "::error::BACKUP_ENCRYPTION_KEY is missing"; exit 1; }
+          RUN_ID="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/sakm61-database-backup.yml/runs?status=success&per_page=1" | jq -r '.workflow_runs[0].id // empty')"
+          test -n "$RUN_ID" || { echo "::error::No successful encrypted backup run was found"; exit 1; }
+          echo "Using encrypted backup run $RUN_ID"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name SAKM-61-encrypted-backup --dir "$RUNNER_TEMP/backup-download"
+          cd "$RUNNER_TEMP/backup-download"
+          sha256sum -c SAKM-61-backup.tar.gz.enc.sha256
+          openssl enc -d -aes-256-cbc -salt -pbkdf2 -iter 600000 \
+            -in SAKM-61-backup.tar.gz.enc \
+            -out "$RUNNER_TEMP/SAKM-61-restore-test.tar.gz" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          mkdir -p "$RUNNER_TEMP/restore-data"
+          tar -xzf "$RUNNER_TEMP/SAKM-61-restore-test.tar.gz" -C "$RUNNER_TEMP/restore-data"
+          test -s "$RUNNER_TEMP/restore-data/sakm61-backup/database/schema.sql"
+          test -s "$RUNNER_TEMP/restore-data/sakm61-backup/database/data.sql"
+          test -s "$RUNNER_TEMP/restore-data/sakm61-backup/auth-users-metadata.json"
+
+      - name: Install Supabase CLI and PostgreSQL client
+        uses: supabase/setup-cli@v2
+        with:
+          version: latest
+          github-token: ${{ github.token }}
+
+      - name: Start isolated local Supabase stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/restore-project"
+          cd "$RUNNER_TEMP/restore-project"
+          supabase init
+          supabase start
+          supabase status -o env > "$RUNNER_TEMP/local-supabase.env"
+          cat "$RUNNER_TEMP/local-supabase.env" | sed -E 's/(KEY|URL)=.*/\1=[redacted]/'
+
+      - name: Restore database schema, Auth references, Storage and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source "$RUNNER_TEMP/local-supabase.env"
+          set +a
+          BACKUP_DIR="$RUNNER_TEMP/restore-data/sakm61-backup"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role; GRANT ALL ON SCHEMA public TO postgres;"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$BACKUP_DIR/database/schema.sql"
+          npm install --prefix "$RUNNER_TEMP" --no-save --no-package-lock @supabase/supabase-js@2.49.1 pg@8.13.1
+          cp scripts/restore-supabase-assets.mjs "$RUNNER_TEMP/restore-supabase-assets.mjs"
+          RESTORE_BACKUP_DIR="$BACKUP_DIR" \
+          LOCAL_SUPABASE_URL="$API_URL" \
+          LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" \
+          LOCAL_SUPABASE_DB_URL="$DB_URL" \
+          node "$RUNNER_TEMP/restore-supabase-assets.mjs"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$BACKUP_DIR/database/data.sql"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "ANALYZE;"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "SELECT 'profiles' AS table_name, count(*) FROM public.profiles UNION ALL SELECT 'ledger_entries', count(*) FROM public.ledger_entries UNION ALL SELECT 'account_journal_entries', count(*) FROM public.account_journal_entries UNION ALL SELECT 'storage_objects', count(*) FROM storage.objects;"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "SELECT count(*) AS public_tables, count(*) FILTER (WHERE c.relrowsecurity) AS tables_with_rls FROM pg_tables t JOIN pg_class c ON c.relname=t.tablename JOIN pg_namespace n ON n.oid=c.relnamespace WHERE t.schemaname='public';"
+
+      - name: Stop isolated Supabase stack and remove temporary files
+        if: always()
+        shell: bash
+        run: |
+          if [ -d "$RUNNER_TEMP/restore-project/supabase" ]; then
+            cd "$RUNNER_TEMP/restore-project"
+            supabase stop || true
+          fi
+          rm -rf "$RUNNER_TEMP/restore-project" "$RUNNER_TEMP/restore-data" "$RUNNER_TEMP/backup-download" "$RUNNER_TEMP/node_modules"
+          rm -f "$RUNNER_TEMP/SAKM-61-restore-test.tar.gz" "$RUNNER_TEMP/restore-supabase-assets.mjs" "$RUNNER_TEMP/local-supabase.env"
