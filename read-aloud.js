@@ -1,4 +1,4 @@
-/* Local, API-key-free Bengali male TTS using Svāra + WebGPU. */
+/* Free Bengali male voice through the project's no-provider-key Edge TTS service. */
 (() => {
   'use strict';
 
