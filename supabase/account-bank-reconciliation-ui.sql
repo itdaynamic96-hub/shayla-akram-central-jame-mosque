@@ -429,3 +429,27 @@ end;
 $$;
 revoke all on function public.account_create_bank_reconciliation(text,uuid,date,numeric,numeric,text) from public,anon;
 grant execute on function public.account_create_bank_reconciliation(text,uuid,date,numeric,numeric,text) to authenticated;
+
+drop policy if exists account_bank_reconciliation_items_insert on public.account_bank_reconciliation_items;
+create policy account_bank_reconciliation_items_insert
+on public.account_bank_reconciliation_items for insert to authenticated
+with check (
+  exists (
+    select 1 from public.account_bank_reconciliations r
+    where r.id = reconciliation_id
+      and r.status = 'draft'
+      and public.accounts_feature_access(r.institution,'m46',true)
+  )
+);
+
+drop policy if exists account_bank_reconciliation_items_delete on public.account_bank_reconciliation_items;
+create policy account_bank_reconciliation_items_delete
+on public.account_bank_reconciliation_items for delete to authenticated
+using (
+  exists (
+    select 1 from public.account_bank_reconciliations r
+    where r.id = reconciliation_id
+      and r.status = 'draft'
+      and public.accounts_feature_access(r.institution,'m46',true)
+  )
+);
