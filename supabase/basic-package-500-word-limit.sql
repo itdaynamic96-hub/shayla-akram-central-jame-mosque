@@ -34,3 +34,13 @@ drop trigger if exists module_records_500_word_limit on public.module_records;
 create trigger module_records_500_word_limit
 before insert or update of data on public.module_records
 for each row execute function public.enforce_module_record_500_word_limit();
+
+-- The body word-count constraint helper is immutable and has a fixed search path.
+create or replace function public.basic_mosque_body_within_500(v jsonb)
+returns boolean language sql immutable set search_path=public,pg_temp
+as $$
+ select case
+  when btrim(coalesce(v->>'body','')) = '' then true
+  else cardinality(regexp_split_to_array(btrim(v->>'body'), '\\s+')) <= 500
+ end
+$$;
