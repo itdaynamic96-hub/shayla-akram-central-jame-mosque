@@ -116,6 +116,12 @@ assert 'custom_admin' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 
 assert 'document.querySelector' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Staff permission checkboxes must query their controls safely'
 assert 'staffManager' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Super Admin account panel must remain visible after module shell starts'
 
+permission_edge=(ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8')
+assert 'keys.length > 85' in permission_edge, 'Permissions: Edge Function must accept up to all 85 modules'
+assert 'can_write: true' in permission_edge and 'can_approve: true' in permission_edge, 'Permissions: selected modules must grant full module activity to one worker'
+permission_migration=(ROOT/'supabase/migrations/20261125111114_accounts_permission_cap_85_and_missing_fk_indexes.sql').read_text(encoding='utf-8')
+assert 'jsonb_array_length(permission_rows) > 85' in permission_migration, 'Permissions: database RPC limit must match the 85 module UI'
+assert 'account_obligation_payments_obligation_id_idx' in permission_migration and 'ledger_entries_bank_account_id_idx' in permission_migration, 'Accounts: missing foreign-key indexes must be covered'
 assert 'replace_admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Permissions must be replaced atomically by a server-only RPC'
 assert 'admin.rpc("replace_admin_module_permissions"' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Edge Function must use the atomic permission RPC'
 
