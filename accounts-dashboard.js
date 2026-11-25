@@ -49,14 +49,14 @@ function mount(){
  for(let i=-2;i<=3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);monthOptions.push('<option value="'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'">'+new Intl.DateTimeFormat('bn-BD',{month:'long',year:'numeric'}).format(d)+'</option>')}
  el('adMonth').innerHTML=monthOptions.join('');
  const target=new Date(now.getFullYear(),now.getMonth()+(now.getDate()>=20?1:0),1);el('adMonth').value=target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0');
- el('adMonth').onchange=()=>{if(activeModule===3)loadChanda().catch(showError)};
+ el('adMonth').onchange=()=>{if(activeModule===23)loadChanda().catch(showError)};
  el('adAdd').onclick=memberForm;el('adReport').onclick=exportExcel;el('adLogout').onclick=()=>el('logout')?.click();
  refreshNav();
 }
 function openModule(i){
  if(!visibleModules.includes(i))return;
  activeModule=i;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
- el('adAdd').hidden=!(i===3&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===3&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==3||currentInstitution()!=='mosque';
+ el('adAdd').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==23||currentInstitution()!=='mosque';
  if(i===0){renderDashboard().catch(showError);return}
  if(i===3){renderDonations().catch(showError);return}
  if(i===4){renderBankAccounts().catch(showError);return}
@@ -101,7 +101,7 @@ async function renderDonations(){
  if(inst==='mosque'&&chandaCanView){p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায়</h2></div><div class="body" id="adChandaContent"><div class="empty">চাঁদার তথ্য লোড হচ্ছে…</div></div></section>');await loadChanda()}
 }
 async function renderMonthlyChanda(){const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায় ব্যবস্থাপনা</h2></div><div class="body" id="adChandaContent"><div class="empty">মাসিক চাঁদার তথ্য লোড হচ্ছে…</div></div></section>');if(currentInstitution()!=='mosque'){el('adChandaContent').innerHTML='<div class="note">মাসিক চাঁদা মসজিদ প্রতিষ্ঠানের হিসাবের অংশ; ফাউন্ডেশনের হিসাব আলাদা রাখা হয়েছে।</div>';return}await loadChanda()}
-function renderMessageCenter(){const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>বার্তা ও নোটিফিকেশন ব্যবস্থাপনা</h2></div><div class="body"><div class="empty">বার্তার ডেলিভারি রিপোর্ট লোড হচ্ছে…</div></div></section>');const panel=el('accountsMessaging');if(!panel){el('adPage').insertAdjacentHTML('beforeend','<div class="note">বার্তা ব্যবস্থাপনা প্যানেল পাওয়া যায়নি।</div>');return}panel.hidden=false;panel.classList.add('ad-legacy-panel');p.appendChild(panel)}
+async function renderMessageCenter(){const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>বার্তা ও নোটিফিকেশন ব্যবস্থাপনা</h2></div><div class="body"><div class="empty">বার্তার ডেলিভারি রিপোর্ট লোড হচ্ছে…</div></div></section>');const panel=el('accountsMessaging');if(!panel){el('adPage').insertAdjacentHTML('beforeend','<div class="note">বার্তা ব্যবস্থাপনা প্যানেল পাওয়া যায়নি।</div>');return}panel.hidden=false;panel.classList.add('ad-legacy-panel');p.appendChild(panel)}
 async function renderBankAccounts(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>ব্যাংক ও নগদ হিসাব</h2></div><div class="body"><div id="adBankAccounts"></div></div></section>');
  const host=el('adBankAccounts');
@@ -202,12 +202,12 @@ async function renderUserPermissions(){
 async function renderSettings(){
  const p=el('adPage'),inst=currentInstitution();
  resetAdPage('<section class="panel"><div class="head"><h2>Accounts Settings</h2></div><div class="body"><p><b>প্রতিষ্ঠান:</b> '+(inst==='mosque'?'মসজিদ':'ফাউন্ডেশন')+'</p><p><b>ব্যবহারকারীর ভূমিকা:</b> '+escapeHtml(profile?.role||'')+'</p><p><b>বার্তা সেবা:</b> Provider Secrets Supabase Edge Functions → Secrets থেকে পরিচালিত হয়। কোনো API Key এখানে দেখানো হয় না।</p><a class="action" href="https://supabase.com/dashboard/project/lmwczibsipczfymhyqba/functions/secrets">Supabase Edge Function Secrets</a></div></section>');
- const {data:messageAccess}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m41',write_access:false});const panel=el('accountsMessaging');if(panel&&messageAccess){panel.hidden=false;panel.classList.add('ad-legacy-panel');p.appendChild(panel)}
+
 }
-function stateOf(m,d,day,upcoming,today){if(d&&Number(d.paid_amount)>=Number(d.amount))return ['paid','✓','আদায় সম্পন্ন'];if(d&&Number(d.paid_amount)>0)return ['partial','◒','আংশিক আদায়'];if(upcoming&&day>=20&&day<=24)return ['warning','◷','সময় ঘনিয়ে এসেছে'];if(upcoming&&day>=25)return ['collect','!','নতুন মাসের চাঁদা সংগ্রহ'];if(d&&today>d.due_date)return ['overdue','!','বকেয়া'];return ['neutral','·','অপেক্ষমাণ']}
+function stateOf(m,d,day,upcoming,today){if(d&&Number(d.paid_amount)>=Number(d.amount))return ['paid','✓','আদায় সম্পন্ন'];if(d&&Number(d.paid_amount)>0)return ['partial','◒','আংশিক আদায়'];if(upcoming&&day>=20&&day<=24)return ['warning','◷','সময় ঘনিয়ে এসেছে'];if(upcoming&&day>=25)return ['collect','!','নতুন মাসের চাঁদা সংগ্রহ'];if(d&&today>=d.due_date)return ['overdue','!','বকেয়া'];return ['neutral','·','অপেক্ষমাণ']}
 async function loadChanda(){
  const p=el('adChandaContent')||el('adPage');if(currentInstitution()!=='mosque')return;p.innerHTML='<div class="panel"><div class="empty">লাইভ ডেটা লোড হচ্ছে…</div></div>';
- const month=el('adMonth').value+'-01',today=dhaka(),day=+today.slice(8,10),upcoming=month.slice(0,7)!==today.slice(0,7);
+ const month=el('adMonth').value+'-01',today=dhaka(),day=+today.slice(8,10),upcoming=month.slice(0,7)>today.slice(0,7);
  const {data:canWrite,error:writeErr}=await supabase.rpc('chanda_can_access',{write_access:true});if(writeErr)throw writeErr;if(canWrite){const {error:dueErr}=await supabase.rpc('ensure_chanda_dues_for_month',{target_month:month});if(dueErr)throw dueErr}
  const [mr,dr]=await Promise.all([supabase.from('chanda_members').select('id,member_name,father_name,address,phone,monthly_amount,due_day,status').eq('status','active').order('member_name'),supabase.from('chanda_dues').select('id,member_id,due_month,due_date,amount,paid_amount,status,paid_at').eq('due_month',month)]);
  if(mr.error)throw mr.error;if(dr.error)throw dr.error;members=mr.data||[];dues=dr.data||[];chandaCanWrite=!!canWrite;el('adAdd').hidden=!chandaCanWrite;el('adReport').hidden=!chandaCanWrite;
