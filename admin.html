@@ -93,6 +93,51 @@
 @media(max-width:700px){#adminWorkspace{padding:13px}#adminWorkspace .dash-columns{grid-template-columns:1fr}#adminWorkspace .dash-shortcuts{grid-template-columns:1fr 1fr}#adminWorkspace .dash-metric strong{font-size:19px}}
 @media(max-width:390px){#adminWorkspace .dash-metrics{grid-template-columns:1fr 1fr;gap:7px}#adminWorkspace .dash-metric{padding:10px}#adminWorkspace .dash-shortcuts{grid-template-columns:1fr}}
 
+
+/* 2026 visual refresh: clear, calm and accessible administration workspace */
+:root{color-scheme:light;--bg:#f4f5ef;--panel:#fffefa;--line:#e2e7dc;--gold:#a9853d;--text:#20372b;--muted:#66756b;--red:#b42318}
+body{background:radial-gradient(ellipse at 8% 0%,#fffdf6 0,transparent 40%),linear-gradient(145deg,#f6f5ef,#edf2eb);color:var(--text);line-height:1.65}
+main{max-width:1500px;padding:24px clamp(14px,3vw,38px)}
+body>.top,.top{padding:18px 20px;background:linear-gradient(120deg,#0d3526,#1d6043);border:1px solid #b8944e;border-radius:18px;color:#fff8e8;box-shadow:0 14px 32px #123b2c1a}
+.top h1,.top h2{color:#fff4d5;margin:8px 0 3px}.top .muted{color:#d9e5dc}.brand{color:#f2d895;font-size:16px}
+a{color:#176344}button{background:linear-gradient(120deg,#123b2c,#1e6043);color:#fff5dc;border:1px solid #b8944e;border-radius:10px;padding:10px 16px;box-shadow:0 4px 10px #123b2c12;transition:transform .18s,box-shadow .18s}
+button:hover{transform:translateY(-1px);box-shadow:0 8px 18px #123b2c20}
+input,select,textarea{background:#fff;color:#20372b;border:1px solid #d8dfd4;border-radius:10px;padding:11px 12px}
+label{color:#53665a;font-weight:600}
+.panel,.stat,#adminWorkspace,#adminPage{background:#fffefa;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 10px 26px rgba(24,57,38,.055);color:var(--text)}
+.panel h2,.panel h3,.panel h4,#adminWorkspace h2,#adminWorkspace h3,#adminPage h2{color:#164a34}
+.grid{gap:14px}.stat{background:linear-gradient(145deg,#fffefa,#f0f5ed);border-top:3px solid #b8944e;font-weight:600}
+.stat strong{color:#176344;font-size:27px}
+.tag{background:#edf4ec;border-color:#d4e2d3;color:#24563d;padding:5px 11px}
+table{background:#fffefa;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;padding:11px 12px;color:#31483a}
+.muted{color:#66756b}.error{color:#b42318}
+#adminSidebar{background:linear-gradient(180deg,#0b3022,#123f2c);border-right:1px solid #b8944e;box-shadow:8px 0 24px #123b2c12}
+#adminSidebar .side-brand{color:#f2d895;font-size:15px}
+#adminSidebar summary{color:#f7e9c5;border-radius:9px}
+#adminSidebar a{color:#d0dfd4;border-radius:8px;padding:8px 10px}
+#adminSidebar a:hover,#adminSidebar a.active{background:#286247;color:#fff8e8}
+#adminWorkspace .dash-metric{background:linear-gradient(145deg,#fffefa,#f0f5ed);border-color:#dfe7dc}
+#adminWorkspace .dash-icon{background:#e8f0e5;color:#176344}
+#adminWorkspace .dash-label,#adminWorkspace .dash-metric small{color:#66756b}
+#adminWorkspace .dash-metric strong{color:#174b34}
+#adminWorkspace .dash-panel,#adminWorkspace .module-card,#adminWorkspace .staff-module{background:#f8faf6;border-color:#dfe7dc;color:#20372b}
+#adminWorkspace .dash-section-head h3,#adminWorkspace .module-card b{color:#174b34}
+#adminWorkspace .dash-shortcuts>a{background:#fff;border-color:#dfe7dc;color:#20372b}
+#adminWorkspace .dash-shortcuts>a:hover{background:#edf4ec;border-color:#b8944e}
+#adminWorkspace .dash-shortcuts>a span{color:#174b34}
+#adminWorkspace .dash-shortcuts>a small,#adminWorkspace .dash-empty,#adminWorkspace .dash-list-item small{color:#66756b}
+#adminWorkspace .dash-date-chip,#adminWorkspace .dash-status{background:#edf4ec;border-color:#d4e2d3;color:#24563d}
+#adminWorkspace .dash-footer-note{background:#f5f7f1;color:#53665a}
+#adminWorkspace .dash-bar-track{background:#e5ece2}
+#adminWorkspace .dash-bar-track i{background:linear-gradient(90deg,#a9853d,#d6bd78)}
+#adminWorkspace .staff-module span{color:#31483a}
+#adminWorkspace .staff-perms label{color:#53665a}
+:focus-visible{outline:3px solid #c5a45b!important;outline-offset:2px}
+@media(max-width:850px){main{padding:12px}#adminSidebar{background:linear-gradient(135deg,#0b3022,#174b34);max-height:46vh}#app.admin-layout{padding-left:0}}
+@media(max-width:700px){.top{padding:15px;border-radius:14px}.panel,.stat,#adminWorkspace,#adminPage{padding:15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat strong{font-size:21px}}
+@media(max-width:390px){.grid{grid-template-columns:1fr}}
+
 </style></head><body><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Admin Panel</h1><p class="muted">ব্যবহারকারী, ভূমিকা, নোটিশ ও প্রশাসনিক কার্যক্রম</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<a href="./accounts.html">Accounts</a>　<a href="./video-bulk-import.html">১০০ ভিডিও যুক্ত করুন</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। README-তে সেটআপ নির্দেশিকা আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ Admin লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" required autocomplete="username"><label>পাসওয়ার্ড</label><input id="password" type="password" required autocomplete="current-password"><p><button>লগইন</button></p></form><p class="muted">Public sign-up বন্ধ। Super Admin কর্তৃক অনুমোদিত অ্যাকাউন্ট প্রয়োজন।</p><p id="loginError" class="error" hidden></p></section>
