@@ -124,12 +124,15 @@ Deno.serve(async (req) => {
   };
 
   const processStatus = async (providerId: string, status: string, channel: "whatsapp" | "sms",
-    errorCode = "", errorMessage = "") => {
+    errorCode = "", errorMessage = "", retryMissing = false) => {
     if (!providerId || !["delivered", "read", "failed"].includes(status)) return;
     const { data: row, error } = await admin.from("accounts_message_queue").select("*")
       .eq("provider_message_id", providerId).eq("active_channel", channel).maybeSingle();
     if (error) throw error;
-    if (!row) return;
+    if (!row) {
+      if (retryMissing) throw new Error("Meta delivery status is not linked to a queued message yet; retry the webhook.");
+      return;
+    }
 
     if (status === "read" && channel !== "whatsapp") return;
     if (status === "delivered" || status === "read") {
@@ -193,6 +196,10 @@ Deno.serve(async (req) => {
         for (const change of (Array.isArray(entry.changes) ? entry.changes : []) as Record<string, unknown>[]) {
           if (change.field !== "messages") continue;
           const value = (change.value && typeof change.value === "object" ? change.value : {}) as Record<string, unknown>;
+          const metadata = (value.metadata && typeof value.metadata === "object" ? value.metadata : {}) as Record<string, unknown>;
+          const expectedPhoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "";
+          const eventPhoneId = String(metadata.phone_number_id || "");
+          if (expectedPhoneId && eventPhoneId && expectedPhoneId !== eventPhoneId) continue;
           for (const item of (Array.isArray(value.statuses) ? value.statuses : []) as Record<string, unknown>[]) {
             const errors = Array.isArray(item.errors) ? item.errors as Record<string, unknown>[] : [];
             const firstError = errors[0] || {};
@@ -202,6 +209,7 @@ Deno.serve(async (req) => {
               "whatsapp",
               String(firstError.code || ""),
               safeError(firstError.title || firstError.message || ""),
+              true,
             );
           }
         }
