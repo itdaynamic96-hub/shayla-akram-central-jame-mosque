@@ -53,3 +53,6 @@ This repository is the **SAKM-61** (61-module) mosque and foundation website. It
 
 ### Admin dashboard preferences
 The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
+
+
+Live Bengali TTS smoke test workflow is opt-in: commits containing `[tts-smoke]` verify the deployed no-key TTS endpoint and audio response.
