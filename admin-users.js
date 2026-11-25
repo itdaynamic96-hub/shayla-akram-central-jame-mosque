@@ -142,7 +142,7 @@ async function init() {
   try {
     const { profile } = await currentProfile();
     if (profile?.role !== "super_admin") { root.hidden = true; return; }
-    root.hidden = false;
+    root.hidden = true;
     renderChecks();
     await loadStaff();
   } catch (e) { showError($("staffError"), e); }
