@@ -240,4 +240,5 @@ assert 'duplicates.map(x=>x.member_name)' in dashboard_js, 'Chanda member form m
 recon_fix=(ROOT/'supabase/fix-bank-reconciliation-generated-column-and-item-grants.sql').read_text(encoding='utf-8')
 assert 'book_balance,status,notes,created_by' in recon_fix and 'grant insert,delete on table public.account_bank_reconciliation_items to authenticated' in recon_fix, 'Bank reconciliation must omit generated difference and grant RLS-governed item actions'
 
-assert "if(i===22){renderMessageCenter().catch(showError);return}" in dashboard_js and "if(i===23){renderMonthlyChanda().catch(showError);return}" in dashboard_js, 'Messaging and monthly chanda navigation items must open their dedicated modules'
+assert "if(i===22){renderMessageCenter().catch(showError);return}" not in dashboard_js and "if(i===23){renderMonthlyChanda().catch(showError);return}" not in dashboard_js, 'Messaging and monthly chanda must not be separate top-level modules'
+assert "const panel=el('accountsMessaging')" in dashboard_js and 'await loadChanda()' in dashboard_js, 'Messaging belongs inside Settings and monthly chanda belongs inside Donations'
