@@ -145,7 +145,8 @@ assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs
 assert 'navigator.share' in reader_js and 'navigator.clipboard' in reader_js, 'Share: native share and copy-link actions are required'
 for platform in ('facebook.com/sharer','wa.me/?text=','t.me/share/url','twitter.com/intent/tweet','linkedin.com/sharing/share-offsite','mailto:'):
     assert platform in reader_js, f'Share: missing platform {platform}'
-assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran ayah and Hadith cards must be covered'\nassert \"'.video-card'\" in reader_js and \"'.content-slot.video-card'\" in reader_js, 'Share: every video gallery card must receive a share control'
+assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran ayah and Hadith cards must be covered'
+assert \"'.video-card'\" in reader_js and \"'.content-slot.video-card'\" in reader_js, 'Share: every video gallery card must receive a share control'
 assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
 
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
