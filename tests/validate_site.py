@@ -241,6 +241,7 @@ assert "if(allowed('m69')||allowed('m76'))" in enterprise_js, 'Obligation and as
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
 assert 'account_submit_obligation_payment' in enterprise_js and 'account_obligation_payments' in enterprise_js, 'Obligation payments must enter the ledger approval flow'
 assert 'data-pending' in enterprise_js and 'অনুমোদনের অপেক্ষায়' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Pending obligation payments must be tracked separately'
+assert '<th>অনুমোদনের অপেক্ষায়</th>' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Obligation payment table must show pending approvals separately'
 assert 'bank_account_id' in accounts_html and 'id="bankAccount"' in accounts_html, 'Ledger entries must support a selected bank/cash account'
 assert 'data-ledger-decision' in dashboard_js, 'Central approvals must include pending ledger entries'
 obligation_sql=(ROOT/'supabase/accounts-obligation-payments-and-bank-link.sql').read_text(encoding='utf-8')
