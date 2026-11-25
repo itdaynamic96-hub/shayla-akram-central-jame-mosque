@@ -146,4 +146,7 @@ for marker in ('account_staff','payroll_records','account_obligations','account_
     assert marker in (ROOT/'supabase/accounts-enterprise-extensions.sql').read_text(encoding='utf-8'), f'Accounts enterprise migration missing: {marker}'
 for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
     assert marker in (ROOT/'accounts.html').read_text(encoding='utf-8'), f'Accounts UI missing: {marker}'
+
+assert 'data-payroll-slip' in enterprise_js, 'Accounts: printable salary slip action is missing'
+assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: daily/monthly/yearly book filters are missing'
 print('Enterprise Accounts checks passed: external JS syntax, payroll, cash/bank books, obligations, assets and migration markers.')
