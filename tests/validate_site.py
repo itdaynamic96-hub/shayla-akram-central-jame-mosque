@@ -234,3 +234,5 @@ assert 'cd.paid_amount+record_chanda_payment.paid_amount' in (ROOT/'supabase/fix
 assert (ROOT/'supabase/accounts-dashboard-quality-and-index-fixes.sql').exists(), 'Accounts security/index migration source is missing'
 
 assert 'async function renderCashbookJournal()' in dashboard_js and 'account_submit_manual_journal' in dashboard_js, 'Cashbook module must expose the balanced manual journal workflow'
+
+assert 'duplicates.map(x=>x.member_name)' in dashboard_js, 'Chanda member form must warn before reusing a phone number'
