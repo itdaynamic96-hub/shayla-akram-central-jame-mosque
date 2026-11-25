@@ -392,3 +392,12 @@ hardening_sql=(ROOT/'supabase/accounts-admin-panel-hardening.sql').read_text(enc
 assert 'mp.can_view and mp.can_write and mp.can_approve' in hardening_sql, 'Module-record approval must require explicit can_approve permission'
 assert "'m81',false" in hardening_sql, 'Audit Trail module must have its own audit-log read permission'
 assert 'admin_dashboard_settings_updated_by_idx' in hardening_sql, 'Admin dashboard settings foreign key must be indexed'
+
+# Bengali TTS regression: use the deployed no-key Edge TTS endpoint, not a missing multi-GB local model.
+reader_source=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
+assert "functions/v1/bengali-tts" in reader_source and "window.SUPABASE_CONFIG" in reader_source, 'Read aloud must call the configured free Bengali TTS Edge Function'
+assert 'ensureSvaraModel' not in reader_source and 'svara-build' not in reader_source and '1.95 GB' not in reader_source, 'Read aloud must not depend on the missing multi-GB Svara model'
+assert (ROOT/'supabase/functions/bengali-tts/index.ts').exists(), 'Bengali TTS Edge Function source must be versioned with the site'
+for page in ('index.html','admin.html','accounts.html'):
+    assert 'read-aloud.js?v=20261126-edge-tts2' in (ROOT/page).read_text(encoding='utf-8'), f'{page}: Bengali TTS cache key must be refreshed'
+subprocess.run(['node','--check'],input=reader_source,text=True,capture_output=True,check=True)
