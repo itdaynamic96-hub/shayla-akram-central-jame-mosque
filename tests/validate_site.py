@@ -182,6 +182,7 @@ assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform 
 
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
+subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
 assert "from('chanda_members')" in chanda_js
 assert "from('chanda_dues')" in chanda_js
 assert "rpc('record_chanda_payment_months'" in chanda_js and "p_paid_amount:n" in chanda_js
