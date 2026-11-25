@@ -76,7 +76,7 @@ print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepag
 admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 module_data = admin_modules.split('const data=[', 1)[1].split('];' + chr(10) + 'const groups=', 1)[0]
 module_count = len(re.findall(r"\['[^']+','[^']+'\]", module_data))
-assert module_count == 61, f'Admin Panel: expected 61 module definitions, found {module_count}'
+assert module_count == 85, f'Admin Panel: expected 85 module definitions including 24 detailed Accounts modules, found {module_count}'
 subprocess.run(['node','--check','--input-type=module'],input=admin_modules,text=True,capture_output=True,check=True)
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
@@ -245,4 +245,11 @@ assert "const panel=el('accountsMessaging')" in dashboard_js and 'await loadChan
 assert "Object.fromEntries(modules.map((_,i)=>[i,'m'+String(62+i).padStart(2,'0')]))" in dashboard_js, 'Every Accounts module must use a unique permission key'
 assert 'মোট ৮৫টি' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin must include all 24 detailed Accounts permissions'
 assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly chanda permission must be assignable from Admin'
+assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
+assert 'm(0[1-9]|[1-7][0-9]|8[0-5])' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure staff account endpoint must accept the expanded module key range'
+assert (ROOT/'supabase/accounts-granular-module-access.sql').exists(), 'Detailed Accounts RLS and module permission migration source is missing'
+assert 'jsonb_array_length(permission_rows) > 85' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8'), 'Permission replacement RPC must support all 85 modules'
+assert 'm84' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8') and 'm85' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8'), 'Messaging and monthly chanda must be separately secured'
 assert 'max-width:none' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8'), 'Accounts dashboard must use full available width'
+assert 'main{width:100%;max-width:none' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts outer page must not constrain the dashboard width'
+assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view)" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin dashboard Accounts shortcut must use the new granular permissions'
