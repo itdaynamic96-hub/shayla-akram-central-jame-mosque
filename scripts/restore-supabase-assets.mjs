@@ -24,45 +24,12 @@ try {
     if (error.code !== "ENOENT") throw error;
   }
 
-  if (users.length) {
-    const columnsResult = await pg.query(
-      "select column_name from information_schema.columns where table_schema='auth' and table_name='users'"
-    );
-    const available = new Set(columnsResult.rows.map((row) => row.column_name));
-    const candidates = [
-      ["id", (u) => u.id],
-      ["aud", (u) => u.aud || "authenticated"],
-      ["role", (u) => u.role || "authenticated"],
-      ["email", (u) => u.email || null],
-      ["encrypted_password", () => ""],
-      ["email_confirmed_at", (u) => u.email_confirmed_at || null],
-      ["phone", (u) => u.phone || null],
-      ["phone_confirmed_at", (u) => u.phone_confirmed_at || null],
-      ["created_at", (u) => u.created_at || new Date().toISOString()],
-      ["updated_at", (u) => u.updated_at || new Date().toISOString()],
-      ["raw_app_meta_data", (u) => JSON.stringify(u.app_metadata || {})],
-      ["raw_user_meta_data", (u) => JSON.stringify(u.user_metadata || {})],
-      ["is_sso_user", () => false],
-      ["is_anonymous", () => false]
-    ].filter(([name]) => available.has(name));
-    if (!available.has("id")) throw new Error("Local Auth schema has no auth.users.id column.");
-    const names = candidates.map(([name]) => '"' + name + '"').join(",");
-    const placeholders = candidates.map((_, i) => "$" + (i + 1)).join(",");
-    await pg.query("begin");
-    try {
-      await pg.query("set local session_replication_role = replica");
-      for (const user of users) {
-        const values = candidates.map(([, value]) => value(user));
-        await pg.query(
-          "insert into auth.users (" + names + ") values (" + placeholders + ") on conflict (id) do nothing",
-          values
-        );
-      }
-      await pg.query("commit");
-    } catch (error) {
-      await pg.query("rollback");
-      throw error;
-    }
+  const userIds = users.map((user) => user.id).filter(Boolean);
+  if (userIds.length) {
+    const restoredUsers = await pg.query("select id from auth.users where id = any($1::uuid[])", [userIds]);
+    const restoredIds = new Set(restoredUsers.rows.map((row) => row.id));
+    const missingUsers = userIds.filter((id) => !restoredIds.has(id));
+    if (missingUsers.length) throw new Error("Database data dump did not restore " + missingUsers.length + " Auth user IDs.");
   }
 
   const supabase = createClient(supabaseUrl, serviceKey, {
@@ -79,16 +46,19 @@ try {
 
   let restoredObjects = 0;
   const objectsRoot = path.join(root, "storage-objects");
+  const expectedBucketIds = buckets.map((bucket) => bucket.id || bucket.name).filter(Boolean);
+  const existingBuckets = await pg.query("select id from storage.buckets where id = any($1::text[])", [expectedBucketIds]);
+  const existingBucketIds = new Set(existingBuckets.rows.map((row) => row.id));
   for (const bucket of buckets) {
     const bucketId = bucket.id || bucket.name;
     if (!bucketId) continue;
-    const { error: bucketError } = await supabase.storage.createBucket(bucketId, {
-      public: !!bucket.public,
-      fileSizeLimit: bucket.file_size_limit ?? undefined,
-      allowedMimeTypes: bucket.allowed_mime_types ?? undefined
-    });
-    if (bucketError && !/already exists|duplicate/i.test(bucketError.message || "")) {
-      throw new Error("Could not restore Storage bucket " + bucketId + ": " + bucketError.message);
+    if (!existingBucketIds.has(bucketId)) {
+      const { error: bucketError } = await supabase.storage.createBucket(bucketId, {
+        public: !!bucket.public,
+        fileSizeLimit: bucket.file_size_limit ?? undefined,
+        allowedMimeTypes: bucket.allowed_mime_types ?? undefined
+      });
+      if (bucketError) throw new Error("Could not restore Storage bucket " + bucketId + ": " + bucketError.message);
     }
 
     const bucketDir = path.join(objectsRoot, bucket.name || bucketId);
@@ -122,12 +92,14 @@ try {
 
   const userCount = await pg.query("select count(*)::int as count from auth.users");
   const bucketCount = await pg.query("select count(*)::int as count from storage.buckets");
+  const objectCount = await pg.query("select count(*)::int as count from storage.objects");
   console.log(JSON.stringify({
-    restoredAuthUsers: users.length,
+    verifiedAuthUserIds: userIds.length,
     localAuthUsers: userCount.rows[0].count,
-    restoredBuckets: buckets.length,
+    verifiedBuckets: buckets.length,
     localBuckets: bucketCount.rows[0].count,
-    restoredStorageObjects: restoredObjects
+    restoredStorageObjects: restoredObjects,
+    localStorageObjects: objectCount.rows[0].count
   }));
 } finally {
   await pg.end();
