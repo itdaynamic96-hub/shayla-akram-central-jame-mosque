@@ -29,16 +29,40 @@ function movePanel(id){
 function mount(){
  if(el('accountsDashboard'))return;
  const root=document.createElement('section');root.id='accountsDashboard';
- root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div><b>🕌 মসজিদ Accounts</b><div style="font-size:11px;color:#657b97">সাকছিপাড়া শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</div></div><select id="adMonth" aria-label="মাস"></select><div id="adUser" style="font-size:13px;text-align:right"></div></header><section class="hero"><div><h1 id="adTitle">মাসিক চাঁদা আদায় ব্যবস্থাপনা</h1><p id="adSub">মসজিদের নিয়মিত মাসিক চাঁদার হিসাব ও অগ্রগতি</p></div><div><button class="action green" id="adAdd">＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport">▥ রিপোর্ট</button></div></section><div id="adPage"></div></main></div>';
+ root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div><b>SAKM-61 Accounts</b><div style="font-size:11px;color:#657b97">মসজিদ ও ফাউন্ডেশনের পৃথক হিসাব</div></div><select id="adInstitution" aria-label="প্রতিষ্ঠান"></select><select id="adMonth" aria-label="মাস"></select><div id="adUser" style="font-size:13px;text-align:right"></div></header><section class="hero"><div><h1 id="adTitle">ড্যাশবোর্ড</h1><p id="adSub">প্রতিষ্ঠানভিত্তিক আর্থিক সারসংক্ষেপ</p></div><div><button class="action green" id="adAdd" hidden>＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport" hidden>▥ রিপোর্ট</button></div></section><div id="adPage"></div></main></div>';
  const app=el('app');app.prepend(root);[...app.children].filter(x=>x!==root).forEach(x=>{x.hidden=true});
- el('adNav').innerHTML=modules.map((m,i)=>'<button type="button" data-i="'+i+'" class="'+(i===23?'active':'')+'"><span class="num">'+(i+1)+'</span>'+m+'</button>').join('');
+ el('adNav').innerHTML=modules.map((m,i)=>'<button type="button" data-i="'+i+'"><span class="num">'+(i+1)+'</span>'+m+'</button>').join('');
  el('adNav').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)openModule(+b.dataset.i)};
- const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Dhaka'}));const opts=[];for(let i=-2;i<=3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);opts.push('<option value="'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'">'+new Intl.DateTimeFormat('bn-BD',{month:'long',year:'numeric'}).format(d)+'</option>')}
- el('adMonth').innerHTML=opts.join('');const target=new Date(now.getFullYear(),now.getMonth()+(now.getDate()>=20?1:0),1);el('adMonth').value=target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0');
- el('adMonth').onchange=()=>loadChanda().catch(showError);
+ const opts=profile?.institution==='both'?['mosque','foundation']:[profile?.institution==='foundation'?'foundation':'mosque'];
+ el('adInstitution').innerHTML=opts.map(x=>'<option value="'+x+'">'+(x==='mosque'?'মসজিদ':'ফাউন্ডেশন')+'</option>').join('');
+ el('adInstitution').value=opts[0];if(el('institution'))el('institution').value=opts[0];
+ el('adInstitution').onchange=async()=>{if(el('institution'))el('institution').value=currentInstitution();try{await loadModuleVisibility();refreshNav();const next=visibleModules.includes(activeModule)?activeModule:(visibleModules[0]??-1);if(next>=0)openModule(next);else el('adPage').innerHTML='<div class="panel empty">এই প্রতিষ্ঠানের কোনো Accounts মডিউলে আপনার অনুমতি নেই।</div>'}catch(e){showError(e)}};
+ const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Dhaka'})),monthOptions=[];
+ for(let i=-2;i<=3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);monthOptions.push('<option value="'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'">'+new Intl.DateTimeFormat('bn-BD',{month:'long',year:'numeric'}).format(d)+'</option>')}
+ el('adMonth').innerHTML=monthOptions.join('');
+ const target=new Date(now.getFullYear(),now.getMonth()+(now.getDate()>=20?1:0),1);el('adMonth').value=target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0');
+ el('adMonth').onchange=()=>{if(activeModule===3)loadChanda().catch(showError)};
  el('adAdd').onclick=memberForm;el('adReport').onclick=exportExcel;el('adLogout').onclick=()=>el('logout')?.click();
+ refreshNav();
 }
-function openModule(i){document.querySelectorAll('#adNav button').forEach(b=>b.classList.toggle('active',+b.dataset.i===i));el('adTitle').textContent=modules[i];el('adSub').textContent=i===23?'সদস্য, মাসিক চাঁদা, আংশিক আদায় ও বকেয়া ব্যবস্থাপনা':'হিসাব বিভাগের '+modules[i]+' মডিউল';if(i===23||i===0){loadChanda().catch(showError);return}const map={1:'entryForm',2:'entryForm',4:'cashBankPanel',6:'cashBankPanel',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',12:'entries',13:'entries',16:'cashBankPanel',17:'accountAuditPanel',18:'entries',19:'accountAuditPanel',21:'accountsMessaging'};const id=map[i];if(id){const target=el(id);if(target){const panel=target.closest('.panel')||target;el('adPage').replaceChildren(panel);panel.hidden=false;panel.classList.remove('ad-legacy');return}}el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলের নেভিগেশন যুক্ত আছে। এর পূর্ণ কার্যকারিতা এখনো সংযুক্ত হয়নি; তাই ভুল বা কাল্পনিক হিসাব দেখানো হচ্ছে না।</p></section>'}
+function openModule(i){
+ if(!visibleModules.includes(i))return;
+ activeModule=i;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
+ el('adAdd').hidden=!(i===3&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===3&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==3||currentInstitution()!=='mosque';
+ if(i===0){renderDashboard().catch(showError);return}
+ if(i===3){renderDonations().catch(showError);return}
+ if(i===4){renderBankAccounts().catch(showError);return}
+ if(i===5){renderTransfers().catch(showError);return}
+ if(i===14){renderTrialBalance().catch(showError);return}
+ if(i===15){renderAdvancedSearch().catch(showError);return}
+ if(i===16){renderReconciliation().catch(showError);return}
+ if(i===18){renderApprovals().catch(showError);return}
+ if(i===20){renderUserPermissions().catch(showError);return}
+ if(i===21){renderSettings().catch(showError);return}
+ const map={1:'entryForm',2:'entryForm',6:'cashBankPanel',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',12:'entries',13:'entries',17:'accountAuditPanel',19:'accountAuditPanel'};
+ const id=map[i];if(id){movePanel(id);if((i===1||i===2)&&el('type'))el('type').value=i===1?'income':'expense';return}
+ el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলটি এই প্রতিষ্ঠানের জন্য এখনো সংযুক্ত নয়।</p></section>';
+}
 function showError(e){const p=el('adPage');if(p)p.insertAdjacentHTML('afterbegin','<div class="note" style="color:#a11">'+escapeHtml(e?.message||String(e))+'</div>');else console.error(e)}
 function stateOf(m,d,day,upcoming,today){if(d&&Number(d.paid_amount)>=Number(d.amount))return ['paid','✓','আদায় সম্পন্ন'];if(d&&Number(d.paid_amount)>0)return ['partial','◒','আংশিক আদায়'];if(upcoming&&day>=20&&day<=24)return ['warning','◷','সময় ঘনিয়ে এসেছে'];if(upcoming&&day>=25)return ['overdue','!','চাঁদা বকেয়া'];if(d&&today>d.due_date)return ['overdue','!','বকেয়া'];return ['neutral','·','অপেক্ষমাণ']}
 async function loadChanda(){
