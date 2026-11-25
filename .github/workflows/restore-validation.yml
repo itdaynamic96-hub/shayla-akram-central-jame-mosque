@@ -88,7 +88,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$BACKUP_DIR/database/data.sql"
           psql "$DB_URL" -v ON_ERROR_STOP=1 -c "ANALYZE;"
           psql "$DB_URL" -v ON_ERROR_STOP=1 -c "SELECT 'profiles' AS table_name, count(*) FROM public.profiles UNION ALL SELECT 'ledger_entries', count(*) FROM public.ledger_entries UNION ALL SELECT 'account_journal_entries', count(*) FROM public.account_journal_entries UNION ALL SELECT 'storage_objects', count(*) FROM storage.objects;"
-          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "SELECT count(*) AS public_tables, count(*) FILTER (WHERE c.relrowsecurity) AS tables_with_rls FROM pg_tables t JOIN pg_class c ON c.relname=t.tablename JOIN pg_namespace n ON n.oid=c.relnamespace WHERE t.schemaname='public' AND c.relnamespace=n.oid AND c.relname=t.tablename;"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "SELECT count(*) AS public_tables, count(*) FILTER (WHERE c.relrowsecurity) AS tables_with_rls FROM pg_tables t JOIN pg_class c ON c.relname=t.tablename JOIN pg_namespace n ON n.oid=c.relnamespace WHERE t.schemaname='public' AND n.nspname=t.schemaname AND c.relnamespace=n.oid AND c.relname=t.tablename;"
 
       - name: Stop isolated Supabase stack and remove temporary files
         if: always()
