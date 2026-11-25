@@ -26,17 +26,6 @@ function refreshNav(){
  document.querySelectorAll('#adNav button').forEach(b=>{const i=Number(b.dataset.i);b.hidden=!visibleModules.includes(i);b.classList.toggle('active',i===activeModule)});
 }
 function resetAdPage(html=''){
- const messageContent=el('messageContent'),messagePanel=el('accountsMessaging');
- if(messageContent&&messagePanel){
-  while(messageContent.firstChild)messagePanel.appendChild(messageContent.firstChild);
-  const refresh=el('messageRefresh');
-  if(refresh){
-   let header=messagePanel.querySelector('.top');
-   if(!header){header=document.createElement('div');header.className='top';messagePanel.prepend(header)}
-   header.appendChild(refresh);
-  }
-  messagePanel.hidden=true;
- }
  const page=el('adPage'),bin=el('adLegacyBin');
  [...page.children].forEach(node=>{if(node.classList.contains('ad-legacy-panel'))bin.appendChild(node);else node.remove()});
  if(html)page.innerHTML=html;
@@ -79,20 +68,29 @@ function openModule(i){
  if(i===14){renderTrialBalance().catch(showError);return}
  if(i===15){renderAdvancedSearch().catch(showError);return}
  if(i===16){renderReconciliation().catch(showError);return}
+ if(i===17){renderAuditReview().catch(showError);return}
  if(i===18){renderApprovals().catch(showError);return}
+ if(i===19){renderAuditTrail().catch(showError);return}
  if(i===20){renderUserPermissions().catch(showError);return}
  if(i===21){renderSettings().catch(showError);return}
  if(i===22){renderMessageCenter().catch(showError);return}
  if(i===23){renderMonthlyChanda().catch(showError);return}
- const map={1:'entryForm',2:'entryForm',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',17:'accountAuditPanel',19:'accountAuditPanel'};
+ const map={1:'entryForm',2:'entryForm',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries'};
  const id=map[i];if(id){movePanel(id);if((i===1||i===2)&&el('type'))el('type').value=i===1?'income':'expense';return}
  el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলটি এই প্রতিষ্ঠানের জন্য এখনো সংযুক্ত নয়।</p></section>';
 }
 function showError(e){const p=el('adPage');if(p)p.insertAdjacentHTML('afterbegin','<div class="note" style="color:#a11">'+escapeHtml(e?.message||String(e))+'</div>');else console.error(e)}
 async function renderDashboard(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<div class="panel"><div class="empty">লাইভ হিসাব লোড হচ্ছে…</div></div>');
- const {data,error}=await supabase.from('ledger_entries').select('entry_type,amount,status,entry_date').eq('institution',inst).order('entry_date',{ascending:false}).limit(1000);if(error)throw error;
- const rows=data||[],approved=rows.filter(x=>x.status==='approved'),pending=rows.filter(x=>x.status==='pending');
+ const rows=[];let offset=0;
+ while(true){
+  const {data,error}=await supabase.from('ledger_entries').select('entry_type,amount,status,entry_date').eq('institution',inst).order('entry_date',{ascending:false}).range(offset,offset+999);
+  if(error)throw error;
+  const batch=data||[];rows.push(...batch);
+  if(batch.length<1000)break;
+  offset+=1000;
+ }
+ const approved=rows.filter(x=>x.status==='approved'),pending=rows.filter(x=>x.status==='pending');
  const income=approved.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount||0),0),expense=approved.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount||0),0);
  p.innerHTML='<div class="stats"><div class="stat greenstat"><div><small>অনুমোদিত মোট আয়</small><strong>'+money(income)+'</strong></div></div><div class="stat redstat"><div><small>অনুমোদিত মোট ব্যয়</small><strong>'+money(expense)+'</strong></div></div><div class="stat bluestat"><div><small>বর্তমান স্থিতি</small><strong>'+money(income-expense)+'</strong></div></div><div class="stat yellowstat"><div><small>অনুমোদনের অপেক্ষায়</small><strong>'+fmt(pending.length)+'টি</strong></div></div></div><section class="panel"><div class="head"><h2>'+(inst==='mosque'?'মসজিদ':'ফাউন্ডেশন')+' — সাম্প্রতিক হিসাব</h2></div><div class="body tablewrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>খাত</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead><tbody>'+rows.slice(0,20).map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.entry_type)+'</td><td>—</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.status)+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
@@ -119,15 +117,12 @@ async function renderDonations(){
 async function renderMonthlyChanda(){const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায় ব্যবস্থাপনা</h2></div><div class="body" id="adChandaContent"><div class="empty">মাসিক চাঁদার তথ্য লোড হচ্ছে…</div></div></section>');if(currentInstitution()!=='mosque'){el('adChandaContent').innerHTML='<div class="note">মাসিক চাঁদা মসজিদ প্রতিষ্ঠানের হিসাবের অংশ; ফাউন্ডেশনের হিসাব আলাদা রাখা হয়েছে।</div>';return}await loadChanda()}
 async function renderMessageCenter(){
  const p=el('adPage');
- resetAdPage('<section class="module message-module"><div class="head"><h2>বার্তা ও নোটিফিকেশন ব্যবস্থাপনা</h2><div id="messageRefreshHost"></div></div><div class="message-body"><div id="messageContent"></div></div></section>');
+ resetAdPage();
  const panel=el('accountsMessaging');
- if(!panel){p.insertAdjacentHTML('beforeend','<div class="note">বার্তা ব্যবস্থাপনা প্যানেল পাওয়া যায়নি।</div>');return}
- const oldHeader=panel.querySelector('.top'),refresh=el('messageRefresh');
- if(oldHeader)oldHeader.remove();
- if(refresh)el('messageRefreshHost').appendChild(refresh);
- const content=el('messageContent');
- while(panel.firstChild)content.appendChild(panel.firstChild);
- panel.hidden=true;
+ if(!panel){p.innerHTML='<div class="note">বার্তা ব্যবস্থাপনা প্যানেল পাওয়া যায়নি।</div>';return}
+ panel.hidden=false;
+ panel.classList.add('ad-legacy-panel','message-module');
+ p.appendChild(panel);
 }
 async function renderBankAccounts(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>ব্যাংক ও নগদ হিসাব</h2></div><div class="body"><div id="adBankAccounts"></div></div></section>');
@@ -228,6 +223,35 @@ async function renderReports(exportMode=false){
  };
  el('adReportFilter').onsubmit=async e=>{e.preventDefault();try{await run()}catch(err){showError(err)}};await run();
 }
+async function renderAuditReview(){
+ const p=el('adPage'),inst=currentInstitution();
+ resetAdPage('<section class="panel"><div class="head"><h2>অডিট ও যাচাই · জার্নাল ব্যালান্স পরীক্ষা</h2></div><div class="body"><p class="note">প্রতিটি পোস্টকৃত জার্নালের ডেবিট ও ক্রেডিট সমান কি না যাচাই করা হচ্ছে।</p><div class="tablewrap"><table><thead><tr><th>জার্নাল</th><th>তারিখ</th><th>বিবরণ</th><th>ডেবিট</th><th>ক্রেডিট</th><th>যাচাই</th></tr></thead><tbody id="auditReviewRows"><tr><td colspan="6">তথ্য লোড হচ্ছে…</td></tr></tbody></table></div></div></section>');
+ const {data:journals,error}=await supabase.from('account_journal_entries').select('id,journal_no,journal_date,description,status').eq('institution',inst).order('journal_date',{ascending:false}).limit(300);
+ if(error)throw error;
+ const ids=(journals||[]).map(x=>x.id);
+ let lines=[];
+ if(ids.length){const result=await supabase.from('account_journal_lines').select('journal_id,debit,credit').in('journal_id',ids);if(result.error)throw result.error;lines=result.data||[]}
+ const totals=new Map();
+ lines.forEach(x=>{const t=totals.get(x.journal_id)||{debit:0,credit:0};t.debit+=Number(x.debit||0);t.credit+=Number(x.credit||0);totals.set(x.journal_id,t)});
+ const rows=(journals||[]).map(j=>{const t=totals.get(j.id)||{debit:0,credit:0},balanced=Math.abs(t.debit-t.credit)<0.005;return '<tr><td>'+escapeHtml(String(j.journal_no))+'</td><td>'+escapeHtml(j.journal_date)+'</td><td>'+escapeHtml(j.description||'—')+'</td><td>'+money(t.debit)+'</td><td>'+money(t.credit)+'</td><td><span class="tag">'+(balanced?'সমান':'পার্থক্য')+'</span></td></tr>'}).join('');
+ const host=el('auditReviewRows');if(host)host.innerHTML=rows||'<tr><td colspan="6">কোনো জার্নাল পাওয়া যায়নি।</td></tr>';
+}
+async function renderAuditTrail(){
+ const p=el('adPage');
+ resetAdPage('<section class="panel"><div class="head"><h2>অডিট ট্রেইল · পরিবর্তনের ইতিহাস</h2><button class="action light" id="auditTrailRefresh">রিফ্রেশ</button></div><div class="body"><p class="note">অনুমতিপ্রাপ্ত Accounts রেকর্ডে কে, কখন, কোন পরিবর্তন করেছেন তার ইতিহাস।</p><div class="tablewrap"><table><thead><tr><th>সময়</th><th>ব্যবহারকারী ID</th><th>টেবিল</th><th>কাজ</th><th>রেকর্ড ID</th><th>পরিবর্তনের সারাংশ</th></tr></thead><tbody id="auditTrailRows"><tr><td colspan="6">তথ্য লোড হচ্ছে…</td></tr></tbody></table></div></div></section>');
+ const load=async()=>{
+  const {data,error}=await supabase.from('audit_logs').select('actor,table_name,record_id,action,before_data,after_data,happened_at').order('happened_at',{ascending:false}).limit(300);
+  if(error)throw error;
+  const rows=(data||[]).map(x=>{
+   const before=x.before_data||{},after=x.after_data||{},keys=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(k=>!['institution','created_by','updated_by'].includes(k)).slice(0,5);
+   const summary=keys.map(k=>k+': '+String(after[k]??before[k]??'—')).join(' · ')||'পরিবর্তন রেকর্ড';
+   return '<tr><td>'+escapeHtml(new Date(x.happened_at).toLocaleString('bn-BD',{timeZone:'Asia/Dhaka'}))+'</td><td>'+escapeHtml(String(x.actor||'—').slice(0,8))+'</td><td>'+escapeHtml(x.table_name)+'</td><td>'+escapeHtml(x.action)+'</td><td>'+escapeHtml(x.record_id||'—')+'</td><td>'+escapeHtml(summary.slice(0,260))+'</td></tr>';
+  }).join('');
+  const host=el('auditTrailRows');if(host)host.innerHTML=rows||'<tr><td colspan="6">এখনো কোনো অডিট রেকর্ড নেই।</td></tr>';
+ };
+ await load();
+ const refresh=el('auditTrailRefresh');if(refresh)refresh.onclick=()=>load().catch(showError);
+}
 async function renderApprovals(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="empty">অনুমোদনের অনুরোধ লোড হচ্ছে…</div></section>');
  const [requestRes,ledgerRes]=await Promise.all([
@@ -236,7 +260,7 @@ async function renderApprovals(){
  ]);
  if(requestRes.error)throw requestRes.error;if(ledgerRes.error)throw ledgerRes.error;
  let canApprove=['super_admin','accounts_manager','mosque_admin','foundation_admin'].includes(profile?.role);
- if(profile?.role==='custom_admin'){const {data:grant,error:grantError}=await supabase.from('admin_module_permissions').select('can_view,can_write,can_approve').eq('user_id',user.id).eq('module_key','m80').maybeSingle();if(grantError)throw grantError;canApprove=!!grant?.can_view}
+ if(profile?.role==='custom_admin'){const {data:grant,error:grantError}=await supabase.from('admin_module_permissions').select('can_view,can_write,can_approve').eq('user_id',user.id).eq('module_key','m80').maybeSingle();if(grantError)throw grantError;canApprove=!!(grant?.can_view&&grant?.can_write&&grant?.can_approve)}
  const requests=(requestRes.data||[]).map(x=>{const d=x.request_data||{},summary=x.request_type==='bank_transfer'?'পরিমাণ '+money(d.amount)+' · তারিখ '+escapeHtml(d.transfer_date||''):(d.description||d.memo||x.request_type);return '<tr><td>'+escapeHtml(new Date(x.created_at).toLocaleString('bn-BD'))+'</td><td>'+escapeHtml(x.request_type)+'</td><td>'+escapeHtml(String(summary))+'</td><td>'+escapeHtml(x.status)+'</td><td>'+escapeHtml(x.id)+'</td><td>'+(canApprove&&x.status==='pending'?'<button class="action green" data-decision="approved" data-id="'+x.id+'">অনুমোদন</button> <button class="action light" data-decision="rejected" data-id="'+x.id+'">বাতিল</button>':'—')+'</td></tr>'}).join('');
  const ledger=(ledgerRes.data||[]).map(x=>'<tr><td>'+escapeHtml(new Date(x.created_at).toLocaleString('bn-BD'))+'</td><td>'+(x.entry_type==='income'?'আয়':'ব্যয়')+' লেনদেন</td><td>'+escapeHtml(x.category)+' · '+escapeHtml(x.payer_or_payee||'—')+' · '+money(x.amount)+'</td><td>অনুমোদনের অপেক্ষায়</td><td>'+escapeHtml(x.document_no||x.id)+'</td><td>'+(canApprove?'<button class="action green" data-ledger-decision="approved" data-id="'+x.id+'">অনুমোদন</button> <button class="action light" data-ledger-decision="rejected" data-id="'+x.id+'">বাতিল</button>':'—')+'</td></tr>').join('');
  p.innerHTML='<section class="panel"><div class="head"><h2>অনুমোদন ব্যবস্থাপনা</h2></div><div class="body"><div class="stats"><div class="stat"><div><small>জার্নাল/ট্রান্সফার অনুরোধ</small><strong>'+fmt((requestRes.data||[]).filter(x=>x.status==='pending').length)+'</strong></div></div><div class="stat"><div><small>আয়/ব্যয় লেনদেন</small><strong>'+fmt((ledgerRes.data||[]).length)+'</strong></div></div></div><div class="tablewrap"><table><thead><tr><th>সময়</th><th>ধরন</th><th>বিবরণ</th><th>অবস্থা</th><th>নথি/অনুরোধ ID</th><th>সিদ্ধান্ত</th></tr></thead><tbody>'+requests+ledger+'</tbody></table></div><div class="note">একজন দায়িত্বপ্রাপ্ত কর্মী নিজের অনুমতিপ্রাপ্ত মডিউলের লেনদেন নিজেই পরিচালনা ও অনুমোদন করতে পারবেন। অনুমোদিত আয়/ব্যয় স্বয়ংক্রিয়ভাবে ডাবল-এন্ট্রি জার্নালে পোস্ট হবে।</div></div></section>';
