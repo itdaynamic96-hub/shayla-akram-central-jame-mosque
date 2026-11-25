@@ -32,6 +32,7 @@ async function init(){
   $('payrollMonth').value=month();
   $('institution').addEventListener('change',()=>loadAll().catch(fail));
   $('bookType').addEventListener('change',()=>loadBooks().catch(fail));
+  $('bookPeriod').addEventListener('change',()=>loadBooks().catch(fail));
   $('staffForm').addEventListener('submit',saveStaff);
   $('payrollForm').addEventListener('submit',savePayroll);
   $('obligationForm').addEventListener('submit',saveObligation);
@@ -54,7 +55,7 @@ async function loadAll(){
   $('payrollStaff').innerHTML=staff.filter(s=>s.is_active).map(s=>'<option value="'+s.id+'" data-salary="'+s.monthly_salary+'">'+escapeHtml(s.full_name)+' — '+money(s.monthly_salary)+'</option>').join('');
   const syncSalary=()=>{const o=$('payrollStaff').selectedOptions[0];if(o)$('payrollBase').value=o.dataset.salary};
   $('payrollStaff').onchange=syncSalary;if(staff.length)syncSalary();
-  $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m43',true)&&canApprove('m43'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m43',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
+  $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m43',true)&&canApprove('m43'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m43',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
  }
  if(allowed('m46'))await loadBooks();
  if(allowed('m43')){
@@ -71,7 +72,8 @@ async function loadAll(){
 async function loadBooks(){
  const {data,error}=await supabase.from('account_cash_bank_book').select('*').eq('institution',institution()).eq('payment_method',$('bookType').value).order('entry_date',{ascending:false}).limit(500);
  if(error)throw error;
- const rows=data||[],inc=rows.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount),0),exp=rows.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount),0);
+ const todayText=today(),period=$('bookPeriod').value;
+ const rows=(data||[]).filter(x=>period==='all'||(period==='today'&&x.entry_date===todayText)||(period==='month'&&x.entry_date.slice(0,7)===month())||(period==='year'&&x.entry_date.slice(0,4)===todayText.slice(0,4))),inc=rows.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount),0),exp=rows.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount),0);
  $('bookIncome').textContent=money(inc);$('bookExpense').textContent=money(exp);$('bookBalance').textContent=money(inc-exp);
  $('bookRows').innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.category)+'</td><td>'+escapeHtml(x.payer_or_payee||x.note||'—')+'</td><td>'+(x.entry_type==='income'?money(x.amount):'—')+'</td><td>'+(x.entry_type==='expense'?money(x.amount):'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')||'<tr><td colspan="6">এই মাধ্যমে অনুমোদিত লেনদেন নেই।</td></tr>';
 }
@@ -91,7 +93,10 @@ async function savePayroll(e){
  const {error}=await supabase.from('payroll_records').insert(payload);if(error)throw error;e.target.reset();$('payrollMonth').value=month();await loadAll()}catch(ex){fail(ex)}
 }
 async function payrollAction(e){
- const approve=e.target.dataset.payrollApprove,pay=e.target.dataset.payrollPay;if(!approve&&!pay)return;
+ const approve=e.target.dataset.payrollApprove,pay=e.target.dataset.payrollPay,slip=e.target.dataset.payrollSlip;if(!approve&&!pay&&!slip)return;
+ if(slip){
+  try{const {data,error}=await supabase.from('payroll_records').select('*,account_staff(full_name,job_title,employee_no)').eq('id',slip).single();if(error)throw error;const p=data,s=p.account_staff||{};const w=window.open('','_blank');if(!w)throw new Error('বেতন স্লিপ খুলতে পপ-আপ অনুমতি দিন।');const esc=v=>escapeHtml(v??'—');w.document.write('<!doctype html><html lang="bn"><meta charset="utf-8"><title>বেতন স্লিপ</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#17251e}h2{text-align:center}table{width:100%;border-collapse:collapse;margin-top:24px}td{padding:10px;border:1px solid #bbb}.muted{color:#666}@media print{button{display:none}}</style><h2>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ / ফাউন্ডেশন</h2><h3 style="text-align:center">বেতন স্লিপ</h3><p>কর্মচারী: '+esc(s.full_name)+' ('+esc(s.employee_no)+')</p><p>পদবি: '+esc(s.job_title)+' · মাস: '+esc(p.payroll_month)+'</p><table><tr><td>মূল বেতন</td><td>'+money(p.base_salary)+'</td></tr><tr><td>বোনাস</td><td>'+money(p.bonus)+'</td></tr><tr><td>কর্তন</td><td>'+money(p.deductions)+'</td></tr><tr><td><b>নিট বেতন</b></td><td><b>'+money(p.net_amount)+'</b></td></tr><tr><td>পরিশোধের তারিখ</td><td>'+esc(p.payment_date)+'</td></tr><tr><td>মাধ্যম</td><td>'+esc(p.payment_method)+'</td></tr><tr><td>রেফারেন্স</td><td>'+esc(p.reference_no)+'</td></tr></table><p class="muted">এটি সিস্টেম-উৎপাদিত বেতন স্লিপ।</p><p>প্রস্তুতকারীর স্বাক্ষর: ____________________</p><p>গ্রহণকারীর স্বাক্ষর: ____________________</p></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}catch(ex){fail(ex)}return;
+ }
  try{
   if(approve){const {error}=await supabase.from('payroll_records').update({status:'approved',approved_by:user.id,approved_at:new Date().toISOString()}).eq('id',approve).eq('status','pending');if(error)throw error}
   else{const method=prompt('পেমেন্ট মাধ্যম: cash / bank / mobile_banking / other','cash');if(method===null)return;const ref=prompt('ট্রানজেকশন/রেফারেন্স নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';const {error}=await supabase.rpc('mark_payroll_paid',{target_payroll:pay,paid_on:today(),paid_via:method,payment_reference:ref});if(error)throw error}
