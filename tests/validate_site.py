@@ -206,15 +206,18 @@ assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf
 module_block=re.search(r"const modules=\[(.*?)\];",dashboard_js,re.S)
 assert module_block, 'Accounts dashboard module list is missing'
 module_labels=re.findall(r"'([^']*)'",module_block.group(1))
-assert len(module_labels)==22, f'Accounts dashboard must contain exactly 22 approved modules, found {len(module_labels)}'
-assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' not in module_labels and 'বার্তা ও নোটিফিকেশন' not in module_labels, 'Monthly chanda belongs inside Donations and messaging belongs inside Settings'
-for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderReports","renderAdvancedSearch","renderReconciliation","resetAdPage","adLegacyBin","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
+assert len(module_labels)==24, f'Accounts dashboard must contain exactly 24 approved modules, found {len(module_labels)}'
+assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' in module_labels and 'বার্তা ও নোটিফিকেশন' in module_labels, 'Donors, Chanda and messaging must be separate modules'
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderReceipts","renderFinancialReports","renderTrialBalance","account_submit_manual_journal","renderReports","renderAdvancedSearch","renderReconciliation","account_add_reconciliation_item","renderMessageCenter","renderMonthlyChanda","resetAdPage","adLegacyBin","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
-assert 'ব্যালান্স শিট সারসংক্ষেপ' in dashboard_js, 'Trial balance module must include a balance-sheet summary'
+assert 'account_balance_sheet' in dashboard_js, 'Trial balance module must include a full balance sheet'
+assert 'account_donors' in dashboard_js and 'donor_id' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Donor registry must link to ledger entries'
+assert 'document_no' in dashboard_js, 'Automatic receipt/voucher numbers must be surfaced'
+assert 'account_reverse_journal' in dashboard_js, 'Posted journals must be reversed rather than edited or deleted'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
-print('SAKM-61 Accounts dashboard checks passed: syntax, 22 approved modules, separate institution views, chanda integration and financial tools.')
+print('SAKM-61 Accounts dashboard checks passed: syntax, 24 modules, separate institution views, Chanda, messaging and financial workflows.')
 
 assert 'ensure_chanda_dues_for_month' in dashboard_js, 'Accounts dashboard must create dues for the selected month using authenticated access'
 assert (ROOT/'supabase/accounts-chanda-monthly-due-generation.sql').exists(), 'Monthly due generation migration source is missing'
