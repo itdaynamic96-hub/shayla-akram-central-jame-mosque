@@ -208,6 +208,7 @@ assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='ut
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 accounts_html=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'document_no' in accounts_html and 'data-print-doc' in accounts_html and 'রসিদ / ভাউচার নম্বর' in accounts_html, 'Approved automatic receipts and vouchers must be visible and printable'
+assert "^m(6[2-9]|7[0-9]|8[0-5])$" in accounts_html and "^m(4[1-9]|50)$" not in accounts_html, 'Custom admins must be gated by the new 24 Accounts module keys'
 module_block=re.search(r"const modules=\[(.*?)\];",dashboard_js,re.S)
 assert module_block, 'Accounts dashboard module list is missing'
 module_labels=re.findall(r"'([^']*)'",module_block.group(1))
