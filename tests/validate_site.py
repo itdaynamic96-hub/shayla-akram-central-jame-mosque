@@ -85,7 +85,7 @@ media_module=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=media_module,text=True,capture_output=True,check=True)
 assert all(k in media_module for k in ('mosque_homepage','mosque_accounts','mosque_admin')), 'Media: all three surfaces must have independent settings keys'
 assert 'id="mosqueMediaAdmin"' in (ROOT/'admin.html').read_text(encoding='utf-8') and 'id="mosqueMediaAdmin"' not in accounts, 'Media: controls must live only in the Admin module'
-assert 'id="staffManager"' in (ROOT/'admin.html').read_text(encoding='utf-8') and "legacyPanels.users=existing.find(x=>x.id==='staffManager')" in admin_modules, 'Admin: staff management must be routed to its own module'
+assert 'id="staffManager"' in (ROOT/'admin.html').read_text(encoding='utf-8') and "legacyPanels.users=existing.find(x=>x.id==='staffManager')" in admin_modules and 'root.hidden = true;' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin: staff management must remain hidden until its module is opened'
 migration=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert 'create table if not exists public.module_records' in migration
 assert 'alter table public.profiles add constraint profiles_role_check' in migration
