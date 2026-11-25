@@ -12,7 +12,8 @@ const statusClass = (s) => ({queued:"pending",processing:"pending",awaiting_deli
 function render() {
   const panel = $("accountsMessaging");
   if (!panel) return;
-  panel.hidden = !canRead();
+  // Keep this source panel hidden; its controls are mounted only in the dedicated module view.
+  panel.hidden = true;
   if (!canRead()) return;
   $("messageInstitution").value = institution;
   $("messageInstitution").disabled = profile.institution !== "both";

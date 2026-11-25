@@ -33,7 +33,15 @@
     if (!root) return '';
     const copy = root.cloneNode(true);
     copy.querySelectorAll(excluded).forEach(el => el.remove());
-    return (copy.innerText || copy.textContent || '').replace(/\s+/g, ' ').trim();
+    copy.querySelectorAll('[dir="rtl"],.arabic,.arabic-pronunciation').forEach(el => el.remove());
+    const raw = copy.innerText || copy.textContent || '';
+    return raw.replace(/\r/g,'').split(/\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
+      .replace(/https?:\/\/[^\s]+/gi,' ')
+      .replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g,' ')
+      .replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)])
+      .replace(/\s*([।!?])\s*/g,'$1 ')
+      .replace(/([।!?])(?:\s*[।!?])+/g,'$1')
+      .replace(/\s+/g,' ').trim();
   };
 
   const splitText = value => {
@@ -41,9 +49,9 @@
     const result = [];
     for (const sentence of sentences) {
       let rest = sentence.trim();
-      while (rest.length > 220) {
-        let cut = rest.lastIndexOf(' ', 220);
-        if (cut < 100) cut = 220;
+      while (rest.length > 180) {
+        let cut = rest.lastIndexOf(' ', 180);
+        if (cut < 85) cut = 180;
         result.push(rest.slice(0, cut).trim());
         rest = rest.slice(cut).trim();
       }
@@ -153,7 +161,7 @@
       return;
     }
     try {
-      const result = engine.synthesize(session.chunks[session.index], {rate: Math.round(150 * speed), pitch:35});
+      const result = engine.synthesize(session.chunks[session.index], {rate: Math.round(125 * speed), pitch:28});
       if (!result.samples?.length) throw new Error('এই অংশের জন্য অডিও তৈরি করা যায়নি।');
       const buffer = audioContext.createBuffer(1, result.samples.length, result.sampleRate);
       const channel = buffer.getChannelData(0);
@@ -193,7 +201,7 @@
       await context.resume?.();
       session.state = 'playing';
       setControls('playing');
-      statusText('বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', statusTarget);
+      statusText('ধীর ও স্পষ্ট বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', statusTarget);
       playNext(session);
     } catch (error) {
       finish(error.message || 'বাংলা পুরুষ কণ্ঠ চালু করা যায়নি।');
@@ -229,57 +237,6 @@
   };
 
   const stop = (message = 'পড়া বন্ধ করা হয়েছে।') => finish(message);
-
-  const pageRoot = () =>
-    document.querySelector('main:not(.hidden)') ||
-    document.querySelector('#home:not(.hidden),#detail:not(.hidden),#islamicLibrary:not(.hidden),#app:not([hidden])') ||
-    document.body;
-
-  const pageButtons = () => {
-    const root = document.getElementById('readAloud');
-    const actions = root?.querySelector('.read-aloud-actions');
-    if (!actions) return null;
-    const buttons = {
-      play:actions.querySelector('#readStart'),
-      pause:actions.querySelector('#readPause'),
-      resume:actions.querySelector('#readResume'),
-      stop:actions.querySelector('#readStop')
-    };
-    return Object.values(buttons).some(item => !item) ? null : buttons;
-  };
-
-  const bindPageReader = () => {
-    const root = document.getElementById('readAloud');
-    if (!root || root.dataset.readerReady === '1') return;
-    root.dataset.readerReady = '1';
-    const toggle = root.querySelector('#readToggle');
-    const buttons = pageButtons();
-    const actions = root.querySelector('.read-aloud-actions');
-    if (actions && !actions.querySelector('#readSpeed')) {
-      const select = document.createElement('select');
-      select.id = 'readSpeed';
-      select.setAttribute('aria-label','পড়ার গতি');
-      [['0.85','ধীরে'],['1','স্বাভাবিক'],['1.15','দ্রুত']].forEach(([value,label]) => {
-        const option = document.createElement('option');
-        option.value=value; option.textContent=label;
-        if (value==='1') option.selected=true;
-        select.appendChild(option);
-      });
-      select.addEventListener('change', () => { speed=Number(select.value); });
-      actions.appendChild(select);
-    }
-    toggle?.addEventListener('click', () => {
-      root.classList.toggle('open');
-      toggle.setAttribute('aria-expanded',root.classList.contains('open')?'true':'false');
-    });
-    buttons?.play.addEventListener('click', () => start(readableText(pageRoot()),buttons));
-    buttons?.pause.addEventListener('click', () => pause(buttons));
-    buttons?.resume.addEventListener('click', () => resume(buttons));
-    buttons?.stop.addEventListener('click', () => { if (active?.buttons===buttons) stop(); });
-    currentButtons=buttons;
-    setControls('idle');
-    statusText('বিনামূল্যের বাংলা পুরুষ কণ্ঠে বর্তমান পৃষ্ঠার লেখা শুনুন।');
-  };
 
   let shareSequence = 0;
 
@@ -398,7 +355,7 @@
     box.className='nexora-read-aloud';
     box.setAttribute('aria-label','এই লেখাটি পড়ে শোনানোর নিয়ন্ত্রণ');
     const play=document.createElement('button');
-    play.type='button'; play.textContent='🔊 পড়ে শুনুন';
+    play.type='button'; play.textContent='🔊 বাংলায় শুনুন';
     const pauseButton=document.createElement('button');
     pauseButton.type='button'; pauseButton.textContent='বিরতি'; pauseButton.disabled=true;
     const resumeButton=document.createElement('button');
@@ -408,7 +365,7 @@
     const status=document.createElement('span');
     status.className='nexora-tts-status';
     status.setAttribute('aria-live','polite');
-    status.textContent='ফ্রি বাংলা পুরুষ কণ্ঠে শুনুন';
+    status.textContent='বাংলা পুরুষ কণ্ঠে শুনুন';
     box.append(play,pauseButton,resumeButton,stopButton,status);
     card.appendChild(box);
     const buttons={play,pause:pauseButton,resume:resumeButton,stop:stopButton};
@@ -424,7 +381,8 @@
   };
 
   const init = () => {
-    bindPageReader();
+    // Disable the page-wide reader; individual posts, Quran ayahs and Hadith cards keep their own controls.
+    document.getElementById('readAloud')?.remove();
     scanCards();
     observer = new MutationObserver(records => {
       for (const record of records) for (const node of record.addedNodes) {
