@@ -3,10 +3,10 @@ const $ = (id) => document.getElementById(id);
 let profile = null, permissions = [], institution = "mosque", rows = [], attempts = [], ready = false, started = false;
 const canWrite = () => {
   if (!profile) return false;
-  if (profile.role === "custom_admin") return permissions.some(p => /^m(4[1-9]|50)$/.test(p.module_key) && p.can_view && p.can_write);
+  if (profile.role === "custom_admin") return permissions.some(p => /^m84$/.test(p.module_key) && p.can_view && p.can_write);
   return ["super_admin","admin","accounts_manager","accountant","mosque_admin","foundation_admin"].includes(profile.role);
 };
-const canRead = () => profile?.role === "custom_admin" ? permissions.some(p => /^m(4[1-9]|50)$/.test(p.module_key) && p.can_view) : canWrite() || profile?.role === "auditor";
+const canRead = () => profile?.role === "custom_admin" ? permissions.some(p => /^m84$/.test(p.module_key) && p.can_view) : canWrite() || profile?.role === "auditor";
 const statusLabel = (s) => ({queued:"অপেক্ষমাণ",processing:"প্রক্রিয়াধীন",awaiting_delivery:"প্রেরণ হয়েছে · ডেলিভারি নিশ্চিত নয়",delivered:"ডেলিভারি নিশ্চিত",read:"পড়া হয়েছে",failed:"ব্যর্থ"}[s] || s);
 const statusClass = (s) => ({queued:"pending",processing:"pending",awaiting_delivery:"pending",delivered:"success",read:"read",failed:"failed"}[s] || "pending");
 function render() {
