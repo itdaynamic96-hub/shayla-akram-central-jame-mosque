@@ -81,3 +81,22 @@
  #accountsDashboard .top-brand-copy b{font-size:16px}
  #accountsDashboard .top-brand-copy span{font-size:12px}
 }
+
+
+/* Dashboard cards are real navigation controls with clear affordance */
+#accountsDashboard .stats .stat-link{width:100%;min-width:0;text-align:left;font:inherit;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid #b8c9da!important;border-radius:13px;padding:16px!important;box-shadow:0 3px 10px rgba(18,52,82,.08);transition:transform .15s ease,box-shadow .15s ease}
+#accountsDashboard .stats .stat-link:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(18,52,82,.16)}
+#accountsDashboard .stats .stat-link:focus-visible{outline:3px solid #f0a51b!important;outline-offset:3px}
+#accountsDashboard .stats .stat-link small{display:block;color:#18334d!important;font-weight:800;font-size:14px;line-height:1.5}
+#accountsDashboard .stats .stat-link strong{display:block;color:#102f4b!important;font-size:24px;line-height:1.35}
+#accountsDashboard .stats .stat-link .stat-arrow{color:#164e78!important;font-size:12px;font-weight:800}
+#accountsDashboard .panel>.head.section-heading{background:#eaf1f8!important;border:1px solid #c7d5e4!important;border-bottom:2px solid #9db3ca!important;border-radius:10px 10px 0 0;padding:13px 16px!important}
+#accountsDashboard .panel>.head.section-heading h2{color:#123b60!important;font-size:19px!important;font-weight:800!important;line-height:1.5!important;text-shadow:none!important}
+#accountsDashboard .panel>.head:not(.section-heading){background:#eaf1f8!important;color:#123b60!important}
+#accountsDashboard .panel>.head:not(.section-heading) h1,
+#accountsDashboard .panel>.head:not(.section-heading) h2,
+#accountsDashboard .panel>.head:not(.section-heading) h3,
+#accountsDashboard .panel>.head:not(.section-heading) b,
+#accountsDashboard .panel>.head:not(.section-heading) span{color:#123b60!important;text-shadow:none!important}
+#accountsDashboard .panel>.head:not(.section-heading) small{color:#38546f!important}
+#accountsDashboard .panel>.head h2{overflow-wrap:anywhere}
