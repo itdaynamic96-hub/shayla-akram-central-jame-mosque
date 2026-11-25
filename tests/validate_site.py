@@ -148,7 +148,7 @@ reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261125-share3' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261125-cardreader1' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
     assert '@spelling-creator/spellophone@0.2.1/dist/legacy/spellophone.iife.js' in page_source, f'Read Aloud: free Bengali TTS engine is not loaded by {page_name}'
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
