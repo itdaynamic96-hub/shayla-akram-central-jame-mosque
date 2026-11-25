@@ -435,3 +435,11 @@ assert "!location.hash.includes('admin=m85')" in chanda_js and "p.module_key==='
 direct_posting=(ROOT/'supabase/migrations/20261125195658_accounts_direct_posting_single_operator.sql').read_text(encoding='utf-8')
 assert "approved_by = (select auth.uid())" in direct_posting and "status = 'approved'" in direct_posting, 'Accounts: direct posting must be restricted to the authenticated operator'
 assert 'ledger_entry_double_entry_post_insert' in direct_posting and 'post_approved_ledger_entry_to_journal' in direct_posting, 'Accounts: direct approved entries must create a double-entry journal'
+
+# Direct posting requires write+approve; write-only staff can only submit pending entries.
+approval_hardening=(ROOT/'supabase/migrations/20261125195858_accounts_entry_approval_permission_hardening.sql').read_text(encoding='utf-8')
+assert 'accounts_detail_insert_pending' in approval_hardening and "status='pending'" in approval_hardening, 'Accounts: write-only users must submit pending entries'
+assert 'account_module_permission(institution,array[\'m63\',\'m80\'],true,true)' in approval_hardening, 'Accounts: direct approval must require explicit can_approve'
+assert "approved_by=(select auth.uid())" in approval_hardening and "approved_at is not null" in approval_hardening, 'Accounts: approval updates must be attributed to the current user'
+accounts_html_text=(ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'const directApproved=canApproveAccountEntry' in accounts_html_text and "status:directApproved?'approved':'pending'" in accounts_html_text, 'Accounts: UI must submit pending when the operator lacks approval rights'
