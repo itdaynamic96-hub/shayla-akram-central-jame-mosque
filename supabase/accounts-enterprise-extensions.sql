@@ -209,3 +209,7 @@ begin
  return new;
 end;$$;
 revoke all on function public.guard_payroll_record_changes() from public,anon,authenticated;
+
+-- Payroll payment is an authenticated, permission-checked RPC only.
+revoke all on function public.mark_payroll_paid(uuid,date,text,text) from public,anon;
+grant execute on function public.mark_payroll_paid(uuid,date,text,text) to authenticated;
