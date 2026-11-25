@@ -3,8 +3,8 @@ alter table public.site_content add column if not exists source_url text;
 alter table public.site_content add column if not exists media_credit text;
 -- Public display assets; only website approvers can upload/manage files.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('site-media','site-media',true,10485760,array['image/jpeg','image/png','image/webp','image/gif'])
-on conflict(id) do update set public=true,file_size_limit=10485760,allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif'];
+values('site-media','site-media',true,52428800,array['image/jpeg','image/png','image/webp','image/gif','application/pdf','video/*','application/octet-stream'])
+on conflict(id) do update set public=true,file_size_limit=52428800,allowed_mime_types=array['image/jpeg','image/png','image/webp','image/gif','application/pdf','video/*','application/octet-stream'];
 drop policy if exists "site media public read" on storage.objects;
 drop policy if exists "site media admins list" on storage.objects;
 create policy "site media admins list" on storage.objects for select to authenticated
