@@ -170,7 +170,12 @@ Deno.serve(async (req) => {
     await recordAttempt(row.id, "whatsapp", "failed", providerId,
       errorCode || "whatsapp_delivery_failed", errorMessage || "Meta reported final WhatsApp delivery failure.");
 
-    const sms = await sendEsms(digits(String(row.recipient_phone)), String(row.message));
+    let sms: { ok: boolean; providerId: string; code: string; detail: string };
+    try {
+      sms = await sendEsms(digits(String(row.recipient_phone)), String(row.message));
+    } catch (error) {
+      sms = { ok: false, providerId: "", code: "sms_network_error", detail: safeError(error instanceof Error ? error.message : error) };
+    }
     if (sms.ok) {
       await recordAttempt(row.id, "sms", "accepted", sms.providerId);
       const { error: updateError } = await admin.from("accounts_message_queue").update({
