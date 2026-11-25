@@ -103,6 +103,8 @@ async function functionError(error) {
   return error;
 }
 function renderChecks(selected = []) {
+  const staffModuleRoot = $("staffModules");
+  if (!staffModuleRoot) { console.warn("Admin staff module form is not mounted; skipping permission checklist."); return; }
   const selectedMap = new Map(selected.map(x => [x.module_key, x]));
   const institution = $("staffInstitution").value;
   const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return !(n >= 41 && n <= 50) && (n !== 61 || institution !== "foundation") && (n !== 85 || institution !== "foundation") && (n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31)); });
@@ -110,7 +112,7 @@ function renderChecks(selected = []) {
   if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৮৫টি)`;
   const accountsModules = visibleModules.filter(m => Number(m.key.slice(1)) >= 62 && Number(m.key.slice(1)) <= 85);
   const accountsAllSelected = accountsModules.length > 0 && accountsModules.every(m => selectedMap.has(m.key));
-  $("staffModules").innerHTML =
+  staffModuleRoot.innerHTML =
     (accountsModules.length ? `<div class="staff-module staff-module-master"><label><input id="staffAccountsAllModules" type="checkbox" ${accountsAllSelected ? "checked" : ""}>
       <strong>সম্পূর্ণ অ্যাকাউন্টিং সফটওয়্যার — ${accountsModules.length}টি প্রযোজ্য মডিউল</strong></label>
       <small>এটি নির্বাচন করলে নির্বাচিত কর্মী অ্যাকাউন্টিংয়ের সব প্রযোজ্য মডিউলে দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ পূর্ণ কার্যক্রম পরিচালনা করতে পারবেন। আলাদা Approver লাগবে না।</small></div>` : "") +
@@ -121,7 +123,7 @@ function renderChecks(selected = []) {
     }).join("");
   const master = $("staffAccountsAllModules");
   if (master) master.addEventListener("change", () => {
-    $("staffModules").querySelectorAll('[data-module]').forEach(input => {
+    staffModuleRoot.querySelectorAll('[data-module]').forEach(input => {
       const n = Number(input.dataset.module.slice(1));
       if (n >= 62 && n <= 85) input.checked = master.checked;
     });
@@ -134,7 +136,8 @@ function renderChecks(selected = []) {
   }));
 }
 function readChecks() {
-  const staffModuleRoot = document.querySelector("#staffModules") || $("staffModules");
+  const staffModuleRoot = $("staffModules");
+  if (!staffModuleRoot) return [];
   return [...staffModuleRoot.querySelectorAll("[data-module]:checked")].map(el => ({ module_key: el.dataset.module }));
 }
 async function init() {
@@ -151,7 +154,9 @@ async function loadStaff() {
   const { data, error } = await supabase.from("profiles").select("id,full_name,email,role,institution,job_title,created_at").order("created_at", { ascending: false });
   if (error) throw error;
   profiles = data || [];
-  $("staffRows").innerHTML = profiles.map(p => `<tr><td>${escapeHtml(p.full_name)}</td><td>${escapeHtml(p.email || "—")}</td><td>${escapeHtml(p.job_title || "—")}</td><td>${escapeHtml(p.role)}</td><td>${escapeHtml(p.institution)}</td><td>${p.role === "custom_admin" ? `<button type="button" data-edit="${p.id}">অনুমতি সম্পাদনা</button> <button type="button" data-toggle="${p.id}">নিষ্ক্রিয়/সক্রিয়</button>` : "মূল প্রশাসক"}</td></tr>`).join("");
+  const staffRows = $("staffRows");
+  if (!staffRows) return;
+  staffRows.innerHTML = profiles.map(p => `<tr><td>${escapeHtml(p.full_name)}</td><td>${escapeHtml(p.email || "—")}</td><td>${escapeHtml(p.job_title || "—")}</td><td>${escapeHtml(p.role)}</td><td>${escapeHtml(p.institution)}</td><td>${p.role === "custom_admin" ? `<button type="button" data-edit="${p.id}">অনুমতি সম্পাদনা</button> <button type="button" data-toggle="${p.id}">নিষ্ক্রিয়/সক্রিয়</button>` : "মূল প্রশাসক"}</td></tr>`).join("");
 }
 $("staffForm").addEventListener("submit", async e => {
   e.preventDefault();
