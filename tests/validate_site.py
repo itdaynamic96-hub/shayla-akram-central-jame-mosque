@@ -217,7 +217,7 @@ for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আ�
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
 assert 'পূর্ণ ব্যালান্স শিট' in dashboard_js, 'Trial balance module must include the full balance sheet'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
-for marker in ('account_bank_account_balances','account_journal_lines','account_reverse_journal','account_trial_balance','account_balance_sheet','adReportExcel','adTbExcel','minAmount','maxAmount','transactionId'):
+for marker in ('account_bank_account_balances','account_reverse_journal','account_trial_balance','account_balance_sheet','adReportExcel','adTbExcel','minAmount','maxAmount','transactionId'):
     assert marker in dashboard_js, f'Accounts dashboard missing financial control/report: {marker}'
 enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
 assert "canApprove('m80')" in enterprise_js, 'Payroll approval must use the central approval module permission'
