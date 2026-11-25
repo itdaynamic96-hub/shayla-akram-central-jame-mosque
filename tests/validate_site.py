@@ -393,3 +393,17 @@ admin_modules=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert 'dashboardSettingsOpen=true' in admin_modules and 'settingsPanel.hidden=!dashboardSettingsOpen' in admin_modules, 'Dashboard settings panel must remain open after saving'
 assert "dashboardSettingsNotice='সফলভাবে সংরক্ষিত হয়েছে।'" in admin_modules, 'Dashboard save success must remain visible after dashboard rerender'
 assert 'admin-modules.js?v=20261126-dashboardprefs2' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
+
+# Website Admin: each writable website module has its own concise field schema.
+admin_modules_text=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
+schema_block=admin_modules_text.split('const fieldSchemas={',1)[1].split('};',1)[0]
+schema_keys={int(x) for x in re.findall(r'(?m)^([0-9]+):\\[',schema_block)}
+expected_form_modules=set([2,*range(4,13),*range(17,41),*range(51,55),*range(56,62)])
+assert schema_keys == expected_form_modules, f'Admin: every data-entry module must have an explicit dedicated form schema; missing={sorted(expected_form_modules-schema_keys)}, extra={sorted(schema_keys-expected_form_modules)}'
+assert 'schema=fieldSchemas[m.n]' in admin_modules_text and 'fieldSchemas[m.n]||[[' not in admin_modules_text, 'Admin: generic fallback form must not be used'
+assert 'const title=String(data[titleField]||m.name)' in admin_modules_text, 'Admin: form title should be derived from the module-specific first field'
+assert 'id="recordInstitution" type="hidden"' in admin_modules_text, 'Admin: institution must be stored without an unnecessary visible form field'
+assert 'id="recordStatus"' in admin_modules_text, 'Admin: record status must remain available to approvers'
+admin_html_text=(ROOT/'admin.html').read_text(encoding='utf-8')
+assert '#adminSidebar a{font-size:15px' in admin_html_text and '#adminWorkspace .admin-entry-grid' in admin_html_text, 'Admin: larger readable typography and module forms styling are required'
+assert '#adminWorkspace .module-card b{font-size:18px' in admin_html_text, 'Admin: module cards must use larger text'
