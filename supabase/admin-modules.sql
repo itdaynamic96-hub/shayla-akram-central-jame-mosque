@@ -57,6 +57,7 @@ as $$
    or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
    or (substring(target_key from 2)::integer between 51 and 60 and p.role='admin')
    or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
+   or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
  ) and (not write_access or p.role not in ('auditor','viewer')));
 $$;
 create or replace function public.module_record_approval_access(target_key text,target_institution text)
@@ -197,3 +198,14 @@ $$;
 drop trigger if exists module_records_audit_trigger on public.module_records;
 create trigger module_records_audit_trigger after insert or update or delete on public.module_records
 for each row execute function public.log_module_record_change();
+
+-- The separately private mosque-member register is the only addition to the Basic mosque allowlist.
+alter table public.module_records drop constraint if exists module_records_mosque_basic_module_key_check;
+alter table public.module_records add constraint module_records_mosque_basic_module_key_check
+ check (institution <> 'mosque' or module_key = any(array['m01','m02','m03','m04','m05','m06','m07','m08','m09','m10','m11','m12','m13','m14','m15','m61']::text[]));
+alter table public.module_records drop constraint if exists module_records_m61_mosque_only_check;
+alter table public.module_records add constraint module_records_m61_mosque_only_check check (module_key <> 'm61' or institution='mosque');
+revoke all on function public.guard_module_record_publication() from public,anon,authenticated;
+revoke all on function public.log_module_record_change() from public,anon,authenticated;
+create index if not exists module_records_approved_by_idx on public.module_records(approved_by);
+create index if not exists module_records_created_by_idx on public.module_records(created_by);
