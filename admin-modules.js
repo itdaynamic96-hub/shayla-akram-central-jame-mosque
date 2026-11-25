@@ -180,7 +180,7 @@ const fieldSchemas={
 const publicModuleMap={"4":9,"7":1,"8":1,"10":4,"11":3,"12":12,"13":10,"14":8,"15":14,"16":14,"18":15,"19":15,"21":2,"22":6,"23":6,"24":11,"25":7,"26":9,"27":7,"28":5,"31":12,"32":9,"33":10,"34":12,"35":12,"36":12,"37":12,"38":12,"40":9};
 const privateOnlyModules=new Set([2,3,5,6,29,30,39,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61]);
 function fieldInput(field,value='',old={},required=false){
- const [key,label,type='text',opts='']=field,id='recordField_'+key,safe=escapeHtml(value??''),req=required?' required':'';
+ const [key,label,type='text',opts='']=field,id='recordField_'+key,safe=escapeHtml(value??''),req=required&&!['image','file','video'].includes(type)?' required':'';
  if(type==='textarea')return '<div class="admin-field"><label for="'+id+'">'+escapeHtml(label)+(required?' *':'')+'</label><textarea id="'+id+'" rows="3" maxlength="12000"'+req+'>'+safe+'</textarea></div>';
  if(type==='select')return '<div class="admin-field"><label for="'+id+'">'+escapeHtml(label)+(required?' *':'')+'</label><select id="'+id+'"'+req+'><option value="">নির্বাচন করুন</option>'+opts.split('|').map(v=>'<option value="'+escapeHtml(v)+'" '+(value===v?'selected':'')+'>'+escapeHtml(v)+'</option>').join('')+'</select></div>';
  const kind=type==='video'||type==='file'?'file':type==='image'?'image':null;
@@ -204,8 +204,8 @@ function form(m,r=null){
    const data={};
    for(const [key,label,type,opts=''] of schema){
     const el=$('recordField_'+key);data[key]=el?.value?.trim?.()??'';
-    if(!data[key]&&key===titleField)throw new Error(label+' লিখুন।');
     const file=$('recordUpload_'+key)?.files?.[0];
+    if(!data[key]&&key===titleField&&!file)throw new Error(label+' লিখুন অথবা ফাইল আপলোড করুন।');
     if(file&&(type==='image'||type==='file'||type==='video')){
      const kind=type==='video'?'video':type==='file'?'file':'image';
      const rules=kind==='video'?{'video/mp4':'mp4','video/webm':'webm','video/ogg':'ogv'}:kind==='file'?{'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'}:{'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
