@@ -141,6 +141,61 @@ th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;paddin
 #adminWorkspace #dashboardSettingsStatus{font-size:12px;color:#176344}
 #adminWorkspace .dash-column-item{min-width:0}
 @media(max-width:600px){#adminWorkspace .dash-settings-grid{grid-template-columns:1fr}#adminWorkspace .dash-settings-panel{padding:13px}}
+
+/* Accessibility and readable Admin Panel typography */
+#adminSidebar{width:300px;padding:18px 14px}
+#adminSidebar .side-brand{font-size:17px;line-height:1.75;padding:10px 10px 20px}
+#adminSidebar .side-brand small{display:block;font-size:14px}
+#adminSidebar summary{font-size:17px;line-height:1.6;padding:11px 8px}
+#adminSidebar a{font-size:15px;line-height:1.65;padding:9px 10px 9px 14px}
+#adminSidebar .side-foot{font-size:13px;line-height:1.6}
+#app.admin-layout{padding-left:322px}
+#adminWorkspace{padding:24px}
+#adminWorkspace h2{font-size:27px;line-height:1.45}
+#adminWorkspace h3{font-size:21px;line-height:1.5}
+#adminWorkspace p,#adminWorkspace .notice{font-size:16px;line-height:1.7}
+#adminWorkspace .module-grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+#adminWorkspace .module-card{padding:18px;min-height:112px}
+#adminWorkspace .module-card b{font-size:18px;line-height:1.55}
+#adminWorkspace .module-card p{font-size:15px;line-height:1.65}
+#adminWorkspace label{font-size:16px;line-height:1.6;margin:12px 0 7px}
+#adminWorkspace input,#adminWorkspace select,#adminWorkspace textarea{font-size:16px;min-height:46px;padding:12px}
+#adminWorkspace textarea{min-height:110px}
+#adminWorkspace button{font-size:15px;padding:11px 16px}
+#adminWorkspace th,#adminWorkspace td{font-size:15px;line-height:1.6;padding:12px}
+#adminWorkspace .dash-label{font-size:15px}
+#adminWorkspace .dash-metric strong{font-size:27px}
+#adminWorkspace .dash-section-head h3{font-size:19px}
+#adminWorkspace .dash-shortcuts>a span{font-size:16px}
+#adminWorkspace .dash-shortcuts>a small{font-size:14px;line-height:1.6}
+#adminWorkspace .admin-entry-form{padding:22px;margin:14px 0 22px;border-radius:14px}
+#adminWorkspace .admin-form-heading h3{font-size:23px;margin:0 0 4px}
+#adminWorkspace .admin-form-heading p{font-size:15px;color:var(--muted);margin:0 0 16px}
+#adminWorkspace .admin-entry-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px 18px}
+#adminWorkspace .admin-field{min-width:0}
+#adminWorkspace .admin-field textarea{min-height:120px}
+#adminWorkspace .admin-field .admin-file-input{min-height:42px;padding:8px}
+#adminWorkspace .admin-upload-label{display:block;margin-top:10px;font-size:14px}
+#adminWorkspace .admin-status-field{max-width:320px;margin-top:14px}
+#adminWorkspace .admin-form-actions{margin-top:20px}
+#adminWorkspace .admin-form-actions .secondary{background:#263d33;border-color:#60796b}
+@media(max-width:850px){
+ #adminSidebar{width:auto;padding:14px}
+ #adminSidebar .side-brand{font-size:16px}
+ #adminSidebar summary{font-size:16px}
+ #adminSidebar a{font-size:15px}
+ #app.admin-layout{padding-left:0}
+ #adminWorkspace{padding:16px}
+ #adminWorkspace .admin-entry-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+}
+@media(max-width:560px){
+ #adminWorkspace{padding:12px}
+ #adminWorkspace .admin-entry-grid{grid-template-columns:1fr}
+ #adminWorkspace .admin-entry-form{padding:14px}
+ #adminWorkspace h2{font-size:23px}
+ #adminWorkspace h3{font-size:19px}
+ #adminWorkspace label{font-size:15px}
+}
 </style></head><body><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Admin Panel</h1><p class="muted">ব্যবহারকারী, ভূমিকা, নোটিশ ও প্রশাসনিক কার্যক্রম</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<a href="./accounts.html">Accounts</a>　<a href="./video-bulk-import.html">১০০ ভিডিও যুক্ত করুন</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। README-তে সেটআপ নির্দেশিকা আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ Admin লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" required autocomplete="username"><label>পাসওয়ার্ড</label><input id="password" type="password" required autocomplete="current-password"><p><button>লগইন</button></p></form><p class="muted">Public sign-up বন্ধ। Super Admin কর্তৃক অনুমোদিত অ্যাকাউন্ট প্রয়োজন।</p><p id="loginError" class="error" hidden></p></section>
