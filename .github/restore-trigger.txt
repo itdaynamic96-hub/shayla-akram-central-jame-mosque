@@ -15,3 +15,5 @@ Retry with Supabase CLI v3 local_smtp section.
 Retry restore after pg client variable fix.
 
 Retry full local restore with Auth and Storage SQL rows first.
+
+Verify the final encrypted backup run #18 in isolated local Supabase.
