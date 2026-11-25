@@ -381,3 +381,19 @@ $$;
 drop trigger if exists module_records_audit_trigger on public.module_records;
 create trigger module_records_audit_trigger after insert or update or delete on public.module_records
 for each row execute function public.log_module_record_change();
+
+-- Least-privilege RPC grants: trigger functions are not public RPC endpoints.
+revoke all on function public.create_profile_for_new_user() from public,anon,authenticated;
+revoke all on function public.log_ledger_change() from public,anon,authenticated;
+revoke all on function public.protect_ledger_history() from public,anon,authenticated;
+revoke all on function public.guard_public_content_publish() from public,anon,authenticated;
+revoke all on function public.has_access(text[],text) from public,anon;
+grant execute on function public.has_access(text[],text) to authenticated;
+
+-- Foreign-key indexes for profiles and financial/content records.
+create index if not exists announcements_created_by_idx on public.announcements(created_by);
+create index if not exists audit_logs_actor_idx on public.audit_logs(actor);
+create index if not exists budgets_created_by_idx on public.budgets(created_by);
+create index if not exists ledger_entries_approved_by_idx on public.ledger_entries(approved_by);
+create index if not exists ledger_entries_created_by_idx on public.ledger_entries(created_by);
+create index if not exists site_content_created_by_idx on public.site_content(created_by);
