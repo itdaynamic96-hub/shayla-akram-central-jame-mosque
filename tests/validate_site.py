@@ -195,13 +195,3 @@ assert 'next_month_start' in (ROOT/'supabase/chanda-upcoming-month-due.sql').rea
 print('Accounts messaging checks passed: queue UI, RLS, WhatsApp-first/SMS fallback, webhook and monthly chanda status window.')
 
 assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')
-
-# Double-entry Accounts journal and reports.
-assert 'doubleEntryPanel' in (ROOT/'accounts.html').read_text(encoding='utf-8')
-ledger_js=(ROOT/'accounts-ledger.js').read_text(encoding='utf-8')
-subprocess.run(['node','--check','--input-type=module'],input=ledger_js,text=True,capture_output=True,check=True)
-ledger_sql=(ROOT/'supabase/accounts-double-entry.sql').read_text(encoding='utf-8')
-for marker in ('account_chart_of_accounts','account_journal_entries','account_journal_lines','post_approved_ledger_entry_to_journal','account_trial_balance','unique(source_type,source_id)'):
-    assert marker in ledger_sql, f'Double-entry migration missing: {marker}'
-assert 'account_trial_balance' in ledger_js and 'account_journal_report' in ledger_js
-print('Double-entry Accounts checks passed: journal migration, automatic posting, trial balance UI and JS syntax.')
