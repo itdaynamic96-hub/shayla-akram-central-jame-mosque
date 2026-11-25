@@ -430,3 +430,8 @@ assert 'main.admin-shell{width:100%;max-width:none' in admin_layout_html and '#a
 assert "document.querySelector('main')?.classList.add('admin-shell')" in admin_modules_js, 'Admin: shell must activate full-width layout'
 assert 'const staffModuleRoot = $("staffModules");' in admin_users_js and 'if (!staffModuleRoot) return [];' in admin_users_js, 'Admin: missing staff form nodes must not cause null innerHTML errors'
 assert "!location.hash.includes('admin=m85')" in chanda_js and "p.module_key==='m85'" in chanda_js, 'Chanda: module route and permission key must match Accounts monthly chanda module'
+
+# Single assigned Accounts operator may post income/expense directly; the journal trigger is idempotent.
+direct_posting=(ROOT/'supabase/migrations/20261125195658_accounts_direct_posting_single_operator.sql').read_text(encoding='utf-8')
+assert "approved_by = (select auth.uid())" in direct_posting and "status = 'approved'" in direct_posting, 'Accounts: direct posting must be restricted to the authenticated operator'
+assert 'ledger_entry_double_entry_post_insert' in direct_posting and 'post_approved_ledger_entry_to_journal' in direct_posting, 'Accounts: direct approved entries must create a double-entry journal'
