@@ -134,7 +134,7 @@ async function renderReconciliation(){
   const account=(accounts.data||[]).find(a=>a.id===draft.bank_account_id);
   const [items,candidates]=await Promise.all([
    supabase.from('account_bank_reconciliation_items').select('id,transaction_date,description,reference_no,amount,direction,matched_journal_line_id').eq('reconciliation_id',draft.id).order('transaction_date'),
-   account?supabase.rpc('account_bank_reconciliation_candidates',{p_bank_account:account.id}):Promise.resolve({data:[],error:null})
+   account?supabase.rpc('account_bank_reconciliation_candidates',{p_bank_account:account.id,p_statement_date:draft.statement_date}):Promise.resolve({data:[],error:null})
   ]);
   if(items.error)throw items.error;if(candidates.error)throw candidates.error;
   const options=(candidates.data||[]).map(x=>'<option value="'+x.id+'" data-date="'+x.transaction_date+'" data-description="'+escapeHtml(x.line_description||'')+'" data-debit="'+x.debit+'" data-credit="'+x.credit+'">'+escapeHtml(x.transaction_date)+' · #'+x.journal_no+' · '+escapeHtml(x.line_description||'')+' · ডেবিট '+money(x.debit)+' / ক্রেডিট '+money(x.credit)+'</option>').join('');
