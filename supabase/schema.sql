@@ -105,7 +105,7 @@ alter table public.audit_logs enable row level security;
 
 drop policy if exists "profile self or admins read" on public.profiles;
 create policy "profile self or admins read" on public.profiles for select to authenticated
-using (id = auth.uid() or public.has_access(array['super_admin','admin'], null));
+using (id = (select auth.uid()) or public.has_access(array['super_admin','admin'], null));
 drop policy if exists "super admins update profiles" on public.profiles;
 create policy "super admins update profiles" on public.profiles for update to authenticated
 using (public.has_access(array['super_admin'], null))
@@ -118,7 +118,7 @@ using (public.has_access(array['super_admin','accounts_manager','accountant','au
 drop policy if exists "accounts staff create pending" on public.ledger_entries;
 create policy "accounts staff create pending" on public.ledger_entries for insert to authenticated
 with check (
-  status = 'pending' and created_by = auth.uid()
+  status = 'pending' and created_by = (select auth.uid())
   and public.has_access(array['super_admin','accounts_manager','accountant'], institution)
 );
 drop policy if exists "managers approve and edit" on public.ledger_entries;
@@ -133,7 +133,7 @@ create policy "public can read published announcements" on public.announcements 
 grant select on public.announcements to anon,authenticated;
 drop policy if exists "admins create announcements" on public.announcements;
 create policy "admins create announcements" on public.announcements for insert to authenticated
-with check (created_by = auth.uid() and public.has_access(array['super_admin','admin','website_admin','editor'], null));
+with check (created_by = (select auth.uid()) and public.has_access(array['super_admin','admin','website_admin','editor'], null));
 drop policy if exists "admins update announcements" on public.announcements;
 create policy "admins update announcements" on public.announcements for update to authenticated
 using (public.has_access(array['super_admin','admin','website_admin','editor'], null))
@@ -211,7 +211,7 @@ create policy "accounts read budgets by institution" on public.budgets for selec
 drop policy if exists "accounts managers manage budgets" on public.budgets;
 drop policy if exists "accounts managers insert budgets" on public.budgets;
 create policy "accounts managers insert budgets" on public.budgets for insert to authenticated
-with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=auth.uid());
+with check(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution) and created_by=(select auth.uid()));
 drop policy if exists "accounts managers update budgets" on public.budgets;
 create policy "accounts managers update budgets" on public.budgets for update to authenticated
 using(public.has_access(array['super_admin','accounts_manager','mosque_admin','foundation_admin'],institution))
@@ -229,7 +229,7 @@ create policy "site media admins list" on storage.objects for select to authenti
 using(bucket_id='site-media' and public.has_access(array['super_admin','admin','website_admin'],null));
 drop policy if exists "site media approvers upload" on storage.objects;
 create policy "site media approvers upload" on storage.objects for insert to authenticated
-with check(bucket_id='site-media' and owner_id=auth.uid()::text and public.has_access(array['super_admin','admin','website_admin'],null));
+with check(bucket_id='site-media' and owner_id=(select auth.uid())::text and public.has_access(array['super_admin','admin','website_admin'],null));
 drop policy if exists "site media approvers update" on storage.objects;
 create policy "site media approvers update" on storage.objects for update to authenticated
 using(bucket_id='site-media' and public.has_access(array['super_admin','admin','website_admin'],null))
@@ -349,7 +349,7 @@ for each row execute function public.guard_module_record_publication();
 drop policy if exists "module records read by role" on public.module_records;
 create policy "module records read by role" on public.module_records for select to authenticated using(public.module_record_access(module_key,institution,false));
 drop policy if exists "module records insert by role" on public.module_records;
-create policy "module records insert by role" on public.module_records for insert to authenticated with check(public.module_record_access(module_key,institution,true) and created_by=auth.uid() and status in ('draft','pending'));
+create policy "module records insert by role" on public.module_records for insert to authenticated with check(public.module_record_access(module_key,institution,true) and created_by=(select auth.uid()) and status in ('draft','pending'));
 drop policy if exists "module records update by role" on public.module_records;
 create policy "module records update by role" on public.module_records for update to authenticated using(public.module_record_access(module_key,institution,true)) with check(public.module_record_access(module_key,institution,true) and (status not in ('approved','published') or public.module_record_approval_access(module_key,institution)));
 drop policy if exists "module records delete by super admin" on public.module_records;
