@@ -92,7 +92,7 @@ async function saveStaff(e){
  const {error}=await supabase.from('account_staff').insert(payload);if(error)throw error;e.target.reset();await loadAll()}catch(ex){fail(ex)}
 }
 async function savePayroll(e){
- e.preventDefault();if(!allowed('m69',true)){fail(new Error('বেতন রেকর্ড তৈরির অনুমতি নেই।'));return}
+ e.preventDefault();if(!allowed('m70',true)){fail(new Error('বেতন রেকর্ড তৈরির অনুমতি নেই।'));return}
  try{const payload={institution:institution(),staff_id:val('payrollStaff'),payroll_month:val('payrollMonth'),base_salary:Number(val('payrollBase')),bonus:Number(val('payrollBonus')||0),deductions:Number(val('payrollDeduction')||0),created_by:user.id};
  const {error}=await supabase.from('payroll_records').insert(payload);if(error)throw error;e.target.reset();$('payrollMonth').value=month();await loadAll()}catch(ex){fail(ex)}
 }
@@ -103,18 +103,20 @@ async function payrollAction(e){
   try{const {data,error}=await supabase.from('payroll_records').select('*,account_staff(full_name,job_title,employee_no)').eq('id',slip).single();if(error)throw error;const p=data,s=p.account_staff||{};const esc=v=>escapeHtml(v??'—');w.document.write('<!doctype html><html lang="bn"><meta charset="utf-8"><title>বেতন স্লিপ</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#17251e}h2{text-align:center}table{width:100%;border-collapse:collapse;margin-top:24px}td{padding:10px;border:1px solid #bbb}.muted{color:#666}@media print{button{display:none}}</style><h2>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ / ফাউন্ডেশন</h2><h3 style="text-align:center">বেতন স্লিপ</h3><p>কর্মচারী: '+esc(s.full_name)+' ('+esc(s.employee_no)+')</p><p>পদবি: '+esc(s.job_title)+' · মাস: '+esc(p.payroll_month)+'</p><table><tr><td>মূল বেতন</td><td>'+money(p.base_salary)+'</td></tr><tr><td>বোনাস</td><td>'+money(p.bonus)+'</td></tr><tr><td>কর্তন</td><td>'+money(p.deductions)+'</td></tr><tr><td><b>নিট বেতন</b></td><td><b>'+money(p.net_amount)+'</b></td></tr><tr><td>পরিশোধের তারিখ</td><td>'+esc(p.payment_date)+'</td></tr><tr><td>মাধ্যম</td><td>'+esc(p.payment_method)+'</td></tr><tr><td>রেফারেন্স</td><td>'+esc(p.reference_no)+'</td></tr></table><p class="muted">এটি সিস্টেম-উৎপাদিত বেতন স্লিপ।</p><p>প্রস্তুতকারীর স্বাক্ষর: ____________________</p><p>গ্রহণকারীর স্বাক্ষর: ____________________</p></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}catch(ex){w.close();fail(ex)}return;
  }
  try{
-  if(approve){const {error}=await supabase.from('payroll_records').update({status:'approved',approved_by:user.id,approved_at:new Date().toISOString()}).eq('id',approve).eq('status','pending');if(error)throw error}
+  if(approve&&!allowed('m80',true)){fail(new Error('বেতন অনুমোদনের অনুমতি নেই।'));return}
+ if(pay&&!allowed('m70',true)){fail(new Error('বেতন পরিশোধের অনুমতি নেই।'));return}
+ if(approve){const {error}=await supabase.from('payroll_records').update({status:'approved',approved_by:user.id,approved_at:new Date().toISOString()}).eq('id',approve).eq('status','pending');if(error)throw error}
   else{const method=prompt('পেমেন্ট মাধ্যম: cash / bank / mobile_banking / other','cash');if(method===null)return;const ref=prompt('ট্রানজেকশন/রেফারেন্স নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';const {error}=await supabase.rpc('mark_payroll_paid',{target_payroll:pay,paid_on:today(),paid_via:method,payment_reference:ref});if(error)throw error}
   await loadAll()
  }catch(ex){fail(ex)}
 }
 async function saveObligation(e){
- e.preventDefault();if(!allowed('m72',true)){fail(new Error('পাওনা/দেনা যোগ করার অনুমতি নেই।'));return}
+ e.preventDefault();if(!allowed('m69',true)){fail(new Error('পাওনা/দেনা যোগ করার অনুমতি নেই।'));return}
  try{const payload={institution:institution(),obligation_type:val('obType'),party_name:val('obParty'),description:val('obDescription'),amount:Number(val('obAmount')),due_date:val('obDue')||null,reference_no:val('obReference'),created_by:user.id};
  const {error}=await supabase.from('account_obligations').insert(payload);if(error)throw error;e.target.reset();await loadAll()}catch(ex){fail(ex)}
 }
 async function settleObligation(e){
- const id=e.target.dataset.settle;if(!id)return;
+ const id=e.target.dataset.settle;if(!id)return;if(!allowed('m69',true)){fail(new Error('পাওনা/দেনা নিষ্পত্তির অনুমতি নেই।'));return}
  try{const total=Number(e.target.dataset.amount),old=Number(e.target.dataset.settled),left=total-old;const answer=prompt('এ পর্যন্ত মোট কত টাকা আদায়/পরিশোধ হয়েছে? বাকি '+money(left),String(old));if(answer===null)return;const settled=Number(answer);if(!Number.isFinite(settled)||settled<0||settled>total)throw new Error('সঠিক পরিমাণ দিন।');const status=settled===total?'settled':settled>0?'partial':'open';const {error}=await supabase.from('account_obligations').update({settled_amount:settled,status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await loadAll()}catch(ex){fail(ex)}
 }
 async function saveAsset(e){

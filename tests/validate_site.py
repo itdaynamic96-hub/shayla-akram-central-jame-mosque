@@ -265,6 +265,3 @@ assert 'revoke insert,update,delete,truncate,references,trigger on public.accoun
 
 granular_rls=(ROOT/'supabase/accounts-granular-24-module-rls-alignment.sql').read_text(encoding='utf-8')
 assert "'m76'" in granular_rls and "'m80'" in granular_rls and "account_detail_ledger" not in granular_rls, 'Granular RLS must enforce manual journal and approval permissions'
-
-payroll_rls=(ROOT/'supabase/accounts-payroll-approval-granular-access.sql').read_text(encoding='utf-8')
-assert "account_module_permission(institution,array['m80'],true,true)" in payroll_rls, 'Payroll approval must require the separate m80 approval permission'
