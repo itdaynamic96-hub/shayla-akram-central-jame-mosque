@@ -25,32 +25,82 @@ with check (
   )
 );
 
+-- Header creation is only possible through a server-side function that calculates the book balance.
 drop policy if exists account_bank_reconciliations_insert on public.account_bank_reconciliations;
-create policy account_bank_reconciliations_insert
-on public.account_bank_reconciliations for insert to authenticated
-with check (
-  public.accounts_feature_access(institution,'m46',true)
-  and created_by = (select auth.uid())
-  and exists (
-    select 1
-    from public.account_bank_accounts b
-    where b.id = bank_account_id
-      and b.institution = account_bank_reconciliations.institution
-      and b.is_active
-      and round(book_balance,2) = round(coalesce((
-        select sum(l.debit-l.credit)
-        from public.account_journal_lines l
-        join public.account_journal_entries j on j.id=l.journal_id
-        where l.institution=account_bank_reconciliations.institution
-          and l.account_code=b.account_code
-          and j.institution=account_bank_reconciliations.institution
-          and j.status='posted'
-      ),0),2)
-      and round(difference,2) = round(statement_closing-book_balance,2)
-  )
-);
-
 drop policy if exists account_bank_reconciliations_update on public.account_bank_reconciliations;
+
+create or replace function public.account_create_bank_reconciliation(
+  p_institution text,
+  p_bank_account uuid,
+  p_statement_date date,
+  p_statement_opening numeric,
+  p_statement_closing numeric,
+  p_notes text default ''
+)
+returns uuid
+language plpgsql
+security definer
+set search_path=public,pg_temp
+as $$
+declare
+  bank public.account_bank_accounts%rowtype;
+  book numeric;
+  difference_amount numeric;
+  result_id uuid;
+begin
+  if auth.uid() is null then raise exception 'Authentication required'; end if;
+  if p_statement_date is null then raise exception 'Statement date is required'; end if;
+  if not public.accounts_feature_access(p_institution,'m46',true) then raise exception 'Not authorized'; end if;
+  select * into bank from public.account_bank_accounts
+   where id=p_bank_account and institution=p_institution and is_active for update;
+  if not found then raise exception 'Active bank/cash account not found for this institution'; end if;
+  select coalesce(sum(l.debit-l.credit),0) into book
+    from public.account_journal_lines l
+    join public.account_journal_entries j on j.id=l.journal_id
+   where l.institution=p_institution and l.account_code=bank.account_code
+     and j.institution=p_institution and j.status='posted';
+  book:=round(book,2);
+  difference_amount:=round(p_statement_closing-book,2);
+  insert into public.account_bank_reconciliations(
+    institution,bank_account_id,statement_date,statement_opening,statement_closing,
+    book_balance,difference,status,notes,created_by
+  ) values(
+    p_institution,p_bank_account,p_statement_date,p_statement_opening,p_statement_closing,
+    book,difference_amount,'draft',coalesce(p_notes,''),auth.uid()
+  ) returning id into result_id;
+  return result_id;
+end;
+$$;
+revoke all on function public.account_create_bank_reconciliation(text,uuid,date,numeric,numeric,text) from public,anon;
+grant execute on function public.account_create_bank_reconciliation(text,uuid,date,numeric,numeric,text) to authenticated;
+
+create or replace function public.account_bank_reconciliation_candidates(p_bank_account uuid)
+returns table (
+  id uuid,
+  transaction_date date,
+  journal_no bigint,
+  line_description text,
+  debit numeric,
+  credit numeric
+)
+language sql
+stable
+security definer
+set search_path=public,pg_temp
+as $$
+  select l.id,j.journal_date,j.journal_no,coalesce(nullif(l.description,''),j.description),l.debit,l.credit
+    from public.account_bank_accounts b
+    join public.account_journal_lines l on l.account_code=b.account_code and l.institution=b.institution
+    join public.account_journal_entries j on j.id=l.journal_id and j.institution=b.institution
+   where (select auth.uid()) is not null
+     and b.id=p_bank_account and b.is_active
+     and public.accounts_feature_access(b.institution,'m46',false)
+     and j.status='posted'
+   order by j.journal_date desc,j.journal_no desc,l.created_at desc
+   limit 1000;
+$$;
+revoke all on function public.account_bank_reconciliation_candidates(uuid) from public,anon;
+grant execute on function public.account_bank_reconciliation_candidates(uuid) to authenticated;
 
 create or replace function public.validate_account_bank_reconciliation_item()
 returns trigger
