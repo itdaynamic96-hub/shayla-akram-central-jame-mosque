@@ -9,7 +9,7 @@
 @media(max-width:700px){.read-aloud{right:10px;bottom:10px}}
 
 
-</style><link rel="stylesheet" href="./accounts-dashboard.css?v=20261126-contrast-top">
+</style><link rel="stylesheet" href="./accounts-dashboard.css?v=20261126-top-photo-link-final">
 <style id="modern-refresh">
 :root{color-scheme:light;--bg:#f4f5ef;--panel:#fffefa;--line:#e2e7dc;--gold:#a9853d;--text:#20372b;--muted:#66756b;--red:#b42318}
 body{background:radial-gradient(ellipse at 8% 0%,#fffdf6 0,transparent 40%),linear-gradient(145deg,#f6f5ef,#edf2eb);color:var(--text);font-family:'Noto Sans Bengali',sans-serif;line-height:1.65}
@@ -44,7 +44,7 @@ th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;paddin
 .site-top a{color:#fff!important;text-decoration:underline!important;font-weight:700!important}
 .site-top-links{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 #accountsDashboard{color:#172b40!important;background:#f1f5fa!important}
-#accountsDashboard .top-brand img{display:none!important}
+/* Dashboard duplicate logo removed; primary mosque image lives in the page banner. */
 #accountsDashboard *{text-shadow:none}
 #accountsDashboard .top{background:#fff!important;color:#173653!important}
 #accountsDashboard .top *{color:#173653!important}
@@ -70,6 +70,15 @@ th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;paddin
 #accountsDashboard nav button.active{background:#087f50!important;color:#fff!important}
 @media(max-width:760px){.site-top{align-items:flex-start!important;padding:14px!important;min-height:0!important}.site-top-brand{gap:12px!important}.site-top-brand>img{width:100px!important;height:92px!important;flex-basis:100px!important}.site-top .brand{font-size:14px!important}.site-top .muted{font-size:13px!important}.site-top-links{width:100%}}
 @media(max-width:430px){.site-top-brand>img{width:78px!important;height:76px!important;flex-basis:78px!important}.site-top h1{font-size:23px!important}}
+
+/* FINAL FIX: high-contrast website link and one prominent mosque photo in page banner */
+.site-top{display:flex!important;min-height:220px!important;align-items:center!important;justify-content:space-between!important;gap:22px!important}
+.site-top-brand{display:flex!important;align-items:center!important;gap:22px!important}
+.site-top-brand>img{display:block!important;visibility:visible!important;opacity:1!important;width:200px!important;height:168px!important;flex:0 0 200px!important;object-fit:cover!important;object-position:center!important;border:3px solid #f4d58a!important;border-radius:16px!important;box-shadow:0 9px 24px rgba(0,0,0,.28)!important}
+.site-top-links a,.site-top a[href="./index.html"]{display:inline-flex!important;align-items:center!important;justify-content:center!important;background:#fff!important;color:#073b2c!important;border:2px solid #f2d38a!important;border-radius:10px!important;padding:11px 18px!important;font-size:17px!important;font-weight:800!important;text-decoration:none!important;text-shadow:none!important;box-shadow:0 4px 12px rgba(0,0,0,.18)!important}
+.site-top-links a:hover,.site-top a[href="./index.html"]:hover{background:#fff4d5!important;color:#062e22!important}
+@media(max-width:760px){.site-top{align-items:flex-start!important;min-height:0!important;flex-direction:column!important}.site-top-brand{align-items:center!important;gap:12px!important}.site-top-brand>img{width:112px!important;height:100px!important;flex-basis:112px!important}.site-top-links{width:100%!important}}
+@media(max-width:430px){.site-top-brand>img{width:88px!important;height:82px!important;flex-basis:88px!important}.site-top-links a{font-size:15px!important;padding:9px 14px!important}}
 </style>
 </head><body><main><div class="top site-top"><div class="site-top-brand"><img src="./assets/mosque-hero.webp" alt="শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Accounts Management</h1><p class="muted">শুধু অনুমোদিত হিসাব বিভাগের জন্য · Public Website থেকে পৃথক</p></div></div><div class="site-top-links"><a href="./index.html">মূল ওয়েবসাইট</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। সেটআপ নির্দেশিকা README-তে দেওয়া আছে।</p></section>
