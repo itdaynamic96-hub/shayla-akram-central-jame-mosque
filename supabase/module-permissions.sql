@@ -239,3 +239,23 @@ alter table public.module_records add constraint module_records_mosque_basic_mod
  check (institution <> 'mosque' or module_key = any(array['m01','m02','m03','m04','m05','m06','m07','m08','m09','m10','m11','m12','m13','m14','m15','m61']::text[]));
 alter table public.module_records drop constraint if exists module_records_m61_mosque_only_check;
 alter table public.module_records add constraint module_records_m61_mosque_only_check check (module_key <> 'm61' or institution='mosque');
+
+-- Security and query-plan hardening.
+revoke all on function public.account_module_permission(text,text[],boolean,boolean) from public,anon;
+grant execute on function public.account_module_permission(text,text[],boolean,boolean) to authenticated;
+revoke all on function public.module_record_access(text,text,boolean) from public,anon;
+grant execute on function public.module_record_access(text,text,boolean) to authenticated;
+revoke all on function public.module_record_approval_access(text,text) from public,anon;
+grant execute on function public.module_record_approval_access(text,text) to authenticated;
+
+drop policy if exists "users read own module permissions" on public.admin_module_permissions;
+create policy "users read own module permissions" on public.admin_module_permissions
+ for select to authenticated using(user_id=(select auth.uid()) or public.has_access(array['super_admin'],null));
+drop policy if exists "super admins manage module permissions" on public.admin_module_permissions;
+create policy "super admins insert module permissions" on public.admin_module_permissions
+ for insert to authenticated with check(public.has_access(array['super_admin'],null));
+create policy "super admins update module permissions" on public.admin_module_permissions
+ for update to authenticated using(public.has_access(array['super_admin'],null))
+ with check(public.has_access(array['super_admin'],null));
+create policy "super admins delete module permissions" on public.admin_module_permissions
+ for delete to authenticated using(public.has_access(array['super_admin'],null));
