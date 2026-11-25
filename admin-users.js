@@ -134,7 +134,8 @@ function renderChecks(selected = []) {
   }));
 }
 function readChecks() {
-  return [...$("staffModules").querySelectorAll("[data-module]:checked")].map(el => ({ module_key: el.dataset.module }));
+  const staffModuleRoot = document.querySelector("#staffModules") || $("staffModules");
+  return [...staffModuleRoot.querySelectorAll("[data-module]:checked")].map(el => ({ module_key: el.dataset.module }));
 }
 async function init() {
   if (!configured) return;
