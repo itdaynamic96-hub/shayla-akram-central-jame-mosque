@@ -8,7 +8,7 @@ using (
   exists (
     select 1 from public.account_bank_reconciliations r
     where r.id = reconciliation_id
-      and public.accounts_feature_access(r.institution,'m46',false)
+      and public.accounts_feature_access(r.institution,'m78',false)
   )
 );
 
@@ -21,7 +21,7 @@ with check (
     where r.id = reconciliation_id
       and r.status = 'draft'
       and r.created_by = (select auth.uid())
-      and public.accounts_feature_access(r.institution,'m46',true)
+      and public.accounts_feature_access(r.institution,'m78',true)
   )
 );
 
@@ -50,7 +50,7 @@ declare
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
   if p_statement_date is null then raise exception 'Statement date is required'; end if;
-  if not public.accounts_feature_access(p_institution,'m46',true) then raise exception 'Not authorized'; end if;
+  if not public.accounts_feature_access(p_institution,'m78',true) then raise exception 'Not authorized'; end if;
   select * into bank from public.account_bank_accounts
    where id=p_bank_account and institution=p_institution and is_active for update;
   if not found then raise exception 'Active bank/cash account not found for this institution'; end if;
@@ -94,7 +94,7 @@ as $$
     join public.account_journal_entries j on j.id=l.journal_id and j.institution=b.institution
    where (select auth.uid()) is not null
      and b.id=p_bank_account and b.is_active
-     and public.accounts_feature_access(b.institution,'m46',false)
+     and public.accounts_feature_access(b.institution,'m78',false)
      and j.status='posted'
    order by j.journal_date desc,j.journal_no desc,l.created_at desc
    limit 1000;
@@ -120,7 +120,7 @@ begin
    where r.id=new.reconciliation_id
    for update of r;
   if not found or parent.status<>'draft' then raise exception 'Draft reconciliation not found'; end if;
-  if not public.accounts_feature_access(parent.institution,'m46',true) then raise exception 'Not authorized'; end if;
+  if not public.accounts_feature_access(parent.institution,'m78',true) then raise exception 'Not authorized'; end if;
   if new.matched_journal_line_id is null then raise exception 'A posted journal line must be matched'; end if;
   select l.debit,l.credit,l.institution,l.account_code,j.journal_date,j.status,j.institution as journal_institution
     into journal_line
@@ -163,7 +163,7 @@ using (
     where r.id = reconciliation_id
       and r.status = 'draft'
       and r.created_by = (select auth.uid())
-      and public.accounts_feature_access(r.institution,'m46',true)
+      and public.accounts_feature_access(r.institution,'m78',true)
   )
 );
 
@@ -173,7 +173,7 @@ on public.account_bank_reconciliations for delete to authenticated
 using (
   status = 'draft'
   and created_by = (select auth.uid())
-  and public.accounts_feature_access(institution,'m46',true)
+  and public.accounts_feature_access(institution,'m78',true)
 );
 
 -- Reconciliation balance and candidate lines are bounded by the statement date.
@@ -198,7 +198,7 @@ declare
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
   if p_statement_date is null or p_statement_opening is null or p_statement_closing is null then raise exception 'Statement date and balances are required'; end if;
-  if not public.accounts_feature_access(p_institution,'m46',true) then raise exception 'Not authorized'; end if;
+  if not public.accounts_feature_access(p_institution,'m78',true) then raise exception 'Not authorized'; end if;
   select * into bank from public.account_bank_accounts
    where id=p_bank_account and institution=p_institution and is_active for update;
   if not found then raise exception 'Active bank/cash account not found for this institution'; end if;
@@ -244,7 +244,7 @@ as $$
    where (select auth.uid()) is not null
      and b.id=p_bank_account and b.is_active
      and p_statement_date is not null
-     and public.accounts_feature_access(b.institution,'m46',false)
+     and public.accounts_feature_access(b.institution,'m78',false)
      and j.status='posted' and j.journal_date<=p_statement_date
    order by j.journal_date desc,j.journal_no desc,l.created_at desc
    limit 1000;
@@ -273,7 +273,7 @@ begin
    where r.id=new.reconciliation_id
    for update of r;
   if not found or parent.status<>'draft' then raise exception 'Draft reconciliation not found'; end if;
-  if not public.accounts_feature_access(parent.institution,'m46',true) then raise exception 'Not authorized'; end if;
+  if not public.accounts_feature_access(parent.institution,'m78',true) then raise exception 'Not authorized'; end if;
   if new.matched_journal_line_id is null then raise exception 'A posted journal line must be matched'; end if;
   select l.debit,l.credit,l.institution,l.account_code,j.journal_date,j.status,j.institution as journal_institution
     into journal_line
@@ -320,7 +320,7 @@ begin
    where r.id=new.reconciliation_id
    for update of r;
   if not found or parent.status<>'draft' then raise exception 'Draft reconciliation not found'; end if;
-  if not public.accounts_feature_access(parent.institution,'m46',true) then raise exception 'Not authorized'; end if;
+  if not public.accounts_feature_access(parent.institution,'m78',true) then raise exception 'Not authorized'; end if;
   if new.matched_journal_line_id is null then raise exception 'A posted journal line must be matched'; end if;
   select l.debit,l.credit,l.institution,l.account_code,j.journal_date,j.status,j.institution as journal_institution
     into journal_line
@@ -366,7 +366,7 @@ as $$
    where (select auth.uid()) is not null
      and b.id=p_bank_account and b.is_active
      and p_statement_date is not null
-     and public.accounts_feature_access(b.institution,'m46',false)
+     and public.accounts_feature_access(b.institution,'m78',false)
      and j.status='posted' and j.journal_date<=p_statement_date
      and not exists (
        select 1 from public.account_bank_reconciliation_items ri
@@ -403,7 +403,7 @@ declare
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
   if p_statement_date is null or p_statement_opening is null or p_statement_closing is null then raise exception 'Statement date and balances are required'; end if;
-  if not public.accounts_feature_access(p_institution,'m46',true) then raise exception 'Not authorized'; end if;
+  if not public.accounts_feature_access(p_institution,'m78',true) then raise exception 'Not authorized'; end if;
   select * into bank from public.account_bank_accounts
    where id=p_bank_account and institution=p_institution and is_active for update;
   if not found then raise exception 'Active bank/cash account not found for this institution'; end if;
@@ -438,7 +438,7 @@ with check (
     select 1 from public.account_bank_reconciliations r
     where r.id = reconciliation_id
       and r.status = 'draft'
-      and public.accounts_feature_access(r.institution,'m46',true)
+      and public.accounts_feature_access(r.institution,'m78',true)
   )
 );
 
@@ -450,6 +450,8 @@ using (
     select 1 from public.account_bank_reconciliations r
     where r.id = reconciliation_id
       and r.status = 'draft'
-      and public.accounts_feature_access(r.institution,'m46',true)
+      and public.accounts_feature_access(r.institution,'m78',true)
   )
 );
+
+grant insert,delete on table public.account_bank_reconciliation_items to authenticated;
