@@ -44,3 +44,8 @@ For a complete Accounts deployment, also apply `supabase/accounts-double-entry.s
 
 ## Project identity and live verification
 This repository is the **SAKM-61** (61-module) mosque and foundation website. It is not the separate `shayla-akram-mosque-basic` project. See [PROJECT_IDENTITY.md](PROJECT_IDENTITY.md) for the canonical repository, deployment, Supabase project reference, and operational boundaries. A successful encrypted backup is not the same as a verified restore; password hashes, sessions, provider secrets, dashboard-only settings, and a fresh-project restore are explicitly outside the current backup guarantee.
+
+
+## কেন্দ্রীয় মসজিদের ছবি ব্যবস্থাপনা
+
+`supabase/central-mosque-brand-image-settings.sql` migration creates a public-read, admin-write `site_media_settings` record for the shared mosque photo and adds an authenticated admin-only upload policy under the `site-media` bucket. The same setting is read by the homepage, Admin Panel, Accounts page and 360° tour cover. The default fallback is `assets/mosque-hero.webp`. Image replacement is available to Super Admin, Admin and Website Admin accounts; upload limit is 10 MB.
