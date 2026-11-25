@@ -156,7 +156,7 @@ assert "m61" in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin user
 assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database permissions must accept module 61'
 assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database module access must explicitly authorize mosque member register'
 assert "target_key='m51'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Member module 51 must allow mosque/account read access with admin-only writes'
-assert "m.n===51||m.n===61||m.g===2" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Member module 51 must be scoped to mosque records'
+assert "m.n===51||m.n===61||m.n===85||m.g===2" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Member module 51 must be scoped to mosque records'
 assert 'function customInstitutionAllowed(m)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Custom admins must be limited to their institution for mosque/foundation modules'
 assert '[4,7,8,9,10].includes(m.n)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Website editors must access the home/menu/page/calendar content modules'
 assert "target_key='m04'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Calendar module 4 must be accessible to website editors'
