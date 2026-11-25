@@ -92,7 +92,7 @@ for each row execute function public.guard_module_record_publication();
 drop policy if exists "module records read by role" on public.module_records;
 create policy "module records read by role" on public.module_records for select to authenticated using(public.module_record_access(module_key,institution,false));
 drop policy if exists "module records insert by role" on public.module_records;
-create policy "module records insert by role" on public.module_records for insert to authenticated with check(public.module_record_access(module_key,institution,true) and created_by=auth.uid() and status in ('draft','pending'));
+create policy "module records insert by role" on public.module_records for insert to authenticated with check(public.module_record_access(module_key,institution,true) and created_by=(select auth.uid()) and status in ('draft','pending'));
 drop policy if exists "module records update by role" on public.module_records;
 create policy "module records update by role" on public.module_records for update to authenticated using(public.module_record_access(module_key,institution,true)) with check(public.module_record_access(module_key,institution,true) and (status not in ('approved','published') or public.module_record_approval_access(module_key,institution)));
 drop policy if exists "module records delete by super admin" on public.module_records;
@@ -106,7 +106,7 @@ grant select on public.announcements to anon,authenticated;
 
 drop policy if exists "admins create announcements" on public.announcements;
 create policy "admins create announcements" on public.announcements for insert to authenticated
-with check (created_by=auth.uid() and public.has_access(array['super_admin','admin','website_admin','editor'],null));
+with check (created_by=(select auth.uid()) and public.has_access(array['super_admin','admin','website_admin','editor'],null));
 drop policy if exists "admins update announcements" on public.announcements;
 create policy "admins update announcements" on public.announcements for update to authenticated
 using (public.has_access(array['super_admin','admin','website_admin','editor'],null))
