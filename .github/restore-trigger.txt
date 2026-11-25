@@ -7,3 +7,5 @@ Retry restore with unused Inbucket disabled.
 Retry restore with robust Inbucket configuration edit.
 
 Retry with corrected config section boundary.
+
+Retry restore using explicit local Supabase config.
