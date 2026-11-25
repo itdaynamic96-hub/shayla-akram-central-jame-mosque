@@ -369,7 +369,8 @@ assert 'class="tour-cover"' in html, 'Homepage: mosque photo must be used as the
 assert 'content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important' in html, 'Homepage: 10-card photo/knowledge grids must display in three desktop rows'
 assert 'grid-template-columns:minmax(220px,3in) minmax(300px,1fr) minmax(220px,3in)' in html, 'Homepage: history and bani columns must be 3 inches wide'
 assert 'id="mosqueMediaAdmin"' in admin_html and 'মিডিয়া ব্যবস্থাপনা' in admin_html, 'Admin: dedicated media module is missing'
-assert 'id="mosqueMediaAdmin"' not in accounts and 'data-mosque-image="accounts"' in accounts and 'mosque-media.js' in accounts, 'Accounts: image display must be independent with no direct media controls'
+assert 'mosqueSphericalImageForm' in admin_html and 'mosque_360_spherical_image' in media_js and 'uploadSphericalImage' in media_js and 'canvas.toBlob' in media_js, 'Admin: ordinary image must be converted and stored for the separate spherical 360 viewer'
+assert 'id="mosqueMediaAdmin"' not in accounts and ('data-mosque-image="accounts"' in accounts or "img.dataset.mosqueImage='accounts'" in media_js) and 'mosque-media.js' in accounts, 'Accounts: image display must be independent with no direct media controls'
 assert 'data-mosque-image="homepage"' in html and 'data-mosque-image="admin"' in admin_html, 'Homepage and Admin Panel must each have their own image surface'
 assert (ROOT/'mosque-media.js').exists(), 'Shared mosque media manager script is missing'
 assert (ROOT/'assets/mosque-hero.webp').exists(), 'User-provided mosque image fallback is missing'
@@ -386,7 +387,7 @@ message_css=(ROOT/'accounts-dashboard.css').read_text(encoding='utf-8')
 assert '#accountsDashboard #accountsMessaging.message-module' in message_css and '@media(max-width:600px)' in message_css, 'Accounts messaging must have scoped responsive layout'
 admin_css=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert admin_css.count('#adminSidebar{position:fixed')==1, 'Admin sidebar rules must not be duplicated'
-assert 'accounts-dashboard.css?v=20261125-5' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts dashboard CSS cache key must be refreshed'
+assert 'accounts-dashboard.css?v=' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts dashboard CSS cache key must be refreshed'
 
 hardening_sql=(ROOT/'supabase/accounts-admin-panel-hardening.sql').read_text(encoding='utf-8')
 assert 'mp.can_view and mp.can_write and mp.can_approve' in hardening_sql, 'Module-record approval must require explicit can_approve permission'

@@ -239,7 +239,13 @@ main.admin-shell{width:100%;max-width:none;margin:0;padding:18px 24px 24px 322px
 <section class="media-surface"><h4>৩. Admin Panel-এর প্রধান ছবি</h4><img data-mosque-image="admin" src="./assets/mosque-hero.webp" alt="Admin Panel-এর ছবি" class="media-preview"><form id="mosqueAdminMediaForm"><label>নতুন ছবি (JPG, PNG, WebP · সর্বোচ্চ ১০ MB)</label><input id="mosqueAdminMediaFile" type="file" accept="image/jpeg,image/png,image/webp" required><p><button type="submit">Admin Panel-এর ছবি সংরক্ষণ</button> <button type="button" id="mosqueAdminMediaRemove" class="secondary">ছবি অপসারণ</button></p></form><p id="mosqueAdminMediaError" class="error" hidden></p><p id="mosqueAdminMediaStatus" class="muted" aria-live="polite"></p></section>
 </div>
 <hr><h4>৪. ৩৬০° প্যানোরামা</h4><p class="muted">সম্পূর্ণ ৩৬০° equirectangular ছবি দিন (প্রায় ২:১ অনুপাত), সর্বোচ্চ ৫০ MB। এটি হোমপেজের ভার্চুয়াল ভ্রমণে ব্যবহৃত হবে।</p><img id="mosquePanoramaPreview" alt="বর্তমান ৩৬০° প্যানোরামা প্রিভিউ" hidden class="media-preview"><p id="mosquePanoramaEmpty" class="muted">এখনো ৩৬০° প্যানোরামা ছবি যুক্ত করা হয়নি।</p><form id="mosquePanoramaForm"><label>৩৬০° প্যানোরামা ছবি (JPG, PNG, WebP · সর্বোচ্চ ৫০ MB)</label><input id="mosquePanoramaFile" type="file" accept="image/jpeg,image/png,image/webp" required><p><button type="submit">৩৬০° ছবি আপলোড ও চালু করুন</button> <button type="button" id="mosquePanoramaRemove" class="secondary" hidden>৩৬০° ছবি অপসারণ</button></p></form><p id="mosquePanoramaError" class="error" hidden></p><p id="mosquePanoramaStatus" class="muted" aria-live="polite"></p>
-<hr><h4>৫. ৩৬০° ভ্রমণের ভিডিও</h4>
+<hr><h4>৫. ৩৬০° গোলাকার ছবি ভিউ</h4>
+<p class="muted">সাধারণ JPG, PNG বা WebP ছবি দিন (সর্বোচ্চ ১০ MB)। আপলোডের সময় ছবিটি স্বয়ংক্রিয়ভাবে ২:১ গোলাকার ভিউ ফরম্যাটে রূপান্তর হবে। মূল ছবির অনুপাত পরিবর্তিত হতে পারে; ছবির বাইরে থাকা দৃশ্য তৈরি হবে না।</p>
+<img id="mosqueSphericalImagePreview" alt="৩৬০° গোলাকার ছবির প্রিভিউ" hidden class="media-preview">
+<p id="mosqueSphericalImageEmpty" class="muted">এখনো কোনো সাধারণ ছবি ৩৬০° গোলাকার ভিউ হিসেবে যুক্ত করা হয়নি।</p>
+<form id="mosqueSphericalImageForm"><label>সাধারণ ছবি নির্বাচন করুন (JPG, PNG, WebP · সর্বোচ্চ ১০ MB)</label><input id="mosqueSphericalImageFile" type="file" accept="image/jpeg,image/png,image/webp" required><p><button type="submit">ছবি রূপান্তর ও ৩৬০° ভিউ চালু করুন</button> <button type="button" id="mosqueSphericalImageRemove" class="secondary" hidden>গোলাকার ছবি অপসারণ</button></p></form>
+<p id="mosqueSphericalImageError" class="error" hidden></p><p id="mosqueSphericalImageStatus" class="muted" aria-live="polite"></p>
+<hr><h4>৬. ৩৬০° ভ্রমণের ভিডিও</h4>
 <p class="muted">MP4, MOV, M4V, WebM, MKV, AVI, WMV, FLV, 3GP, MPEG, TS, VOBসহ প্রচলিত ভিডিও ফরম্যাট আপলোড করুন। সর্বোচ্চ ৫০ MB (Free প্ল্যান)। ভিডিওর শব্দ ডিফল্টভাবে বন্ধ থাকবে; চাইলে নিচের অপশন থেকে শব্দ চালু করতে পারবেন।</p>
 <video id="mosque360VideoPreview" data-mosque-360-video-preview controls playsinline preload="metadata" hidden style="display:block;width:min(100%,720px);max-height:380px;background:#111;border-radius:12px"></video>
 <p id="mosque360VideoEmpty" class="muted">এখনো কোনো ভ্রমণ ভিডিও যুক্ত করা হয়নি।</p>
@@ -266,4 +272,4 @@ $('loadAudit').onclick=async()=>{const{data,error}=await supabase.from('audit_lo
 
 <script src="./read-aloud.js?v=20261126-svara1"></script>
 
-<script type="module" src="./mosque-media.js?v=20261125-image-fix1"></script><script type="module" src="./admin-modules.js?v=20261126-layoutfix2"></script><script type="module" src="./admin-users.js?v=20261126-nullguard1"></script><script type="module" src="./chanda-admin.js?v=20261126-modulemap1"></script>\n</body></html>
+<script type="module" src="./mosque-media.js?v=20261126-spherical-image1"></script><script type="module" src="./admin-modules.js?v=20261126-layoutfix2"></script><script type="module" src="./admin-users.js?v=20261126-nullguard1"></script><script type="module" src="./chanda-admin.js?v=20261126-modulemap1"></script>\n</body></html>
