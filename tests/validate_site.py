@@ -121,3 +121,19 @@ assert 'admin.rpc("replace_admin_module_permissions"' in (ROOT/'supabase/functio
 assert 'hasAccountModule' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts panel must honor per-module grants'
 assert "account_module_permission(institution,array['m48'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Budget writes must require the budget module grant'
 assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Receipt uploads must require the receipt module grant'
+
+# Enterprise Premium additions: Bengali read-aloud and monthly chanda workflow.
+assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
+assert 'SpeechSynthesisUtterance' in (ROOT/'read-aloud.js').read_text(encoding='utf-8')
+assert 'bn-BD' in (ROOT/'read-aloud.js').read_text(encoding='utf-8')
+chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
+assert "from('chanda_members')" in chanda_js
+assert "from('chanda_dues')" in chanda_js
+assert "rpc('record_chanda_payment'" in chanda_js
+assert "from('chanda_message_logs')" in chanda_js
+chanda_sql=(ROOT/'supabase/chanda-enterprise.sql').read_text(encoding='utf-8')
+for marker in ('create table if not exists public.chanda_members','create table if not exists public.chanda_dues','create table if not exists public.chanda_payments','create table if not exists public.chanda_message_logs','enable row level security','record_chanda_payment','chanda-daily-reminder-queue'):
+    assert marker in chanda_sql, f'Chanda migration missing: {marker}'
+admin_html=(ROOT/'admin.html').read_text(encoding='utf-8')
+assert 'chanda-admin.js' in admin_html, 'Admin: monthly chanda module script is not loaded'
+print('Enterprise additions checks passed: Read Aloud and chanda dues/payment/reminder modules.')
