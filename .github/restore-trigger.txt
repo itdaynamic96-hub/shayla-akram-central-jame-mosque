@@ -13,3 +13,5 @@ Retry restore using explicit local Supabase config.
 Retry with Supabase CLI v3 local_smtp section.
 
 Retry restore after pg client variable fix.
+
+Retry full local restore with Auth and Storage SQL rows first.
