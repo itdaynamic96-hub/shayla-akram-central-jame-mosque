@@ -10,7 +10,7 @@
   ].join(',');
   const excluded = [
     'button','input','textarea','select','script','style','iframe','video','audio',
-    '.read-aloud','.nexora-read-aloud','.temporary','[aria-hidden="true"]',
+    '.read-aloud','.nexora-read-aloud','.nexora-share','.temporary','[aria-hidden="true"]',
     '[lang="ar"]','.arabic','.arabic-pronunciation'
   ].join(',');
 
@@ -280,11 +280,118 @@
     statusText('বিনামূল্যের বাংলা পুরুষ কণ্ঠে বর্তমান পৃষ্ঠার লেখা শুনুন।');
   };
 
+  let shareSequence = 0;
+
+  const shareTextFor = card => {
+    const heading = card.querySelector('h1,h2,h3,h4,[data-title]');
+    const title = (heading?.innerText || card.getAttribute('aria-label') || document.title || 'শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ').trim();
+    const body = readableText(card).replace(/\\s+/g,' ').trim();
+    return {title, text: body.length > 420 ? body.slice(0,417) + '…' : body};
+  };
+
+  const shareUrlFor = card => {
+    if (!card.id) {
+      const {title,text} = shareTextFor(card);
+      const base = (title + '-' + text.slice(0,45)).toLowerCase()
+        .replace(/[^\\p{L}\\p{N}]+/gu,'-').replace(/^-|-$/g,'').slice(0,55) || 'post';
+      card.id = 'share-' + base + '-' + (++shareSequence);
+    }
+    const url = new URL(window.location.href);
+    url.hash = card.id;
+    return url.href;
+  };
+
+  const addShareControl = card => {
+    if (!(card instanceof Element) || card.dataset.nexoraShareReady === '1' || card.closest('#adminWorkspace')) return;
+    card.dataset.nexoraShareReady = '1';
+    const {title,text} = shareTextFor(card);
+    const url = shareUrlFor(card);
+    const message = [title, text, url].filter(Boolean).join('\\n\\n');
+    const root = document.createElement('div');
+    root.className = 'nexora-share';
+    root.style.cssText = 'position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;gap:6px;margin:6px 4px 4px 0;z-index:3;';
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'nexora-share-toggle';
+    toggle.textContent = '↗ শেয়ার';
+    toggle.setAttribute('aria-expanded','false');
+    toggle.setAttribute('aria-label',title + ' শেয়ার করুন');
+    toggle.style.cssText = 'font:inherit;font-size:12px;line-height:1.3;padding:5px 9px;border:1px solid #9aa7b5;border-radius:7px;background:transparent;color:inherit;cursor:pointer;';
+    const menu = document.createElement('div');
+    menu.className = 'nexora-share-menu';
+    menu.hidden = true;
+    menu.setAttribute('role','group');
+    menu.setAttribute('aria-label','শেয়ার করার মাধ্যম');
+    menu.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;max-width:min(320px,85vw);padding:8px;border:1px solid #aab4c0;border-radius:9px;background:Canvas;color:CanvasText;box-shadow:0 3px 12px #0002;';
+    const addLink = (label,href) => {
+      const link = document.createElement('a');
+      link.textContent = label;
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.style.cssText = 'font:inherit;font-size:12px;padding:5px 8px;border:1px solid #aab4c0;border-radius:6px;color:inherit;text-decoration:none;';
+      menu.appendChild(link);
+    };
+    const encodedUrl = encodeURIComponent(url);
+    const encodedText = encodeURIComponent([title,text].filter(Boolean).join('\\n'));
+    addLink('Facebook','https://www.facebook.com/sharer/sharer.php?u='+encodedUrl);
+    addLink('WhatsApp','https://wa.me/?text='+encodeURIComponent(message));
+    addLink('Telegram','https://t.me/share/url?url='+encodedUrl+'&text='+encodedText);
+    addLink('X','https://twitter.com/intent/tweet?text='+encodedText+'&url='+encodedUrl);
+    addLink('LinkedIn','https://www.linkedin.com/sharing/share-offsite/?url='+encodedUrl);
+    addLink('Pinterest','https://www.pinterest.com/pin/create/button/?url='+encodedUrl+'&description='+encodedText);
+    addLink('ইমেইল','mailto:?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(message));
+    const native = document.createElement('button');
+    native.type = 'button';
+    native.textContent = 'অন্যান্য অ্যাপ…';
+    native.style.cssText = 'font:inherit;font-size:12px;padding:5px 8px;border:1px solid #aab4c0;border-radius:6px;background:transparent;color:inherit;cursor:pointer;';
+    native.addEventListener('click', async () => {
+      if (navigator.share) {
+        try { await navigator.share({title,text:message,url}); }
+        catch (error) { if (error?.name !== 'AbortError') shareStatus.textContent = 'শেয়ার করা যায়নি।'; }
+      } else {
+        shareStatus.textContent = 'এই ব্রাউজারে অ্যাপ শেয়ার সুবিধা নেই; লিংক কপি ব্যবহার করুন।';
+      }
+    });
+    menu.appendChild(native);
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.textContent = 'লিংক কপি';
+    copy.style.cssText = native.style.cssText;
+    const shareStatus = document.createElement('span');
+    shareStatus.setAttribute('aria-live','polite');
+    shareStatus.style.cssText = 'font-size:11px;align-self:center;';
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        shareStatus.textContent = 'লিংক কপি হয়েছে।';
+      } catch (_) {
+        const field = document.createElement('textarea');
+        field.value = url;
+        field.style.position = 'fixed';
+        field.style.opacity = '0';
+        document.body.appendChild(field);
+        field.select();
+        const copied = document.execCommand('copy');
+        field.remove();
+        shareStatus.textContent = copied ? 'লিংক কপি হয়েছে।' : 'লিংক কপি করা যায়নি।';
+      }
+    });
+    menu.append(copy,shareStatus);
+    toggle.addEventListener('click', () => {
+      menu.hidden = !menu.hidden;
+      toggle.setAttribute('aria-expanded',menu.hidden ? 'false' : 'true');
+    });
+    root.append(toggle,menu);
+    card.appendChild(root);
+  };
+
   const addCardReader = card => {
     if (!(card instanceof Element) || card.dataset.nexoraTtsReady==='1' || card.closest('#adminWorkspace')) return;
     const text=readableText(card);
     if (text.length<25) return;
     card.dataset.nexoraTtsReady='1';
+    addShareControl(card);
     const box=document.createElement('div');
     box.className='nexora-read-aloud';
     box.setAttribute('aria-label','এই লেখাটি পড়ে শোনানোর নিয়ন্ত্রণ');
@@ -310,8 +417,8 @@
   };
 
   const scanCards = (root=document) => {
-    if (root instanceof Element && root.matches(selectors)) addCardReader(root);
-    root.querySelectorAll?.(selectors).forEach(addCardReader);
+    if (root instanceof Element && root.matches(selectors)) { addCardReader(root); addShareControl(root); }
+    root.querySelectorAll?.(selectors).forEach(card => { addCardReader(card); addShareControl(card); });
   };
 
   const init = () => {
