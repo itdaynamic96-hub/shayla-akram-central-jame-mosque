@@ -64,3 +64,5 @@ TTS provider catalogue smoke check updated.
 Anonymous Bengali voice availability probe updated.
 
 Google Bengali no-key TTS fallback probe added.
+
+[tts-smoke] Google Bengali TTS endpoint check after Admin layout update.
