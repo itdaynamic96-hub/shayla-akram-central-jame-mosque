@@ -29,6 +29,7 @@ as $$
         where mp.user_id=p.id and mp.module_key=target_key and mp.can_view
           and (not write_access or mp.can_write)))
     or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
+      or (target_key='m04' and p.role in ('admin','website_admin','editor') and p.institution in ('both','mosque') and target_institution='mosque')
     or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
     or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager')
         and p.institution in ('both','mosque') and target_institution='mosque')
