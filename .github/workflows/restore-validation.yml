@@ -63,20 +63,36 @@ jobs:
           cd "$RUNNER_TEMP/restore-project"
           sudo apt-get update
           sudo apt-get install -y postgresql-client
-          supabase init
-          # The runner may already use the default Inbucket port; mail is not needed for a restore test.
-          python3 - <<'PY'
-          from pathlib import Path
-          config = Path("supabase/config.toml")
-          content = config.read_text()
-          start = content.find("[inbucket]")
-          if start >= 0:
-              next_section = content.find("\n[", start + 1)
-              end = len(content) if next_section < 0 else next_section + 1
-              section = content[start:end].replace("enabled = true", "enabled = false", 1)
-              content = content[:start] + section + content[end:]
-              config.write_text(content)
-          PY
+          mkdir -p supabase
+          cat > supabase/config.toml <<'EOF'
+          project_id = "sakm61-restore-test"
+          [api]
+          enabled = true
+          port = 54321
+          schemas = ["public", "graphql_public"]
+          extra_search_path = ["public", "extensions"]
+          max_rows = 1000
+          [db]
+          port = 54322
+          shadow_port = 54320
+          major_version = 17
+          [db.seed]
+          enabled = false
+          [studio]
+          enabled = false
+          [inbucket]
+          enabled = false
+          [storage]
+          enabled = true
+          file_size_limit = "50MiB"
+          [auth]
+          enabled = true
+          site_url = "http://127.0.0.1:3000"
+          additional_redirect_urls = ["http://127.0.0.1:3000"]
+          jwt_expiry = 3600
+          [realtime]
+          enabled = true
+          EOF
           supabase start
           supabase status -o env > "$RUNNER_TEMP/local-supabase.env"
           cat "$RUNNER_TEMP/local-supabase.env" | sed -E 's/(KEY|URL)=.*/\1=[redacted]/'
