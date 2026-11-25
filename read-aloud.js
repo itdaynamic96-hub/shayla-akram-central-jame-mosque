@@ -105,7 +105,7 @@
         throw new Error(message);
       }
       const blob = await response.blob();
-      if (!blob.size || active !== session) return;
+      if (!blob.size || active !== session || session.state !== 'playing') return;
       session.audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(session.audioUrl);
       session.audio = audio;
