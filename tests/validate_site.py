@@ -226,7 +226,6 @@ bank_mask_sql=(ROOT/'supabase/accounts-bank-account-mask-hardening.sql').read_te
 assert 'masked_number:=' in bank_mask_sql and 'right(digits,4)' in bank_mask_sql, 'Bank account number must be masked server-side'
 
 # Final Accounts QA: 24 navigation modules, payment atomicity, and security hardening.
-assert 'len(module_labels)==24' in test if False else True
 assert 'renderMessageCenter' in dashboard_js and 'renderMonthlyChanda' in dashboard_js
 assert "return ['collect','!','নতুন মাসের চাঁদা সংগ্রহ']" in dashboard_js, 'New-month collection warning must be distinct from overdue'
 assert '.status.overdue,#accountsDashboard .status.collect' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8'), 'Red status must distinguish collection warning and overdue'
