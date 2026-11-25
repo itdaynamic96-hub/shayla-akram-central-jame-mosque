@@ -1,5 +1,5 @@
 import {configured,supabase,currentProfile,escapeHtml,money} from './supabase-client.js';
-const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','দাতা ও অনুদান','ব্যাংক ও ক্যাশ','ট্রান্সফার','ক্যাশবুক ও লেজার','বকেয়া ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','তহবিল ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','সার্চ','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস','বার্তা ও নোটিফিকেশন','মাসিক চাঁদা আদায়'];
+const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','দাতা ও অনুদান','ব্যাংক ও ক্যাশ','ট্রান্সফার','ক্যাশবুক ও লেজার','বকেয়া ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','তহবিল ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','সার্চ','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস'];
 let user,profile,members=[],dues=[],visibleModules=[],activeModule=0,chandaCanView=false,chandaCanWrite=false;
 const moduleKeys={0:'m41',1:'m42',2:'m42',3:'m44',4:'m46',5:'m46',6:'m46',7:'m43',8:'m43',9:'m48',10:'m44',11:'m49',12:'m47',13:'m47',14:'m50',15:'m50',16:'m46',17:'m50',18:'m50',19:'m50',20:'m50',21:'m50'};
 const dhaka=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -69,8 +69,6 @@ function openModule(i){
  if(i===18){renderApprovals().catch(showError);return}
  if(i===20){renderUserPermissions().catch(showError);return}
  if(i===21){renderSettings().catch(showError);return}
- if(i===22){renderMessageCenter().catch(showError);return}
- if(i===23){renderMonthlyChanda().catch(showError);return}
  const map={1:'entryForm',2:'entryForm',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',13:'entries',17:'accountAuditPanel',19:'accountAuditPanel'};
  const id=map[i];if(id){movePanel(id);if((i===1||i===2)&&el('type'))el('type').value=i===1?'income':'expense';return}
  el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলটি এই প্রতিষ্ঠানের জন্য এখনো সংযুক্ত নয়।</p></section>';
