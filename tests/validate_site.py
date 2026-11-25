@@ -155,6 +155,12 @@ assert "m61" in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin user
 assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database permissions must accept module 61'
 assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database module access must explicitly authorize mosque member register'
 assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and '61' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Module 61 must stay private'
+# The 61-module enterprise site is not subject to the Basic package's 500-word/15-module restrictions.
+assert 'content-limits.js' not in (ROOT/'admin.html').read_text(encoding='utf-8') and 'content-limits.js' not in (ROOT/'index.html').read_text(encoding='utf-8'), 'Enterprise pages must not load the Basic 500-word limiter'
+assert 'countWords500' not in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Enterprise module records must not enforce the Basic 500-word cap'
+assert 'module_records_mosque_basic_module_key_check' not in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8'), 'Enterprise modules must not be restricted to Basic module keys'
+for key in ('22:fieldSchemas[6]','23:fieldSchemas[7]','24:fieldSchemas[5]','25:fieldSchemas[8]','26:fieldSchemas[11]','27:fieldSchemas[9]','28:fieldSchemas[4]'):
+    assert key in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), f'Admin module schema mapping missing: {key}'
 assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: daily/monthly/yearly book filters are missing'
 assert "schedule:" in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: daily schedule is missing'
 assert 'postgres.lmwczibsipczfymhyqba' in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: pooler username validation is missing'
