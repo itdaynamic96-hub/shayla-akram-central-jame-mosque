@@ -60,3 +60,5 @@ Live Bengali TTS smoke test workflow is opt-in: commits containing `[tts-smoke]`
 Private module report uploads (m06) are stored in the non-public `private-module-files` bucket; Custom Admin write actions require the explicit `can_write` grant.
 
 TTS provider catalogue smoke check updated.
+
+Anonymous Bengali voice availability probe updated.
