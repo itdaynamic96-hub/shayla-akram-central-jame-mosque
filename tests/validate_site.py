@@ -377,3 +377,8 @@ assert '#accountsDashboard #accountsMessaging.message-module' in message_css and
 admin_css=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert admin_css.count('#adminSidebar{position:fixed')==1, 'Admin sidebar rules must not be duplicated'
 assert 'accounts-dashboard.css?v=20261125-5' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts dashboard CSS cache key must be refreshed'
+
+hardening_sql=(ROOT/'supabase/accounts-admin-panel-hardening.sql').read_text(encoding='utf-8')
+assert 'mp.can_view and mp.can_write and mp.can_approve' in hardening_sql, 'Module-record approval must require explicit can_approve permission'
+assert "'m81',false" in hardening_sql, 'Audit Trail module must have its own audit-log read permission'
+assert 'admin_dashboard_settings_updated_by_idx' in hardening_sql, 'Admin dashboard settings foreign key must be indexed'
