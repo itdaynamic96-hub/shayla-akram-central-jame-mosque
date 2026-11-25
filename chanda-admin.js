@@ -38,7 +38,7 @@ async function render(workspace) {
    <div><label>পিতার নাম</label><input id="cmFather" maxlength="140"></div>
    <div><label>মোবাইল নম্বর</label><input id="cmPhone" inputmode="tel" maxlength="30"></div>
    <div><label>মাসিক চাঁদা (টাকা)</label><input id="cmAmount" type="number" min="1" step="0.01" required></div>
-   <div><label>প্রতি মাসে নির্ধারিত তারিখ</label><input id="cmDay" type="number" min="1" max="28" value="10" required></div>
+   <div><label>প্রতি মাসে নির্ধারিত তারিখ</label><input id="cmDay" type="number" min="1" max="28" value="1" required></div>
    <div><label>ঠিকানা</label><input id="cmAddress" maxlength="500"></div>
    <div><label>অনুস্মারক পদ্ধতি</label><select id="cmChannel"><option value="in_app">অ্যাডমিন প্যানেলের নোটিফিকেশন</option><option value="sms">SMS (সার্ভিস সংযোগ প্রয়োজন)</option><option value="whatsapp">WhatsApp (API সংযোগ প্রয়োজন)</option><option value="email">ইমেইল (ঠিকানা ও সার্ভিস প্রয়োজন)</option></select></div>
    <div><label>যোগাযোগে সম্মতি</label><select id="cmConsent"><option value="false">এখনো সম্মতি নেওয়া হয়নি</option><option value="true">সম্মতি নেওয়া হয়েছে</option></select></div>
@@ -48,7 +48,7 @@ async function render(workspace) {
   <p id="chandaError" class="error" hidden></p>
  </section>
  <section class="dash-panel" style="margin:14px 0">
-  <div class="dash-section-head"><div><h3>মাসিক পাওনা ও বকেয়া তালিকা</h3><p>বকেয়া ও দীর্ঘদিনের বকেয়া লাল রঙে দেখানো হবে</p></div></div>
+  <div class="dash-section-head"><div><h3>মাসিক পাওনা ও বকেয়া তালিকা</h3><p>২০–২৪ তারিখে পরবর্তী মাস হলুদ, ২৫ তারিখ থেকে লাল; ১ তারিখে অপরিশোধিত চাঁদা বকেয়া হবে</p></div></div>
   <div class="tablewrap"><table><thead><tr><th>সদস্য</th><th>মাস</th><th>নির্ধারিত</th><th>পরিশোধ</th><th>বকেয়া</th><th>অবস্থা</th><th>পেমেন্ট</th></tr></thead><tbody id="chandaDueRows"><tr><td colspan="7">লোড হচ্ছে…</td></tr></tbody></table></div>
  </section>
  <section class="dash-panel" style="margin:14px 0">
@@ -97,9 +97,17 @@ async function loadAll(){
  const sorted=[...dues].sort((a,b)=>a.due_date.localeCompare(b.due_date));
  $('chandaDueRows').innerHTML=sorted.map(d=>{
   const m=byId.get(d.member_id),remaining=Math.max(0,Number(d.amount)-Number(d.paid_amount)),days=Math.max(0,Math.floor((new Date(today+'T00:00:00')-new Date(d.due_date+'T00:00:00'))/86400000));
-  const late=remaining>0&&days>0,cls=late&&days>=60?'color:#ff7777;font-weight:800':late?'color:#ff9a8d;font-weight:700':remaining===0?'color:#7bd49a':'color:#e7d18e';
-  const status=remaining===0?'পরিশোধিত':late?(days>=60?'দীর্ঘমেয়াদি বকেয়া ('+days+' দিন)':'বকেয়া ('+days+' দিন)'):(Number(d.paid_amount)>0?'আংশিক':'পরিশোধ হয়নি');
-  return '<tr><td>'+escapeHtml(m?.member_name||'অজানা')+'</td><td>'+escapeHtml(d.due_month.slice(0,7))+'</td><td>'+money(d.amount)+'</td><td>'+money(d.paid_amount)+'</td><td style="'+cls+'">'+money(remaining)+'</td><td style="'+cls+'">'+status+'</td><td>'+(remaining>0&&canWrite()?'<button type="button" data-pay="'+d.id+'" data-remain="'+remaining+'">পেমেন্ট নিন</button>':'—')+'</td></tr>';
+  const dueMonth=d.due_month.slice(0,7), currentMonth=today.slice(0,7), day=Number(today.slice(8,10));
+  const overdue=remaining>0&&d.due_date<=today;
+  const nextMonth=dueMonth>currentMonth;
+  let statusClass='upcoming',status='আসন্ন';
+  if(remaining===0){statusClass='paid';status='সম্পূর্ণ পরিশোধিত'}
+  else if(overdue){statusClass='overdue';status=days>=60?'দীর্ঘমেয়াদি বকেয়া ('+days+' দিন)':days>0?'বকেয়া ('+days+' দিন)':'বকেয়া · ১ তারিখ থেকে'}
+  else if(Number(d.paid_amount)>0){statusClass='partial';status='আংশিক পরিশোধ · '+money(remaining)+' বাকি'}
+  else if(nextMonth&&day>=25){statusClass='collection';status='আদায়ের সময় · ২৫ তারিখ থেকে'}
+  else if(nextMonth&&day>=20){statusClass='upcoming';status='পরবর্তী মাসের চাঁদা'}
+  else if(!nextMonth){statusClass='upcoming';status='পরিশোধের অপেক্ষায়'}
+  return '<tr><td>'+escapeHtml(m?.member_name||'অজানা')+'</td><td>'+escapeHtml(d.due_month.slice(0,7))+'</td><td>'+money(d.amount)+'</td><td>'+money(d.paid_amount)+'</td><td>'+money(remaining)+'</td><td><span class="chanda-status '+statusClass+'">'+status+'</span></td><td>'+(remaining>0&&canWrite()?'<button type="button" data-pay="'+d.id+'" data-remain="'+remaining+'">পেমেন্ট নিন</button>':'—')+'</td></tr>';
  }).join('')||'<tr><td colspan="7">এখনো মাসিক পাওনা তৈরি হয়নি। দৈনিক শিডিউল চললে তৈরি হবে।</td></tr>';
  $('chandaDueRows').onclick=async e=>{
   const btn=e.target.closest('[data-pay]');if(!btn)return;
