@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import { Client as PgClient } from "pg";
+import pg from "pg";
+const { Client: PgClient } = pg;
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
