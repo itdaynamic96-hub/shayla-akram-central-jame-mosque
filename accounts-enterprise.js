@@ -26,9 +26,9 @@ async function init(){
    const {data,error}=await supabase.from('admin_module_permissions').select('module_key,can_view,can_write,can_approve').eq('user_id',user.id);
    if(error)throw error;permissions=data||[];
   }
-  const payroll=allowed('m70'),books=allowed('m66'),obligations=allowed('m69'),assets=allowed('m72'),audit=allowed('m79');
+  const payroll=allowed('m70'),books=allowed('m66'),obligations=allowed('m69'),assets=allowed('m76'),audit=allowed('m79');
   setPanel('payrollPanel',payroll);setPanel('cashBankPanel',books);setPanel('obligationsPanel',obligations);setPanel('assetsPanel',assets);setPanel('accountAuditPanel',audit);
-  if(!payroll&&!books&&!extra&&!audit){$('enterpriseAccounts').hidden=true;return}
+  if(!payroll&&!books&&!obligations&&!assets&&!audit){$('enterpriseAccounts').hidden=true;return}
   $('enterpriseAccounts').hidden=false;
   $('payrollMonth').value=month();
   $('institution').addEventListener('change',()=>loadAll().catch(fail));
@@ -71,15 +71,27 @@ async function loadAll(){
  if(allowed('m79'))await loadAudit();
 }
 async function loadBooks(){
+ const inst=institution(),kind=$('bookType').value,defaults={cash:['1000'],bank:['1010'],mobile_banking:['1020']}[kind]||[];
+ const [chartRes,accountRes]=await Promise.all([
+  supabase.from('account_chart_of_accounts').select('account_code,account_name').eq('institution',inst).eq('account_type','asset').eq('is_active',true),
+  supabase.from('account_bank_accounts').select('account_code,account_name').eq('institution',inst).eq('account_kind',kind).eq('is_active',true)
+ ]);
+ if(chartRes.error)throw chartRes.error;if(accountRes.error)throw accountRes.error;
+ const nameByCode=new Map((chartRes.data||[]).map(x=>[x.account_code,x.account_name]));
+ const codes=[...new Set([...defaults,...(accountRes.data||[]).map(x=>x.account_code)])];
+ (accountRes.data||[]).forEach(x=>nameByCode.set(x.account_code,x.account_name));
+ if(!codes.length){$('bookRows').innerHTML='<tr><td colspan="7">এই ধরনের কোনো হিসাব নেই।</td></tr>';return}
  let data=[],offset=0;
  while(true){
-  const {data:batch,error}=await supabase.from('account_cash_bank_book').select('*').eq('institution',institution()).eq('payment_method',$('bookType').value).order('entry_date',{ascending:false}).range(offset,offset+499);
-  if(error)throw error;data=data.concat(batch||[]);if(!batch||batch.length<500)break;offset+=500;
+  const {data:batch,error}=await supabase.from('account_journal_lines').select('id,account_code,description,debit,credit,account_journal_entries!inner(journal_no,journal_date,description,status,institution)').eq('institution',inst).eq('account_journal_entries.institution',inst).eq('account_journal_entries.status','posted').in('account_code',codes).range(offset,offset+499);
+  if(error)throw error;data=data.concat(batch||[]);if(!batch||batch.length<500)break;offset+=500;if(offset>100000)throw new Error('ক্যাশ/ব্যাংক বইয়ে ১ লাখের বেশি লাইন; সময়সীমা ছোট করুন।');
  }
- const todayText=today(),period=$('bookPeriod').value;
- const rows=data.filter(x=>period==='all'||(period==='today'&&x.entry_date===todayText)||(period==='month'&&x.entry_date.slice(0,7)===month())||(period==='year'&&x.entry_date.slice(0,4)===todayText.slice(0,4))),inc=rows.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount),0),exp=rows.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount),0);
+ const rows=data.map(x=>{const j=Array.isArray(x.account_journal_entries)?x.account_journal_entries[0]:x.account_journal_entries;return{...x,journal:j||{}}}).sort((a,b)=>String(a.journal.journal_date||'').localeCompare(String(b.journal.journal_date||''))||Number(a.journal.journal_no||0)-Number(b.journal.journal_no||0));
+ const running=new Map();for(const x of rows){const next=(running.get(x.account_code)||0)+Number(x.debit||0)-Number(x.credit||0);running.set(x.account_code,next);x.running=next}
+ const todayText=today(),period=$('bookPeriod').value,visible=rows.filter(x=>{const d=x.journal.journal_date||'';return period==='all'||(period==='today'&&d===todayText)||(period==='month'&&d.slice(0,7)===month())||(period==='year'&&d.slice(0,4)===todayText.slice(0,4))});
+ const inc=visible.reduce((n,x)=>n+Number(x.debit||0),0),exp=visible.reduce((n,x)=>n+Number(x.credit||0),0);
  $('bookIncome').textContent=money(inc);$('bookExpense').textContent=money(exp);$('bookBalance').textContent=money(inc-exp);
- $('bookRows').innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.category)+'</td><td>'+escapeHtml(x.payer_or_payee||x.note||'—')+'</td><td>'+(x.entry_type==='income'?money(x.amount):'—')+'</td><td>'+(x.entry_type==='expense'?money(x.amount):'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')||'<tr><td colspan="6">এই মাধ্যমে অনুমোদিত লেনদেন নেই।</td></tr>';
+ $('bookRows').innerHTML=visible.slice().reverse().map(x=>'<tr><td>'+escapeHtml(x.journal.journal_date||'')+'</td><td>'+escapeHtml(nameByCode.get(x.account_code)||x.account_code)+'</td><td>'+escapeHtml(x.description||x.journal.description||'—')+'</td><td>'+(Number(x.debit)>0?money(x.debit):'—')+'</td><td>'+(Number(x.credit)>0?money(x.credit):'—')+'</td><td><b>'+money(x.running)+'</b></td><td>JRN-'+escapeHtml(x.journal.journal_no||'')+'</td></tr>').join('')||'<tr><td colspan="7">এই হিসাবে কোনো পোস্টেড লেনদেন নেই।</td></tr>';
 }
 async function loadAudit(){
  const {data,error}=await supabase.from('audit_logs').select('id,table_name,record_id,action,happened_at').in('table_name',['account_staff','payroll_records','account_obligations','account_assets']).order('happened_at',{ascending:false}).limit(100);
@@ -92,7 +104,7 @@ async function saveStaff(e){
  const {error}=await supabase.from('account_staff').insert(payload);if(error)throw error;e.target.reset();await loadAll()}catch(ex){fail(ex)}
 }
 async function savePayroll(e){
- e.preventDefault();if(!allowed('m69',true)){fail(new Error('বেতন রেকর্ড তৈরির অনুমতি নেই।'));return}
+ e.preventDefault();if(!allowed('m70',true)){fail(new Error('বেতন রেকর্ড তৈরির অনুমতি নেই।'));return}
  try{const payload={institution:institution(),staff_id:val('payrollStaff'),payroll_month:val('payrollMonth'),base_salary:Number(val('payrollBase')),bonus:Number(val('payrollBonus')||0),deductions:Number(val('payrollDeduction')||0),created_by:user.id};
  const {error}=await supabase.from('payroll_records').insert(payload);if(error)throw error;e.target.reset();$('payrollMonth').value=month();await loadAll()}catch(ex){fail(ex)}
 }
@@ -109,7 +121,7 @@ async function payrollAction(e){
  }catch(ex){fail(ex)}
 }
 async function saveObligation(e){
- e.preventDefault();if(!allowed('m72',true)){fail(new Error('পাওনা/দেনা যোগ করার অনুমতি নেই।'));return}
+ e.preventDefault();if(!allowed('m69',true)){fail(new Error('পাওনা/দেনা যোগ করার অনুমতি নেই।'));return}
  try{const payload={institution:institution(),obligation_type:val('obType'),party_name:val('obParty'),description:val('obDescription'),amount:Number(val('obAmount')),due_date:val('obDue')||null,reference_no:val('obReference'),created_by:user.id};
  const {error}=await supabase.from('account_obligations').insert(payload);if(error)throw error;e.target.reset();await loadAll()}catch(ex){fail(ex)}
 }
@@ -118,7 +130,7 @@ async function settleObligation(e){
  try{const total=Number(e.target.dataset.amount),old=Number(e.target.dataset.settled),left=total-old;const answer=prompt('এ পর্যন্ত মোট কত টাকা আদায়/পরিশোধ হয়েছে? বাকি '+money(left),String(old));if(answer===null)return;const settled=Number(answer);if(!Number.isFinite(settled)||settled<0||settled>total)throw new Error('সঠিক পরিমাণ দিন।');const status=settled===total?'settled':settled>0?'partial':'open';const {error}=await supabase.from('account_obligations').update({settled_amount:settled,status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await loadAll()}catch(ex){fail(ex)}
 }
 async function saveAsset(e){
- e.preventDefault();if(!allowed('m72',true)){fail(new Error('সম্পদ যোগ করার অনুমতি নেই।'));return}
+ e.preventDefault();if(!allowed('m76',true)){fail(new Error('সম্পদ যোগ করার অনুমতি নেই।'));return}
  try{const payload={institution:institution(),asset_name:val('assetName'),asset_category:val('assetCategory')||'অন্যান্য',acquisition_date:val('assetDate')||null,acquisition_cost:Number(val('assetCost')),location:val('assetLocation'),condition_note:val('assetCondition'),asset_status:val('assetStatus'),reference_no:val('assetReference'),created_by:user.id};
  const {error}=await supabase.from('account_assets').insert(payload);if(error)throw error;e.target.reset();await loadAll()}catch(ex){fail(ex)}
 }
