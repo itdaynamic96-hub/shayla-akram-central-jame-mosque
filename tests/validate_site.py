@@ -203,13 +203,19 @@ subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=
 assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet is missing'
 assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
-assert dashboard_js.count("'মাসিক চাঁদা আদায়'") == 1
-for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month"):
-    assert marker in dashboard_js, f'Accounts dashboard missing live chanda integration: {marker}'
+module_block=re.search(r"const modules=\[(.*?)\];",dashboard_js,re.S)
+assert module_block, 'Accounts dashboard module list is missing'
+module_labels=re.findall(r"'([^']*)'",module_block.group(1))
+assert len(module_labels)==22, f'Accounts dashboard must contain exactly 22 approved modules, found {len(module_labels)}'
+assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' not in module_labels, 'Monthly chanda must be integrated into Donations, not a separate module'
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderAdvancedSearch","renderReconciliation","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
+    assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
-print('SAKM-61 Accounts dashboard checks passed: module syntax, 24-item navigation and live chanda integration.')
+print('SAKM-61 Accounts dashboard checks passed: syntax, 22 approved modules, separate institution views, chanda integration and financial tools.')
 
 assert 'ensure_chanda_dues_for_month' in dashboard_js, 'Accounts dashboard must create dues for the selected month using authenticated access'
 assert (ROOT/'supabase/accounts-chanda-monthly-due-generation.sql').exists(), 'Monthly due generation migration source is missing'
+assert (ROOT/'MESSAGING_SETUP.md').exists(), 'Provider-specific messaging setup guide is missing'
+assert 'account_create_bank_reconciliation' in (ROOT/'supabase/account-bank-reconciliation-ui.sql').read_text(encoding='utf-8'), 'Secure reconciliation creation RPC source is missing'
