@@ -54,7 +54,7 @@
   const setControls = state => {
     if (!currentButtons) return;
     const {play,pause,resume,stop} = currentButtons;
-    if (play) play.disabled = state === 'playing' || state === 'paused';
+    if (play) play.disabled = state === 'playing' || state === 'paused' || state === 'loading';
     if (pause) pause.disabled = state !== 'playing';
     if (resume) resume.disabled = state !== 'paused';
     if (stop) stop.disabled = state !== 'playing' && state !== 'paused' && state !== 'loading';
@@ -101,8 +101,8 @@
         instance.dispose?.();
         throw new Error('ইঞ্জিনে যাচাইকৃত বাংলা পুরুষ কণ্ঠ পাওয়া যায়নি। নারী বা অন্য ভাষার কণ্ঠ চালু করা হবে না।');
       }
-      await instance.loadVoice(voice.identifier);
-      instance.setVoice(voice.identifier);
+      await instance.loadVoice(voice.name);
+      instance.setVoice(voice.name);
       engine = instance;
       maleVoice = voice;
       return engine;
