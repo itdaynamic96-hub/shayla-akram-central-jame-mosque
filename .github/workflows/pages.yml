@@ -1,7 +1,7 @@
 name: Validate and deploy static site to GitHub Pages
 on:
   push:
-    branches: ["main", "admin-panel-repair-20261122", "admin-dashboard-upgrade-20261122", "accounts-messaging-integration-20261125", "accounts-double-entry-20261125", "accounts-finalization-v2-20261125"]
+    branches: ["main", "admin-panel-repair-20261122", "admin-dashboard-upgrade-20261122", "accounts-messaging-integration-20261125", "accounts-double-entry-20261125", "accounts-finalization-v2-20261125", "accounts-finalization-v3-20261125"]
   workflow_dispatch:
 permissions:
   contents: read
