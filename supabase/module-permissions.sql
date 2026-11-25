@@ -9,7 +9,7 @@ alter table public.profiles add constraint profiles_role_check check (role in (
 
 create table if not exists public.admin_module_permissions (
  user_id uuid not null references auth.users(id) on delete cascade,
- module_key text not null check(module_key ~ '^m(0[1-9]|[1-5][0-9]|60)$'),
+ module_key text not null check(module_key ~ '^m(0[1-9]|[1-5][0-9]|6[01])$'),
  can_view boolean not null default true,
  can_write boolean not null default false,
  can_approve boolean not null default false,
@@ -52,6 +52,7 @@ as $$
       or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and p.institution in ('both','foundation') and target_institution='foundation')
       or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
       or (substring(target_key from 2)::integer between 51 and 60 and p.role='admin')
+      or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
     )
     and (not write_access or p.role not in ('auditor','viewer'))
  );
@@ -75,6 +76,7 @@ as $$
     or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin') and p.institution in ('both','foundation'))
     or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution))
     or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin'))
+    or (target_key='m61' and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque') and target_institution='mosque')
    )
  );
 $$;
@@ -230,3 +232,10 @@ using (
   or public.account_module_permission(split_part(name,'/',1),array['m49'],true)
  )
 );
+
+-- Keep the 500-word Basic-package module allowlist, but include the separately private mosque-member register (m61).
+alter table public.module_records drop constraint if exists module_records_mosque_basic_module_key_check;
+alter table public.module_records add constraint module_records_mosque_basic_module_key_check
+ check (institution <> 'mosque' or module_key = any(array['m01','m02','m03','m04','m05','m06','m07','m08','m09','m10','m11','m12','m13','m14','m15','m61']::text[]));
+alter table public.module_records drop constraint if exists module_records_m61_mosque_only_check;
+alter table public.module_records add constraint module_records_m61_mosque_only_check check (module_key <> 'm61' or institution='mosque');
