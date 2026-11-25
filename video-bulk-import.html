@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ভিডিও বাল্ক ইমপোর্ট | শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</title>
+<style>
+:root{color-scheme:dark;--bg:#071d18;--panel:#102b23;--line:#315345;--gold:#e4bd62;--text:#f6f2e8;--muted:#b6c8be;--red:#ffb3a9}*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#071d18,#102c23);color:var(--text);font-family:'Noto Sans Bengali',sans-serif}main{max-width:900px;margin:auto;padding:24px 16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}h1,h2{color:var(--gold)}p{line-height:1.7}.muted{color:var(--muted)}button,a{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#1c4536;color:var(--text);border-radius:9px;padding:11px 16px}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--gold)}.error{color:var(--red);white-space:pre-wrap}.success{color:#9ce0b1}.bar{height:12px;background:#203c31;border-radius:20px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:#e4bd62}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.stat{border:1px solid var(--line);padding:10px 14px;border-radius:9px;min-width:130px}.stat b{display:block;color:var(--gold);font-size:22px}
+</style>
+</head>
+<body><main>
+<p><a href="./admin.html">← Admin Panel</a></p>
+<h1>১০০টি ইসলামিক ভিডিও একসঙ্গে যুক্ত করুন</h1>
+<p class="muted">এই ফ্রি টুলটি আপনার নিজের ব্রাউজারের বিদ্যমান Admin লগইন ব্যবহার করে। কোনো তৃতীয় পক্ষের ব্রাউজার অটোমেশন বা পেইড ওয়ালেট লাগবে না। ভিডিও YouTube থেকেই এম্বেড হবে; ভিডিও ফাইল কপি বা পুনরায় আপলোড করা হবে না।</p>
+<section class="panel">
+<h2>অ্যাকাউন্ট ও অনুমতি যাচাই</h2><p id="auth">যাচাই করা হচ্ছে…</p><p id="permission" class="muted"></p>
+<div class="row"><div class="stat">মোট তালিকা<b>১০০</b></div><div class="stat">বাংলা<b>৫০</b></div><div class="stat">আরবি তিলাওয়াত<b>৫০</b></div><div class="stat">আগে থেকেই আছে<b id="existing">—</b></div></div>
+</section>
+<section class="panel">
+<h2>ইমপোর্ট</h2>
+<p class="muted">ডুপ্লিকেট ভিডিও URL বাদ দেওয়া হবে। আপনার m16 মডিউলে প্রকাশের অনুমতি থাকলে রেকর্ডগুলো Published হবে; অনুমতি না থাকলে Pending হিসেবে সংরক্ষিত হবে। কোনো অনুমোদন-নিয়ম পাশ কাটানো হবে না।</p>
+<div class="bar"><i id="progress"></i></div><p id="progressText" class="muted">এখনো শুরু হয়নি।</p>
+<div class="row"><button id="start" disabled>১০০টি ভিডিও যুক্ত করুন</button><button id="back" type="button">Admin Panel-এ ফিরুন</button></div>
+<p id="result" aria-live="polite"></p><p id="err" class="error" hidden></p>
+</section>
+</main>
+<script src="./supabase-config.js"></script>
+<script type="module">
+import{configured,supabase,currentProfile,showError}from'./supabase-client.js';
+const $=id=>document.getElementById(id);
+const bn=[
+['Jf-gFuA24OI','আল্লাহর দেওয়া ৭টি নির্দেশনা — মিজানুর রহমান আজহারী'],
+['1A5iy7f8zF0','ওয়াজটি শুনে অন্তর ঠান্ডা হয়ে যায় — মিজানুর রহমান আজহারী'],
+['tWSoe9epbN4','১৮টি চমৎকার প্রশ্নোত্তর — শায়খ আহমাদুল্লাহ'],
+['UbuTAPtnb08','পিতা-মাতার করণীয় — মাওলানা মতিউর রহমান মাদানী'],
+['c29IAqTarak','যখন নবী (সাঃ) ও সাহাবাদের ফজরের নামায কাজা হয়েছিল'],
+['J7xRYCG42JQ','সেহরীর সময় যে আমলটি আল্লাহর প্রিয় — শায়খ আহমাদুল্লাহ'],
+['lPtsYrZ8csc','একটি আলহামদুলিল্লাহ কীভাবে জীবন বদলে দিতে পারে'],
+['MvVAvPZK07Y','অমূল্য ইসলামী নসিহা ও প্রশ্নোত্তর — শায়খ আহমাদুল্লাহ'],
+['Gh_fDbLfuH4','রমজানের সওগাত — ইসলামিক আলোচনা অনুষ্ঠান, পর্ব ১১'],
+['dpyYMBXi0fI','রমজানের স্বাস্থ্য কথা — ইসলামিক আলোচনা অনুষ্ঠান'],
+['Lw1zcpmrO5s','রমজানের সওগাত — ইসলামিক আলোচনা অনুষ্ঠান, পর্ব ০২'],
+['oXbUDZiGYZE','যেসব কাজ আল্লাহ ও বান্দার মধ্যে অন্তরায়'],
+['0OOAget9JrQ','এক ঘন্টায় কোরআন শিক্ষা — আরবি হরফ শিক্ষা'],
+['xIxZTBxSJHc','কায়দা থেকে কুরআন শিক্ষা — আরবি ও বাংলা উচ্চারণসহ'],
+['wU8OSQXeJIw','বাচ্চাদের কোরআন শিক্ষা — ক্লাস ০৫'],
+['UCc7-jmgwOk','সুরা আল-আনকাবুত ৪৫–৬৯ — কুরআনের শিক্ষামূলক আয়াত'],
+['GppPFMiXIG0','শব্দে শব্দে অর্থসহ কুরআন শিক্ষা — ক্লাস ২৮'],
+['xzETUBtRcLY','পাঁচ ওয়াক্ত নামাজের নিয়ত — আরবি ও বাংলা অর্থসহ'],
+['7vYtRoS2UW0','হাদিস কাকে বলে? হাদিস কত প্রকার?'],
+['0g5E6v9bHvg','৩৪ নম্বর হাদিস শরীফ'],
+['Dl-OK6ZB7FM','দোয়া সম্পর্কিত ২টি হাদিস — Islamic Golpo'],
+['qbWGCNcS_Hg','হযরত মুহাম্মাদ (সাঃ)-এর বাংলা হাদীস — পর্ব ১৭'],
+['yoS9CXOTqv8','কুরআনের সেরা তাফসীর — মুফতি আরিফ বিন হাবিব'],
+['AWa5AqyE8Zo','সূরা রহমানের তাফসীর — মোবারক করিম আশরাফী'],
+['sFLJY2hAAtA','কুরআনের মধুর তাফসীর — বেলাল হোসাইন হেলালী'],
+['F9zGKbCV_YE','সূরা আসরের তাফসীর — মুফতি নাসির উদ্দীন'],
+['M_YMDy-L8Xo','সূরা হুদ ১১৪–১১৫ — বাংলা অর্থ ও তাফসীর'],
+['E_Zd3lGuNJM','তাফসীর আলোচনা — আবুল কালাম আজাদ বাশার'],
+['B2Vk39Ept68','জ্ঞান অন্বেষণঃ ইসলামের আলোকে — ড. জাকির নায়েক'],
+['NYqhVY5cYBQ','সূরা আন-নিসা — বাংলা অনুবাদ ও কুরআন শিক্ষা'],
+['RG6JpYHXxEQ','আল্লাহ সম্পর্কে আলোচনা — মিজানুর রহমান আজহারী'],
+['KB5r-72Cun8','কুরআন শিক্ষা বাংলা — শায়খ সাইফুদ্দিন বেলাল'],
+['fBcPts5ucJc','১৫ দিনে কুরআন শিখি — ক্লাস ১৫'],
+['guNUt-04GDw','কুরআন শেখার সহজ উপায় — পর্ব ৩'],
+['cjzDw_ToSLg','২১টি দরুদ ও সালাম — আরবি, বাংলা উচ্চারণ ও অর্থসহ'],
+['xcLgS0XqPcc','জানাযার নামাজের সব দোয়া ও নিয়ম'],
+['5P1EtLkuNCU','দোয়া কুনুত — বাংলা উচ্চারণ ও অর্থসহ'],
+['_PUqmQCBu4E','বিভিন্ন ধর্মগ্রন্থে মুহাম্মাদ (ﷺ) — ড. জাকির নায়েক'],
+['9QDmNoGuyXs','আমাদের জীবনের উদ্দেশ্য কী? — ড. জাকির নায়েক'],
+['SnwC4nFvr5o','Dr. Zakir Naik Bangla Lecture — Peace TV Bangla'],
+['8TH_y2LuriY','কোরআনুল কারিম — NTV Islamic Show, পর্ব ৪৭৯'],
+['F2As8Mm-1SQ','সৃষ্টির উদ্দেশ্য — ড. জাকির নায়েক'],
+['GQwe1RSg35s','শায়খ আব্দুর রাজ্জাকের কাছে নামাজ শিখুন — শুরু থেকে শেষ পর্যন্ত'],
+['azZQERu2ZqM','সহিহ নামাজ শিক্ষা — নামাজ পড়ার সঠিক নিয়ম'],
+['3yz2VUh0e4I','শায়খের পাঁচ উপদেশ — শায়খ আব্দুর রাজ্জাক বিন ইউসুফ'],
+['ym6KPof21BY','চাশতের নামাজ — শায়খ আব্দুর রাজ্জাক বিন ইউসুফ'],
+['FRnYiOIXgR8','যে সকল নারীদের ওপর জান্নাত হারাম — মুজাফফর বিন মহসিন'],
+['ybJvOFmG5zE','সহিহ মুসলিম: আল্লাহ বলেছেন শুধু কোরআন ধরো — মুজাফফর বিন মহসিন'],
+['6Bu12bcw_gY','আল্লাহর হুকুম সম্পর্কে আলোচনা — মিজানুর রহমান আজহারী'],
+['x-aJ6kTaLrI','জুমার খুতবা বাংলা — পর্ব ৩৮']
+];
+const ar=[
+['mcFkxppp9-M','Surah Al-Baqarah Full — Mishary Alafasy'],
+['aOq_fMzK11s','سورة البقرة كاملة — مشاري راشد العفاسي'],
+['tKKbFdRioe4','Complete Quran Recitation by Mishary Alafasy — Part 2/3'],
+['xCRxjxkLIns','Complete Quran Recitation by Mishary Alafasy — Part 1/3'],
+['XbfA9H0iiYM','Surah At-Takwir — Abdul Basit'],
+['u6MI8uuOmwo','Best Quran Recitation — Abdul Basit Abdussamad'],
+['b8am5pjsaj4','Surah An-Nur — Abdul Basit'],
+['3FagVxn72_o','Powerful Quran Recitation — Abdul Basit'],
+['J1A-s6LKILE','Surah Al-Waqiah — Abdul Basit'],
+['Hn2GO26Z_80','Surah Ad-Duha & Al-Inshirah — Abdul Basit'],
+['7DsnHjvxaso','Surah Al-Baqarah — Abdul Basit Abdul Samad'],
+['pI2qvsPrl8w','Surat Al-Balad — Qari Abdul Basit'],
+['uUp44jLlDGY','Surah Ar-Rahman — Abdul Basit'],
+['s_yK-Abdrok','Surah Yusuf — Sheikh Sudais'],
+['LFSBvT7tH40','Quran Recitation — Sheikh Sudais, Chapter 29'],
+['dvyZZaC3MeE','Surah Al-Kahf — Sheikh Sudais'],
+['RPnNc6HiYjI','Surah An-Najm — Sheikh Sudais'],
+['_-0WkdHwyKE','Quran Recitation — Sheikh Sudais, Chapter 02'],
+['BX-Ebrd_cWc','Para 23 Full — Sheikh Sudais'],
+['4B0E9gVyg-c','Surah Al-Mulk — Mahmoud Khalil Al-Hussary'],
+['05pu09-FxhM','Surah Al-Infitar — Mahmoud Khalil Al-Hussary'],
+['bhdx9dUmRtM','Surah Al-Hajj — Mahmoud Khalil Al-Hussary'],
+['KvQILQNxEKE','Surah Al-Baqarah — Mahmoud Khalil Al-Hussary'],
+['KrRSDhyiCTI','Surah Al-Kahf — Mahmoud Khalil Al-Hussary'],
+['3E6iTiXAY90','Complete Quran — Mahmoud Khalil Al-Hussary, Part 1'],
+['Pin_wcEVavg','Surah Al-Fatihah — Mahmoud Khalil Al-Hussary'],
+['vF6Twnc5MDU','Surah Al-Fatihah — Mahmoud Khalil Al-Hussary (Warsh)'],
+['MHUGR3Ejly8','Al-Fatiha — Mahmoud Khalil Al-Hussary'],
+['JOs3D7yVlHw','Surah Yaseen — Mahmoud Khalil Al-Hussary'],
+['OZe7WU2ltts','Surah Nuh — Muhammad Siddiq Al-Minshawi'],
+['1PH591JhK4M','Beautiful Quran Recitation — Muhammad Al-Minshawi'],
+['KZb_-alFUI4','Surah An-Naba — Muhammad Siddiq Al-Minshawi'],
+['Z-Hv9Rl06BI','Surah At-Tawbah — Mohamed Siddiq Al-Minshawi'],
+['vBFkfnEPdt0','Al-Fatihah — Muhammad Siddiq Al-Minshawi (Mujawwad)'],
+['gZSKV940tQg','Surah Al-Isra — Saad Al-Ghamdi'],
+['5qjJ5XY5gMI','Surah Ibrahim — Saad Al-Ghamdi'],
+['Vh-6KOyVdLw','Surah Ad-Duha — Saad Al-Ghamdi'],
+['BNKTVjcR8cE','Surah Al-Anfal — Saad Al-Ghamdi'],
+['sMQnRazK1FI','Surah Ar-Ra\'d — Saad Al-Ghamdi'],
+['X6TH-Dm5TO4','Surah Al-Baqarah — Saad Al-Ghamdi'],
+['E0Km_qHDd0w','Surah Al-Mu\'minun — Yasser Al-Dosari'],
+['qcm168-WltA','Surah Luqman — Yasser Al-Dosari'],
+['MSL0yUExgtI','Surah Al-Jumu\'ah — Yasser Al-Dosari'],
+['VFOVqWlGZh4','Heartfelt Recitation from Surah Ar-Ra\'d — Yasser Al-Dosari'],
+['p6ivQGXCdOM','Surah At-Taghabun — Yasser Al-Dosari'],
+['jdFPCemEpwI','Surah Al-Fajr — Yasser Al-Dosari'],
+['PNfLZx8se1o','Surah Al-Hijr — Yasser Al-Dosari'],
+['9k1U0aGQRNA','Surah Al-Kahf — Maher Al-Muaiqly'],
+['Ia6QvbXwxx0','Surah Maryam — Maher Al-Muaiqly'],
+['AYdq7ywuEy4','Surah Muhammad — Mishary Alafasy']
+];
+const list=[...bn.map(([id,title])=>({id,title,category:'bn'})),...ar.map(([id,title])=>({id,title,category:'ar'}))];
+let user,profile,canPublish=false,already=0;
+const setProgress=(n,msg)=>{$('progress').style.width=(n/list.length*100)+'%';$('progressText').textContent=msg};
+async function init(){try{if(!configured)throw new Error('Supabase configuration পাওয়া যায়নি।');const x=await currentProfile();user=x.user;profile=x.profile;if(!user||!profile)throw new Error('প্রথমে Admin Panel-এ লগইন করুন, তারপর এই পেজ খুলুন।');$('auth').textContent='লগইন: '+(profile.full_name||user.email)+' · '+profile.role;let canWrite=['super_admin','admin','website_admin','editor'].includes(profile.role);if(profile.role==='custom_admin'){const{data,error}=await supabase.from('admin_module_permissions').select('can_view,can_write,can_approve').eq('user_id',user.id).eq('module_key','m16').maybeSingle();if(error)throw error;canWrite=!!data?.can_write;canPublish=!!data?.can_approve;$('permission').textContent='m16 অনুমতি: দেখা '+(data?.can_view?'আছে':'নেই')+' · লেখা '+(canWrite?'আছে':'নেই')+' · প্রকাশ '+(canPublish?'আছে':'নেই')}else{canPublish=['super_admin','admin','website_admin'].includes(profile.role);$('permission').textContent='ভূমিকা-ভিত্তিক অনুমতি: '+(canWrite?'ভিডিও যুক্ত করা যাবে':'ভিডিও যুক্ত করার অনুমতি নেই')+' · প্রকাশ '+(canPublish?'অনুমোদিত':'অনুমোদিত নয়')}
+if(!canWrite)throw new Error('এই অ্যাকাউন্টে m16 মডিউলে লেখার অনুমতি নেই। সুপার অ্যাডমিনকে অনুমতি দিতে হবে।');
+const{data:existingRows,error}=await supabase.from('module_records').select('data').eq('module_key','m16').range(0,1999);if(error)throw error;const urls=new Set((existingRows||[]).map(r=>r.data?.video_url).filter(Boolean));already=list.filter(v=>urls.has('https://www.youtube.com/watch?v='+v.id)).length;$('existing').textContent=already.toLocaleString('bn-BD');$('start').disabled=false;
+}catch(e){showError($('err'),e);$('auth').textContent='অ্যাকাউন্ট যাচাই ব্যর্থ';}}
+$('start').onclick=async()=>{if(!confirm('ডুপ্লিকেট বাদ দিয়ে বাকি ভিডিওগুলো m16 মডিউলে যুক্ত করবেন? প্রকাশের অনুমতি থাকলে Published, না থাকলে Pending হবে।'))return;$('start').disabled=true;let inserted=0,published=0,pending=0,failed=0;const{data:existingRows,error:readError}=await supabase.from('module_records').select('data').eq('module_key','m16').range(0,1999);if(readError){showError($('err'),readError);$('start').disabled=false;return}const urls=new Set((existingRows||[]).map(r=>r.data?.video_url).filter(Boolean));const todo=list.filter(v=>!urls.has('https://www.youtube.com/watch?v='+v.id));const status=canPublish?'published':'pending';for(let i=0;i<todo.length;i+=10){const batch=todo.slice(i,i+10).map(v=>({module_key:'m16',institution:'mosque',title:v.title,data:{video_url:'https://www.youtube.com/watch?v='+v.id,summary:v.category==='bn'?'বাংলা ইসলামিক ভিডিও। মূল ভিডিওটি YouTube-এ প্রকাশিত; এখানে YouTube এম্বেড প্লেয়ারে দেখানো হচ্ছে।':'আরবি কুরআন তিলাওয়াত। মূল ভিডিওটি YouTube-এ প্রকাশিত; এখানে YouTube এম্বেড প্লেয়ারে দেখানো হচ্ছে।',public_module:14,public_display:true,public_labels:{video_url:'ভিডিও',summary:'বিবরণ'},permission:'যাচাইাধীন'},status,created_by:user.id,approved_by:canPublish?user.id:null,approved_at:canPublish?new Date().toISOString():null,updated_at:new Date().toISOString()}));const{data,error}=await supabase.from('module_records').insert(batch).select('id,status');if(error){failed+=batch.length;$('err').hidden=false;$('err').textContent+='\nBatch '+(Math.floor(i/10)+1)+': '+error.message;setProgress(Math.min(i+10,todo.length),'সংরক্ষণে সমস্যা: '+(i+10)+' / '+todo.length);continue}inserted+=data.length;published+=data.filter(x=>x.status==='published').length;pending+=data.filter(x=>x.status==='pending').length;setProgress(Math.min(i+10,todo.length),'সংরক্ষণ: '+Math.min(i+10,todo.length)+' / '+todo.length+' · সফল '+inserted+' · ব্যর্থ '+failed)}
+$('result').textContent='সম্পন্ন। নতুন সংরক্ষিত: '+inserted+' · Published: '+published+' · Pending: '+pending+' · আগে থেকেই ছিল: '+already+' · ব্যর্থ: '+failed;$('result').className=failed?'error':'success';if(inserted){const{count}=await supabase.from('module_records').select('id',{count:'exact',head:true}).eq('module_key','m16').eq('status','published');$('progressText').textContent+=' · DB-তে মোট Published m16: '+(count??'যাচাই হয়নি')}};
+$('back').onclick=()=>location.href='./admin.html';init();
+</script>
+</body></html>
