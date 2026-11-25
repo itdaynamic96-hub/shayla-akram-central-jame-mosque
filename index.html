@@ -208,43 +208,6 @@ body{background:linear-gradient(180deg,#f8f5ec 0%,#f2eee2 100%)}
   </div>
   <button class="read-aloud-toggle" type="button" id="readToggle" aria-expanded="false">🔊 বাংলায় শুনুন</button>
 </div>
-<script>
-(function(){
- const root=document.getElementById('readAloud'); if(!root) return;
- const synth=window.speechSynthesis;
- const status=document.getElementById('readAloudStatus');
- const toggle=document.getElementById('readToggle');
- let chunks=[],index=0;
- toggle.addEventListener('click',()=>{root.classList.toggle('open');toggle.setAttribute('aria-expanded',root.classList.contains('open')?'true':'false')});
- function pageText(){
-   const main=document.querySelector('main:not(.hidden)')||document.body;
-   const copy=main.cloneNode(true);
-   copy.querySelectorAll('button,input,textarea,select,script,style,iframe,.read-aloud,.temporary').forEach(n=>n.remove());
-   return (copy.innerText||copy.textContent||'').replace(/\s+/g,' ').trim();
- }
- function speakNext(){
-   if(index>=chunks.length){status.textContent='পড়া শেষ হয়েছে।';return}
-   const u=new SpeechSynthesisUtterance(chunks[index++]);
-   u.lang='bn-BD';u.rate=.92;
-   const voices=synth.getVoices();
-   const bn=voices.find(v=>/^bn(-|_)/i.test(v.lang))||voices.find(v=>/bengali|bangla/i.test(v.name));
-   if(bn)u.voice=bn;
-   u.onend=speakNext;
-   u.onerror=()=>{status.textContent='এই ডিভাইসে বাংলা কণ্ঠস্বর পাওয়া যায়নি। ডিভাইসের বাংলা speech voice চালু করুন।'};
-   synth.speak(u);
- }
- document.getElementById('readStart').addEventListener('click',()=>{
-   if(!synth){status.textContent='এই ব্রাউজারে পড়ে শোনানোর সুবিধা নেই।';return}
-   synth.cancel();const text=pageText();
-   if(!text){status.textContent='পড়ে শোনানোর মতো লেখা পাওয়া যায়নি।';return}
-   chunks=text.match(/[^।!?]+[।!?]?/g)||[text];index=0;
-   status.textContent='বাংলায় পড়ে শোনানো হচ্ছে…';speakNext();
- });
- document.getElementById('readPause').addEventListener('click',()=>{if(synth)synth.pause();status.textContent='পড়া বিরতিতে আছে।'});
- document.getElementById('readResume').addEventListener('click',()=>{if(synth)synth.resume();status.textContent='আবার পড়া শুরু হয়েছে।'});
- document.getElementById('readStop').addEventListener('click',()=>{if(synth)synth.cancel();index=chunks.length;status.textContent='পড়া বন্ধ করা হয়েছে।'});
-})();
-</script>
 <script src="./supabase-config.js"></script><script>
 const modules=[{"n":1,"name":"হোমপেজ","desc":"মসজিদের পরিচিতি, নামাজের সময়, গুরুত্বপূর্ণ ঘোষণা ও সাম্প্রতিক কার্যক্রম।","section":"প্রধান পৃষ্ঠা","items":["মসজিদের পরিচিতি ও স্থাপত্যের ছবি","আজকের পাঁচ ওয়াক্ত নামাজের সময়","জরুরি ঘোষণা ও সাম্প্রতিক কার্যক্রম","মোতাওয়াল্লীর বাণী ও গুরুত্বপূর্ণ পৃষ্ঠার সংযোগ"]},{"n":2,"name":"মসজিদের পরিচিতি","desc":"মসজিদের নাম, অবস্থান, প্রতিষ্ঠার উদ্দেশ্য, কার্যক্রম ও বিশেষ বৈশিষ্ট্য।","section":"পরিচিতি","items":["মসজিদের পূর্ণ নাম ও অবস্থান","প্রতিষ্ঠার উদ্দেশ্য ও কার্যক্রম","মসজিদের বিশেষ বৈশিষ্ট্য","পরিচিতিমূলক ছবি ও প্রয়োজনীয় তথ্য"]},{"n":3,"name":"মসজিদের নামকরণ ও ইতিহাস","desc":"মসজিদের নামকরণের পটভূমি, প্রতিষ্ঠার ইতিহাস ও এলাকার মানুষের অবদান।","section":"ইতিহাস ও ঐতিহ্য","items":["নামকরণের পেছনের ইতিহাস","প্রতিষ্ঠাকালীন ঘটনা ও গুরুত্বপূর্ণ স্মৃতি","এলাকাবাসীর অবদান ও সহযোগিতা","ঐতিহাসিক ছবি, দলিল ও সময়রেখা"]},{"n":4,"name":"মোতাওয়াল্লীর বাণী","desc":"মোতাওয়াল্লীর পরিচিতি, বক্তব্য, ভবিষ্যৎ পরিকল্পনা ও মুসল্লিদের প্রতি আহ্বান।","section":"নেতৃত্বের বাণী","items":["মোতাওয়াল্লীর ছবি ও পরিচিতি","মসজিদ সম্পর্কে বক্তব্য","ভবিষ্যৎ পরিকল্পনা ও উন্নয়ন ভাবনা","মুসল্লিদের প্রতি আহ্বান"]},{"n":5,"name":"পরিচালনা কমিটি","desc":"সভাপতি, মোতাওয়াল্লী, সাধারণ সম্পাদক, কোষাধ্যক্ষ ও অন্যান্য সদস্যের পরিচিতি।","section":"কমিটি ও দায়িত্ব","items":["সভাপতি ও মোতাওয়াল্লী","সাধারণ সম্পাদক ও কোষাধ্যক্ষ","অন্যান্য সদস্য ও দায়িত্ব বণ্টন","সদস্যদের অনুমোদিত ছবি ও পরিচিতি"]},{"n":6,"name":"পাঁচ ওয়াক্ত নামাজের সময়সূচি","desc":"ফজর, যোহর, আসর, মাগরিব ও এশার সময় এবং মাসিক সময়সূচি।","section":"নামাজের সময়","items":["ফজর, যোহর, আসর, মাগরিব ও এশা","সূর্যোদয়ের সময়","আজকের ও মাসিক সময়সূচি","স্থানীয় মসজিদের নির্ধারিত জামাতের সময়"]},{"n":7,"name":"জুমা, রমজান ও ঈদের সময়সূচি","desc":"জুমার নামাজ, খুতবা, সেহরি-ইফতার, তারাবি ও ঈদের জামাতের সময়।","section":"বিশেষ সময়সূচি","items":["জুমার নামাজ ও খুতবার সময়","রমজানের সেহরি, ইফতার ও তারাবি","ঈদুল ফিতর ও ঈদুল আজহার জামাত","বিশেষ সময়সূচি ও কর্তৃপক্ষের ঘোষণা"]},{"n":8,"name":"নোটিশ ও ঘোষণা","desc":"জরুরি ঘোষণা, সভার নোটিশ, নামাজের সময় পরিবর্তন ও পুরোনো নোটিশ।","section":"নোটিশ বোর্ড","items":["জরুরি ও সাধারণ ঘোষণা","সভা ও বিশেষ কার্যক্রমের নোটিশ","নামাজের সময় পরিবর্তনের ঘোষণা","তারিখসহ পুরোনো নোটিশ সংরক্ষণ"]},{"n":9,"name":"সংবাদ ও কার্যক্রম","desc":"মসজিদের সংবাদ, উন্নয়নমূলক কাজ, ধর্মীয় অনুষ্ঠান ও সামাজিক কর্মকাণ্ড।","section":"সংবাদ ও কার্যক্রম","items":["মসজিদের সাম্প্রতিক সংবাদ","উন্নয়নমূলক কার্যক্রমের প্রতিবেদন","ধর্মীয় অনুষ্ঠান ও সামাজিক কর্মকাণ্ড","তারিখ, ছবি ও বিস্তারিত প্রতিবেদন"]},{"n":10,"name":"কোরআন ও ইসলামিক শিক্ষা","desc":"শিশু ও প্রাপ্তবয়স্কদের কোরআন শিক্ষা, পাঠক্রম, শিক্ষক ও নিবন্ধন।","section":"কোরআন শিক্ষা","items":["শিশুদের কোরআন শিক্ষা","প্রাপ্তবয়স্কদের কোরআন শিক্ষা","শিক্ষক, পাঠক্রম ও ক্লাসের সময়সূচি","শিক্ষার্থী নিবন্ধন ও ভর্তির নিয়ম"]},{"n":11,"name":"ইমাম ও খতিব পরিচিতি","desc":"ইমাম, খতিব ও মুয়াজ্জিনের পরিচিতি, দায়িত্ব ও যোগ্যতা।","section":"ইমাম ও খতিব","items":["ইমামের পরিচিতি ও দায়িত্ব","খতিবের পরিচিতি ও দায়িত্ব","মুয়াজ্জিনের পরিচিতি ও দায়িত্ব","অনুমোদিত যোগ্যতা ও যোগাযোগের তথ্য"]},{"n":12,"name":"ধর্মীয় ও সামাজিক সেবা","desc":"জানাজা, নিকাহ, অসহায় মানুষের সহায়তা ও সামাজিক সহযোগিতার তথ্য।","section":"সেবা ও সহযোগিতা","items":["জানাজা সংক্রান্ত তথ্য ও যোগাযোগ","বিবাহ ও নিকাহ সংক্রান্ত তথ্য","অসহায় মানুষের সহায়তা ও সামাজিক সহযোগিতা","সেবা গ্রহণের আবেদন ও যোগাযোগ"]},{"n":13,"name":"অনুদান ও সহযোগিতা","desc":"মসজিদ উন্নয়ন অনুদান, সাধারণ দান, যাকাত-সদকা ও পেমেন্ট নির্দেশনা।","section":"অনুদান","items":["মসজিদ উন্নয়ন ও সাধারণ অনুদান","যাকাত ও সদকার তথ্য","বিকাশ, নগদ ও ব্যাংক পেমেন্টের নির্দেশনা","অনুদান যাচাই, রসিদ ও রেকর্ড"]},{"n":14,"name":"ছবি ও ভিডিও গ্যালারি","desc":"মসজিদ, ধর্মীয় অনুষ্ঠান ও উন্নয়ন কার্যক্রমের ছবি ও ভিডিও।","section":"গ্যালারি","items":["মসজিদের ছবি ও অ্যালবাম","ধর্মীয় অনুষ্ঠানের ছবি","উন্নয়ন কার্যক্রমের ছবি","ভিডিও গ্যালারি"]},{"n":15,"name":"যোগাযোগ ও অবস্থান","desc":"মসজিদের ঠিকানা, মোবাইল, ইমেইল, মানচিত্র ও যোগাযোগ ফর্ম।","section":"যোগাযোগ","items":["সম্পূর্ণ ঠিকানা ও অবস্থান","অনুমোদিত মোবাইল নম্বর ও ইমেইল","গুগল মানচিত্র ও যাতায়াত নির্দেশনা","যোগাযোগ ফর্ম ও বার্তা পাঠানোর ব্যবস্থা"]}];
 const menuGroups=[{"name":"হোম","ids":[]},{"name":"পরিচিতি","ids":[2,3,4,5]},{"name":"নামাজ ও বিশেষ সময়সূচি","ids":[6,7]},{"name":"নোটিশ ও সংবাদ","ids":[8,9]},{"name":"কোরআন ও ইসলামিক শিক্ষা","ids":[10,11]},{"name":"ধর্মীয় ও সামাজিক সেবা","ids":[12,13]},{"name":"গ্যালারি","ids":[14]},{"name":"যোগাযোগ","ids":[15]}]
@@ -378,4 +341,4 @@ renderNav();
   if(latestActivity){const root=document.getElementById('latest-activity-content');if(root){root.replaceChildren();const title=document.createElement('strong');title.textContent=latestActivity.title;const p=document.createElement('p');p.textContent=latestActivity.body||'নতুন ইসলামী জ্ঞানভিত্তিক লেখা প্রকাশিত হয়েছে।';root.append(title,p)}}
   try{const{data:notices,error:noticeError}=await client.from('announcements').select('title,body,created_at').eq('status','published').order('created_at',{ascending:false}).limit(1);if(!noticeError&&notices&&notices.length){const root=document.getElementById('latest-notice-content');if(root){root.replaceChildren();const title=document.createElement('strong');title.textContent=notices[0].title;const p=document.createElement('p');p.textContent=notices[0].body||'';root.append(title,p)}}else{const record=publishedModuleRecords.filter(x=>x.module_key==='m14').sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0))[0];const root=document.getElementById('latest-notice-content');if(record&&root){root.replaceChildren();const title=document.createElement('strong');title.textContent=record.title;const p=document.createElement('p');p.textContent=record.data?.notice_body||record.data?.description||'';root.append(title,p)}}}catch(noticeErr){console.warn('সর্বশেষ নোটিশ লোড করা যায়নি:',noticeErr)}
  }catch(err){console.warn('প্রকাশিত কনটেন্ট লোড করা যায়নি:',err)}
-})();</script><script src="./islamic-library.js?v=07adab0"></script><script src="./read-aloud.js?v=20261125"></script></body></html>
+})();</script><script src="./islamic-library.js?v=07adab0"></script><script src="./read-aloud.js?v=20261125-universal"></script></body></html>
