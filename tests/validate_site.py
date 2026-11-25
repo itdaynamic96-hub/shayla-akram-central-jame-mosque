@@ -202,7 +202,7 @@ assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messa
 
 # SAKM-61 Accounts dashboard: ensure the new external module is syntax-checked and wired.
 dashboard_js=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
-subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True,check=True)
+dashboard_check=subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True); assert dashboard_check.returncode==0, f'Accounts dashboard JS syntax error: {dashboard_check.stderr}'
 assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet is missing'
 assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
@@ -215,7 +215,7 @@ for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_paym
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
-assert 'ব্যালান্স শিট সারসংক্ষেপ' in dashboard_js, 'Trial balance module must include a balance-sheet summary'
+assert 'পূর্ণ ব্যালান্স শিট' in dashboard_js, 'Trial balance module must include the full balance sheet'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
 print('SAKM-61 Accounts dashboard checks passed: syntax, 24 approved modules, separate institution views, chanda integration and financial tools.')
 
