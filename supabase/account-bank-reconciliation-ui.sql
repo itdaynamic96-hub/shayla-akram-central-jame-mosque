@@ -152,3 +152,26 @@ for each row execute function public.validate_account_bank_reconciliation_item()
 create unique index if not exists account_bank_reconciliation_items_unique_match_idx
 on public.account_bank_reconciliation_items(matched_journal_line_id)
 where matched_journal_line_id is not null;
+
+-- Allow owners to remove only their own unfinalized reconciliation drafts and lines.
+drop policy if exists account_bank_reconciliation_items_delete on public.account_bank_reconciliation_items;
+create policy account_bank_reconciliation_items_delete
+on public.account_bank_reconciliation_items for delete to authenticated
+using (
+  exists (
+    select 1 from public.account_bank_reconciliations r
+    where r.id = reconciliation_id
+      and r.status = 'draft'
+      and r.created_by = (select auth.uid())
+      and public.accounts_feature_access(r.institution,'m46',true)
+  )
+);
+
+drop policy if exists account_bank_reconciliations_delete on public.account_bank_reconciliations;
+create policy account_bank_reconciliations_delete
+on public.account_bank_reconciliations for delete to authenticated
+using (
+  status = 'draft'
+  and created_by = (select auth.uid())
+  and public.accounts_feature_access(institution,'m46',true)
+);
