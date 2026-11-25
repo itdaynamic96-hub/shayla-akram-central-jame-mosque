@@ -151,7 +151,7 @@ for page_name in ('index.html','admin.html','accounts.html'):
     assert './read-aloud.js?v=20261125-audioqa2' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: TTS engine must load only when a card is played in {page_name}'
-    assert '@spelling-creator/spellophone@0.2.1/dist/legacy/spellophone.iife.js' in page_source, f'Read Aloud: free Bengali TTS engine is not loaded by {page_name}'
+    assert 'ENGINE_URL' in reader_js and 'loadEngineScript' in reader_js, f'Read Aloud: lazy-loaded free Bengali TTS engine is missing'
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
