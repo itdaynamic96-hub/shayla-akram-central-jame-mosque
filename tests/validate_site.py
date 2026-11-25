@@ -248,7 +248,7 @@ assert 'book_balance,status,notes,created_by' in recon_fix and 'grant select,del
 
 assert "if(i===22){renderMessageCenter();return}" in dashboard_js and "if(i===23){renderMonthlyChanda().catch(showError);return}" in dashboard_js, 'Messaging and monthly chanda must have dedicated navigation routes'
 assert "const panel=el('accountsMessaging')" in dashboard_js and 'await loadChanda()' in dashboard_js, 'Messaging and monthly chanda modules must load their dedicated panels'
-assert "Object.fromEntries(modules.map((_,i)=>[i,'m'+String(62+i).padStart(2,'0')]))" in dashboard_js, 'Every Accounts module must use a unique permission key'
+assert "const moduleKeys={0:'m62',1:'m63',2:'m64',3:'m65',4:'m66',5:'m67',6:'m68',7:'m69',8:'m70',9:'m71',10:'m72',11:'m73',12:'m74',13:'m75',14:'m76',15:'m77',16:'m78',17:'m79',18:'m80',19:'m81',20:'m82',21:'m83'}" in dashboard_js, 'Every Accounts module must use its granular permission key'
 assert 'মোট ৮৫টি' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin must include all 24 detailed Accounts permissions'
 assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly chanda permission must be assignable from Admin'
 assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
