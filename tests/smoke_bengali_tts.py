@@ -4,6 +4,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+import urllib.parse
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = (ROOT / "supabase-config.js").read_text(encoding="utf-8")
@@ -34,7 +35,32 @@ try:
         print("No-key Indic Parler response:", response.status, probe_type, len(probe_body), probe_body[:500].decode("utf-8", "replace") if "json" in probe_type else "")
 except urllib.error.HTTPError as exc:
     print("No-key Indic Parler response:", exc.code, exc.read().decode("utf-8", "replace")[:1000])
-    raise SystemExit(0)
+
+# Probe current no-key Google Translate TTS endpoints for Bengali.
+google_text = "বাংলা কণ্ঠ পরীক্ষা"
+google_ok = False
+for endpoint in (
+    "https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=bn&q=" + urllib.parse.quote(google_text),
+    "https://translate.google.com/translate_tts?client=tw-ob&ie=UTF-8&tl=bn&q=" + urllib.parse.quote(google_text),
+):
+    req = urllib.request.Request(endpoint, headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36",
+        "Referer": "https://translate.google.com/",
+        "Accept": "audio/mpeg,*/*",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=20) as response:
+            audio = response.read()
+            ctype = response.headers.get("Content-Type", "")
+            print("Google no-key TTS probe:", response.status, ctype, len(audio), endpoint.split("/")[2])
+            if ctype.startswith("audio/") and len(audio) > 100:
+                google_ok = True
+                break
+    except urllib.error.HTTPError as exc:
+        print("Google no-key TTS probe:", exc.code, exc.read().decode("utf-8", "replace")[:300])
+if not google_ok:
+    print("Google Translate TTS no-key endpoints did not return audio.")
+
 
 def request(url, data=None, headers=None, timeout=45):
     req = urllib.request.Request(url, data=data, headers=headers or {})
