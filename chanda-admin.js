@@ -107,17 +107,31 @@ async function loadAll(){
   else if(nextMonth&&day>=25){statusClass='collection';status='আদায়ের সময় · ২৫ তারিখ থেকে'}
   else if(nextMonth&&day>=20){statusClass='upcoming';status='পরবর্তী মাসের চাঁদা'}
   else if(!nextMonth){statusClass='upcoming';status='পরিশোধের অপেক্ষায়'}
-  return '<tr><td>'+escapeHtml(m?.member_name||'অজানা')+'</td><td>'+escapeHtml(d.due_month.slice(0,7))+'</td><td>'+money(d.amount)+'</td><td>'+money(d.paid_amount)+'</td><td>'+money(remaining)+'</td><td><span class="chanda-status '+statusClass+'">'+status+'</span></td><td>'+(remaining>0&&canWrite()?'<button type="button" data-pay="'+d.id+'" data-remain="'+remaining+'">পেমেন্ট নিন</button>':'—')+'</td></tr>';
+  return '<tr><td>'+escapeHtml(m?.member_name||'অজানা')+'</td><td>'+escapeHtml(d.due_month.slice(0,7))+'</td><td>'+money(d.amount)+'</td><td>'+money(d.paid_amount)+'</td><td>'+money(remaining)+'</td><td><span class="chanda-status '+statusClass+'">'+status+'</span></td><td>'+(remaining>0&&canWrite()?'<button type="button" data-pay="'+d.id+'" data-member="'+d.member_id+'" data-month="'+dueMonth+'" data-remain="'+remaining+'">পেমেন্ট নিন</button>':'—')+'</td></tr>';
  }).join('')||'<tr><td colspan="7">এখনো মাসিক পাওনা তৈরি হয়নি। দৈনিক শিডিউল চললে তৈরি হবে।</td></tr>';
  $('chandaDueRows').onclick=async e=>{
   const btn=e.target.closest('[data-pay]');if(!btn)return;
-  const remaining=Number(btn.dataset.remain),amount=prompt('কত টাকা গ্রহণ করা হয়েছে? বকেয়া: '+remaining);
-  if(amount===null)return;const n=Number(amount);if(!Number.isFinite(n)||n<=0||n>remaining){alert('সঠিক পেমেন্টের পরিমাণ দিন।');return}
+  const memberId=btn.dataset.member, selectedMonth=btn.dataset.month;
+  const memberDues=dues.filter(d=>d.member_id===memberId&&Number(d.amount)>Number(d.paid_amount))
+    .sort((a,b)=>a.due_month.localeCompare(b.due_month));
+  const monthOptions=memberDues.map(d=>d.due_month.slice(0,7)+' — বাকি '+money(Number(d.amount)-Number(d.paid_amount))).join('\n');
+  const chosen=prompt('এই চাঁদাদাতার কোন কোন মাসের টাকা জমা নেবেন?\n'+monthOptions+'\n\nএকাধিক মাস হলে YYYY-MM কমা দিয়ে লিখুন।',selectedMonth);
+  if(chosen===null)return;
+  const selected=chosen.split(',').map(x=>x.trim()).filter(Boolean);
+  if(!selected.length||selected.some(x=>!/^\\d{4}-\\d{2}$/.test(x))||new Set(selected).size!==selected.length){alert('মাস YYYY-MM ফরম্যাটে লিখুন; একাধিক হলে কমা দিয়ে আলাদা করুন।');return}
+  const selectedDues=selected.map(monthKey=>memberDues.find(d=>d.due_month.slice(0,7)===monthKey));
+  if(selectedDues.some(x=>!x)){alert('নির্বাচিত মাসের বকেয়া পাওয়া যায়নি। তালিকা থেকে থাকা মাস নির্বাচন করুন।');return}
+  const totalDue=selectedDues.reduce((n,d)=>n+Number(d.amount)-Number(d.paid_amount),0);
+  const amount=prompt('কত টাকা জমা দিয়েছেন? নির্বাচিত মাসগুলোর মোট বকেয়া: '+money(totalDue),String(totalDue));
+  if(amount===null)return;const n=Number(amount);
+  if(!Number.isFinite(n)||n<=0||n>totalDue){alert('জমার পরিমাণ নির্বাচিত মাসগুলোর মোট বকেয়ার মধ্যে হতে হবে।');return}
   const method=prompt('পেমেন্ট পদ্ধতি লিখুন: cash / bank / bkash / nagad / other','cash');if(method===null)return;
+  if(!['cash','bank','bkash','nagad','other'].includes(method)){alert('সঠিক পেমেন্ট পদ্ধতি লিখুন।');return}
   const ref=prompt('রেফারেন্স/ট্রানজেকশন নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';
-  try{btn.disabled=true;const{error}=await supabase.rpc('record_chanda_payment',{target_due:btn.dataset.pay,paid_amount:n,paid_on:todayDhaka(),method,reference:ref,memo:'অ্যাডমিন প্যানেল থেকে গ্রহণ'});if(error)throw error;await loadAll()}
+  const memo=prompt('জমার বিবরণ (ঐচ্ছিক)','')||'';
+  try{btn.disabled=true;const{error}=await supabase.rpc('record_chanda_payment_months',{target_dues:selectedDues.map(d=>d.id),paid_amount:n,paid_on:todayDhaka(),method,reference:ref,memo});if(error)throw error;await loadAll()}
   catch(ex){if(err)showError(err,ex);btn.disabled=false}
- };
+ }
  const combined=[
   ...payments.map(p=>({date:p.created_at,type:'পেমেন্ট',member:byId.get(p.member_id)?.member_name||'অজানা',detail:money(p.amount)+' · '+p.payment_method+' · '+p.reference_no,status:'রেকর্ড হয়েছে'})),
   ...logs.map(l=>({date:l.created_at,type:'অনুস্মারক',member:byId.get(l.member_id)?.member_name||'অজানা',detail:l.message,status:l.status}))
