@@ -199,7 +199,8 @@ assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messa
 
 # SAKM-61 Accounts dashboard: ensure the new external module is syntax-checked and wired.
 dashboard_js=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
-subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True,check=True)
+dashboard_check=subprocess.run(['node','--check','--input-type=module'],input=dashboard_js,text=True,capture_output=True)
+assert dashboard_check.returncode==0, dashboard_check.stderr
 assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet is missing'
 assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
