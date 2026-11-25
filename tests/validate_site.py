@@ -164,8 +164,8 @@ assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Rea
 assert 'spellophone' not in reader_js.lower() and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: obsolete local TTS engine must not be loaded'
 assert 'বাংলা পুরুষ কণ্ঠ' in reader_js, 'Read Aloud: user-facing voice must be identified as Bengali male'
 assert 'speechSynthesis' not in reader_js and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: must not depend on device speech voices'
-assert 'functions/v1/bengali-tts' in reader_js and 'window.SUPABASE_CONFIG' in reader_js, 'Read Aloud: must call the configured no-provider-key Bengali TTS Edge Function'
-assert 'ensureSvaraModel' not in reader_js and 'svara-build' not in reader_js and '1.95 GB' not in reader_js, 'Read Aloud: must not depend on the multi-GB local model'
+assert 'ensureSvaraModel' in reader_js and 'svara-build/engine.js' in reader_js, 'Read Aloud: must use the configured browser-local Bengali voice model'
+assert '1.95 GB' in reader_js and 'createSvaraEngine' in reader_js, 'Read Aloud: the local voice model must clearly disclose its first-time download'
 tts_function=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
 assert 'bn-BD-PradeepNeural' in tts_function and 'text.length > 1800' in tts_function, 'Read Aloud: Edge Function must use the Bengali male voice and enforce a text limit'
 assert 'new Audio(audioUrl)' in reader_js, 'Read Aloud: audio playback is not wired'
