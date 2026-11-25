@@ -71,7 +71,7 @@ jobs:
           content = config.read_text()
           start = content.find("[inbucket]")
           if start >= 0:
-              next_section = content.find("\\n[", start + 1)
+              next_section = content.find("\n[", start + 1)
               end = len(content) if next_section < 0 else next_section + 1
               section = content[start:end].replace("enabled = true", "enabled = false", 1)
               content = content[:start] + section + content[end:]
