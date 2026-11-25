@@ -73,12 +73,24 @@ function applyTourVideo(setting){
  const shell=byId('mosque360Viewer'),wrap=byId('mosque360VideoWrap');
  const placeholder=byId('mosque360Placeholder'),stage=byId('mosque360Stage');
  for(const video of document.querySelectorAll('[data-mosque-360-video],[data-mosque-360-video-preview]')){
+  // Apply mute BEFORE changing/loading the source so the first decoded audio frame is silent.
+  video.dataset.forceMute=muted?'true':'false';
+  video.muted=muted;video.defaultMuted=muted;
+  if(muted)video.volume=0;
+  else if(video.volume===0)video.volume=1;
+  if(!video.dataset.muteGuardBound){
+   video.dataset.muteGuardBound='true';
+   const enforceMute=()=>{if(video.dataset.forceMute==='true'){if(!video.muted)video.muted=true;if(video.volume!==0)video.volume=0}};
+   video.addEventListener('play',enforceMute);
+   video.addEventListener('volumechange',enforceMute);
+   video.addEventListener('loadedmetadata',enforceMute);
+  }
   if(video.dataset.appliedVideoUrl!==url){
    video.pause?.();video.dataset.appliedVideoUrl=url;
    if(url){video.src=url;video.load?.()}
    else{video.removeAttribute('src');video.load?.()}
   }
-  video.muted=muted;video.defaultMuted=muted;video.controls=true;video.playsInline=true;
+  video.controls=true;video.playsInline=true;
  }
  if(shell)shell.classList.toggle('video-ready',!!url);
  if(wrap)wrap.hidden=!url;
