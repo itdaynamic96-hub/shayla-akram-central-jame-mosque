@@ -224,8 +224,8 @@ function form(m,r=null){
    data.public_module=publicId;data.public_display=m.n===9?data.visibility==='প্রকাশিত':!privateOnlyModules.has(m.n);
    data.public_labels=Object.fromEntries(schema.map(([key,label])=>[key,label]));
    const title=String(data[titleField]||m.name).trim().slice(0,180);
-   const requestedStatus=$('recordStatus').value,status=showStatus?(r?requestedStatus:(['approved','published'].includes(requestedStatus)?'pending':requestedStatus)):(r?.status||'pending');
-   const payload={module_key:m.key,institution:$('recordInstitution').value,title,data,status,approved_by:['approved','published'].includes(status)?user.id:(r?.approved_by||null),approved_at:['approved','published'].includes(status)?new Date().toISOString():(r?.approved_at||null),updated_at:new Date().toISOString()};
+   const requestedStatus=$('recordStatus').value,status=showStatus?(r?requestedStatus:(['approved','published'].includes(requestedStatus)?'pending':requestedStatus)):(r&&['approved','published'].includes(r.status)?'pending':(r?.status||'pending'));
+   const payload={module_key:m.key,institution:$('recordInstitution').value,title,data,status,approved_by:['approved','published'].includes(status)?user.id:null,approved_at:['approved','published'].includes(status)?new Date().toISOString():null,updated_at:new Date().toISOString()};
    let result;
    if(r)result=await supabase.from('module_records').update(payload).eq('id',r.id);
    else result=await supabase.from('module_records').insert({...payload,created_by:user.id}).select('id').single();
