@@ -151,14 +151,14 @@ Deno.serve(async (req) => {
       if (channel === "sms" && row.status === "awaiting_delivery") {
         await recordAttempt(row.id, "sms", "failed", providerId, errorCode || "sms_delivery_failed", errorMessage || "eSMS reported final delivery failure.");
         await admin.from("accounts_message_queue").update({
-          status: "failed", active_channel: "none", updated_at: new Date().toISOString(),
+          status: "failed", active_channel: "none", attempt_count: Number(row.attempt_count || 0) + 2, updated_at: new Date().toISOString(),
         }).eq("id", row.id).eq("status", "awaiting_delivery").eq("active_channel", "sms");
       }
       return;
     }
 
     const { data: claimed, error: claimError } = await admin.from("accounts_message_queue")
-      .update({ status: "processing", updated_at: new Date().toISOString() })
+      .update({ status: "processing", attempt_count: Number(row.attempt_count || 0) + 1, updated_at: new Date().toISOString() })
       .eq("id", row.id).eq("status", "awaiting_delivery").eq("active_channel", "whatsapp")
       .select("*").maybeSingle();
     if (claimError) throw claimError;
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       await recordAttempt(row.id, "sms", "accepted", sms.providerId);
       const { error: updateError } = await admin.from("accounts_message_queue").update({
         status: "awaiting_delivery", active_channel: "sms", provider_message_id: sms.providerId,
-        attempt_count: Number(row.attempt_count || 0) + 1, updated_at: new Date().toISOString(),
+        attempt_count: Number(row.attempt_count || 0) + 2, updated_at: new Date().toISOString(),
       }).eq("id", row.id).eq("status", "processing");
       if (updateError) throw updateError;
       return;
