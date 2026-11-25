@@ -153,7 +153,7 @@ reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-ttsaipiper1' in page_source, f'Read Aloud: free Bengali Piper client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-svara1' in page_source, f'Read Aloud: free Bengali Piper client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
@@ -161,15 +161,16 @@ for page_name in ('index.html','admin.html','accounts.html'):
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
 assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Read Aloud: Arabic text must not be passed to Bengali TTS as if it were Bengali'
-assert 'svara-build' not in reader_js and 'ensureSvaraModel' not in reader_js and '1.95 GB' not in reader_js, 'Read Aloud: missing multi-gigabyte local model must not be required'
-assert 'functions/v1/bengali-tts' in reader_js and 'window.SUPABASE_CONFIG' in reader_js, 'Read Aloud: browser must call the configured no-provider-key Edge Function'
-assert 'rest.length > 450' in reader_js, 'Read Aloud: text chunks must stay below the anonymous provider limit'
-assert 'বাংলা কণ্ঠ' in reader_js, 'Read Aloud: user-facing voice must be identified as Bengali'
-tts_function=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
-assert 'https://api.tts.ai/v1' in tts_function and '"/voices/?language=bn&model=piper"' in tts_function, 'Read Aloud: free Piper voice discovery must be configured'
-assert 'model: "piper"' in tts_function and 'text.length > 500' in tts_function, 'Read Aloud: Edge Function must use free Bengali Piper and enforce anonymous text limit'
-assert 'Authorization' not in tts_function, 'Read Aloud: TTS.ai must not require a provider API key'
+assert 'svara-build' in reader_js and 'ensureSvaraModel' in reader_js and '১.৯৫ GB' in reader_js, 'Read Aloud: first-use local model download warning is required'
+assert 'createSvaraEngine' in reader_js and "speaker_id:'Bengali (Male)'" in reader_js, 'Read Aloud: local Bengali male voice must be used'
+assert 'functions/v1/bengali-tts' not in reader_js and 'window.SUPABASE_CONFIG' not in reader_js, 'Read Aloud: browser must not call the failed Edge TTS service or depend on Supabase credentials'
 assert 'new Audio(audioUrl)' in reader_js, 'Read Aloud: audio playback is not wired'
+worker_js=(ROOT/'svara-worker.js').read_text(encoding='utf-8')
+assert 'https://esm.sh/@huggingface/transformers@4.0.0' in worker_js and 'https://esm.sh/onnxruntime-web@1.20.0/webgpu' in worker_js, 'Read Aloud: browser worker dependencies must be pinned'
+assert 'shader-f16' in worker_js and 'device: "webgpu"' in worker_js, 'Read Aloud: WebGPU feature requirements are missing'
+assert (ROOT/'svara-engine.js').exists() and (ROOT/'vite.tts.config.js').exists() and (ROOT/'package.json').exists(), 'Read Aloud: Svara build sources are incomplete'
+assert (ROOT/'assets/svara-build/engine.js').exists(), 'Read Aloud: generated Svara engine bundle is missing'
+assert any(p.is_file() and p.suffix=='.js' and p.name!='engine.js' for p in (ROOT/'assets/svara-build').rglob('*.js')), 'Read Aloud: generated WebGPU worker bundle is missing'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
@@ -348,6 +349,9 @@ assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)
 media_js=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
 assert "mosque_360_panorama" in media_js and "mosque360Start" in media_js, '360 panorama setting and homepage launch control are missing'
 assert all(k in media_js for k in ("mosque_360_video","mosque_360_video_muted","uploadTourVideo","setTourVideoMuted","applyTourVideo")), '360 video upload and administrator mute controls are missing'
+assert "shell.classList.toggle('video-ready',!!url)" in media_js and "wrap.hidden=!url" in media_js, 'Homepage: saved 360 video must activate its own visible video mode instead of leaving the static cover'
+assert '.tour-shell.video-ready .tour-cover' in html and '.tour-shell.video-ready #mosque360Video' in html, 'Homepage: 360 video mode must hide the old photo and fill the tour frame'
+assert 'video.defaultMuted=muted' in media_js and 'video.muted=muted' in media_js, 'Homepage and Admin video players must honor the saved mute setting'
 assert 'file.size>50*1024*1024' in media_js and 'supportedVideoExtensions' in media_js and "'mkv'" in media_js and "'mov'" in media_js and "application/octet-stream" in media_js and 'hasVideoMime' in media_js, '360 video must accept browser-recognized video MIME types, common extensions, and enforce the Free-plan 50 MB limit'
 assert 'id="mosque360VideoForm"' in admin_html and 'id="mosque360VideoMuted"' in admin_html and 'accept="video/*' in admin_html and 'data-mosque-360-video' in html, 'Admin broad video upload/mute controls and homepage video player are required'
 independent_media_migration=(ROOT/'supabase/migrations/20261125142528_independent_mosque_media_surfaces.sql').read_text(encoding='utf-8')

@@ -70,13 +70,29 @@ ensureDashboardImages();
 function applyPanoramaPreview(setting){const preview=byId('mosquePanoramaPreview'),empty=byId('mosquePanoramaEmpty'),remove=byId('mosquePanoramaRemove'),start=byId('mosque360Start');if(preview){preview.hidden=!setting?.public_url;if(setting?.public_url)preview.src=setting.public_url}if(empty)empty.hidden=!!setting?.public_url;if(remove)remove.hidden=!setting?.storage_path;if(start){start.disabled=!setting?.public_url;start.textContent=setting?.public_url?'৩৬০° ভ্রমণ শুরু করুন':'৩৬০° ছবি যুক্ত হলে চালু হবে'}}
 function applyTourVideo(setting){
  const url=setting?.public_url||'',muted=settings.mosque_360_video_muted?.public_url!=='false';
+ const shell=byId('mosque360Viewer'),wrap=byId('mosque360VideoWrap');
+ const placeholder=byId('mosque360Placeholder'),stage=byId('mosque360Stage');
  for(const video of document.querySelectorAll('[data-mosque-360-video],[data-mosque-360-video-preview]')){
-  if(video.dataset.appliedVideoUrl!==url){video.pause?.();video.dataset.appliedVideoUrl=url;if(url){video.src=url;video.load?.()}else video.removeAttribute('src')}
-  video.muted=muted;
+  if(video.dataset.appliedVideoUrl!==url){
+   video.pause?.();video.dataset.appliedVideoUrl=url;
+   if(url){video.src=url;video.load?.()}
+   else{video.removeAttribute('src');video.load?.()}
+  }
+  video.muted=muted;video.defaultMuted=muted;video.controls=true;video.playsInline=true;
  }
- const wrap=byId('mosque360VideoWrap'),preview=byId('mosque360VideoPreview'),empty=byId('mosque360VideoEmpty'),remove=byId('mosque360VideoRemove'),toggle=byId('mosque360VideoMuted');
- if(wrap)wrap.hidden=!url;if(preview)preview.hidden=!url;if(empty)empty.hidden=!!url;if(remove)remove.hidden=!setting?.storage_path;
+ if(shell)shell.classList.toggle('video-ready',!!url);
+ if(wrap)wrap.hidden=!url;
+ const preview=byId('mosque360VideoPreview'),empty=byId('mosque360VideoEmpty'),remove=byId('mosque360VideoRemove'),toggle=byId('mosque360VideoMuted');
+ if(preview)preview.hidden=!url;
+ if(empty)empty.hidden=!!url;
+ if(remove)remove.hidden=!setting?.storage_path;
  if(toggle){toggle.checked=muted;toggle.disabled=!url}
+ if(url){if(placeholder)placeholder.hidden=true;if(stage)stage.hidden=true}
+ else{
+  const panoramaActive=!!(shell?.classList.contains('tour-ready')&&settings.mosque_360_panorama?.public_url);
+  if(stage)stage.hidden=!panoramaActive;
+  if(placeholder)placeholder.hidden=panoramaActive;
+ }
 }
 async function getSettings(){if(!configured||!supabase){surfaces.forEach(s=>applySurface(s.attr,fallback));return}const{data,error}=await supabase.from('site_media_settings').select('setting_key,public_url,storage_path').in('setting_key',[...surfaces.map(s=>s.key),'mosque_main','mosque_360_panorama','mosque_360_video','mosque_360_video_muted']);if(error){console.warn('মিডিয়া সেটিং লোড হয়নি:',error);surfaces.forEach(s=>applySurface(s.attr,fallback));return}const main=(data||[]).find(x=>x.setting_key==='mosque_main')||null;for(const s of surfaces){settings[s.key]=(data||[]).find(x=>x.setting_key===s.key)||main;applySurface(s.attr,settings[s.key]?.public_url||fallback)}settings.mosque_360_panorama=(data||[]).find(x=>x.setting_key==='mosque_360_panorama')||null;settings.mosque_360_video=(data||[]).find(x=>x.setting_key==='mosque_360_video')||null;settings.mosque_360_video_muted=(data||[]).find(x=>x.setting_key==='mosque_360_video_muted')||null;applyPanoramaPreview(settings.mosque_360_panorama);applyTourVideo(settings.mosque_360_video)}
 async function uploadSetting({file,user,key,label,errorBox,statusBox,input,ratioRequired=false,maxBytes=10*1024*1024}){let path=null;try{if(!file)throw new Error('প্রথমে একটি ছবি নির্বাচন করুন।');const ext=imageExt[file.type];if(!ext)throw new Error('শুধু JPG, PNG বা WebP ছবি গ্রহণযোগ্য।');if(file.size>maxBytes)throw new Error('নির্ধারিত সর্বোচ্চ ফাইল সাইজ অতিক্রম করেছে।');if(ratioRequired){const bitmap=await createImageBitmap(file),ratio=bitmap.width/bitmap.height;bitmap.close?.();if(ratio<1.8||ratio>2.2)throw new Error('৩৬০° প্যানোরামার ছবির অনুপাত প্রায় ২:১ হতে হবে।')}path='mosque-brand/'+user.id+'/'+key+'-'+crypto.randomUUID()+'.'+ext;const{error:uploadError}=await supabase.storage.from('site-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});if(uploadError)throw uploadError;const publicUrl=supabase.storage.from('site-media').getPublicUrl(path).data.publicUrl;const{error:saveError}=await supabase.from('site_media_settings').upsert({setting_key:key,public_url:publicUrl,storage_path:path,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'setting_key'});if(saveError)throw saveError;const old=settings[key];settings[key]={setting_key:key,public_url:publicUrl,storage_path:path};if(old?.storage_path){const{error:removeError}=await supabase.storage.from('site-media').remove([old.storage_path]);if(removeError)console.warn('পুরোনো ছবি অপসারণ করা যায়নি:',removeError)}if(key==='mosque_360_panorama')applyPanoramaPreview(settings[key]);else{const surface=surfaces.find(s=>s.key===key);if(surface)applySurface(surface.attr,publicUrl)}if(input)input.value='';statusBox.textContent=label+'-এর ছবি সফলভাবে সংরক্ষণ হয়েছে। অন্য জায়গার ছবি অপরিবর্তিত আছে।'}catch(error){if(path)await supabase.storage.from('site-media').remove([path]).catch(()=>{});showError(errorBox,error);statusBox.textContent='ছবি সংরক্ষণ করা যায়নি।'}}
