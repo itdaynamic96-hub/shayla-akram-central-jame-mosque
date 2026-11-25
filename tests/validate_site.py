@@ -393,7 +393,7 @@ assert 'admin_dashboard_settings_updated_by_idx' in hardening_sql, 'Admin dashbo
 admin_modules=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert 'dashboardSettingsOpen=true' in admin_modules and 'settingsPanel.hidden=!dashboardSettingsOpen' in admin_modules, 'Dashboard settings panel must remain open after saving'
 assert "dashboardSettingsNotice='সফলভাবে সংরক্ষিত হয়েছে।'" in admin_modules, 'Dashboard save success must remain visible after dashboard rerender'
-assert 'admin-modules.js?v=20261126-dashboardprefs2' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
+assert 'admin-modules.js?v=20261126-dashboardprefs4' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
 
 # Website Admin: each writable website module has its own concise field schema.
 admin_modules_text=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
