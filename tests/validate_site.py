@@ -420,3 +420,13 @@ assert "['file_url','প্রতিবেদন ফাইল','private-file']" 
 assert "supabase.storage.from('private-module-files').createSignedUrl(path,300)" in admin_modules_private, 'Private report downloads must use short-lived signed URLs'
 assert "kind==='video'?52428800" in admin_modules_private, 'Video upload validation must match the 50 MB Storage bucket limit'
 assert 'admin-modules.js?v=20261126-dashboardprefs4' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
+
+# Admin layout regression: fixed sidebar must not be combined with a narrow centered main container.
+admin_layout_html=(ROOT/'admin.html').read_text(encoding='utf-8')
+admin_modules_js=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
+admin_users_js=(ROOT/'admin-users.js').read_text(encoding='utf-8')
+chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
+assert 'main.admin-shell{width:100%;max-width:none' in admin_layout_html and '#app.admin-layout{width:100%;max-width:none;padding-left:0' in admin_layout_html, 'Admin: full-width content must reserve the fixed sidebar exactly once'
+assert "document.querySelector('main')?.classList.add('admin-shell')" in admin_modules_js, 'Admin: shell must activate full-width layout'
+assert 'const staffModuleRoot = $("staffModules");' in admin_users_js and 'if (!staffModuleRoot) return [];' in admin_users_js, 'Admin: missing staff form nodes must not cause null innerHTML errors'
+assert "!location.hash.includes('admin=m85')" in chanda_js and "p.module_key==='m85'" in chanda_js, 'Chanda: module route and permission key must match Accounts monthly chanda module'
