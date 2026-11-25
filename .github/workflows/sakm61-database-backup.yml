@@ -2,12 +2,14 @@ name: SAKM-61 Encrypted Full Backup (best-effort)
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '45 20 * * *' # Daily at 02:45 Bangladesh time (UTC+6)
 
 permissions:
   contents: read
 
 concurrency:
-  group: sakm-61-manual-database-backup
+  group: sakm-61-database-backup
   cancel-in-progress: false
 
 jobs:
@@ -44,8 +46,12 @@ jobs:
             u = new URL(raw);
             if (!["postgres:", "postgresql:"].includes(u.protocol)) throw new Error("unsupported protocol");
             if (!u.hostname || !u.username || !u.password || !u.pathname || u.pathname === "/") throw new Error("missing URL component");
-            decodeURIComponent(u.username);
+            const decodedUsername = decodeURIComponent(u.username);
             decodeURIComponent(u.password);
+            if (u.hostname.endsWith(".pooler.supabase.com") && decodedUsername !== "postgres.lmwczibsipczfymhyqba") {
+              console.error("::error::For the Supabase Session pooler, SUPABASE_DB_URL username must be postgres.lmwczibsipczfymhyqba. Copy the Session pooler URI from Supabase Connect and update the GitHub Actions secret.");
+              process.exit(1);
+            }
           } catch {
             console.error("::error::SUPABASE_DB_URL is not a valid PostgreSQL URI. In Supabase Connect, select Session pooler and URI format (not .NET). Percent-encode special characters in the password only. Do not include quotes or spaces.");
             process.exit(1);
