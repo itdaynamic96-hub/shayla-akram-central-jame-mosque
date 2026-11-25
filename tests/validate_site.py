@@ -246,7 +246,7 @@ assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncate
 for marker in ('account_bank_account_balances','account_reverse_journal','account_trial_balance','account_balance_sheet','adReportExcel','adTbExcel','minAmount','maxAmount','transactionId'):
     assert marker in dashboard_js, f'Accounts dashboard missing financial control/report: {marker}'
 enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
-assert "canApprove('m80')" in enterprise_js, 'Payroll approval must use the central approval module permission'
+assert "canApprove('m70')" in enterprise_js, 'Single-operator payroll approval must use the assigned payroll module permission'
 assert "if(allowed('m69')||allowed('m76'))" in enterprise_js, 'Obligation and asset register access must match module permissions'
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
 assert 'account_submit_obligation_payment' in enterprise_js and 'account_obligation_payments' in enterprise_js, 'Obligation payments must enter the ledger approval flow'
