@@ -204,7 +204,7 @@ assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet 
 assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert dashboard_js.count("'মাসিক চাঁদা আদায়'") == 1
-for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","run_chanda_daily_jobs"):
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month"):
     assert marker in dashboard_js, f'Accounts dashboard missing live chanda integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
