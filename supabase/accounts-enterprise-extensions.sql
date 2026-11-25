@@ -1,9 +1,9 @@
 -- Enterprise accounts extension for mosque/foundation.
 -- Applied to Supabase project lmwczibsipczfymhyqba. Keep this file for future recovery.
 create or replace function public.accounts_feature_access(target_institution text, target_module text, write_access boolean default false)
-returns boolean language sql stable security definer set search_path=public,pg_temp
+returns boolean language sql stable security invoker set search_path=public,pg_temp
 as $$
- select auth.uid() is not null and exists (
+ select (select auth.uid()) is not null and exists (
   select 1 from public.profiles p where p.id=auth.uid()
    and (p.institution='both' or p.institution=target_institution)
    and (p.role='super_admin'
@@ -61,25 +61,25 @@ alter table public.account_assets enable row level security;
 drop policy if exists account_staff_read on public.account_staff;
 create policy account_staff_read on public.account_staff for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists account_staff_insert on public.account_staff;
-create policy account_staff_insert on public.account_staff for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid());
+create policy account_staff_insert on public.account_staff for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=(select auth.uid()));
 drop policy if exists account_staff_update on public.account_staff;
 create policy account_staff_update on public.account_staff for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 drop policy if exists payroll_read on public.payroll_records;
 create policy payroll_read on public.payroll_records for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists payroll_insert on public.payroll_records;
-create policy payroll_insert on public.payroll_records for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid() and status='pending');
+create policy payroll_insert on public.payroll_records for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=(select auth.uid()) and status='pending');
 drop policy if exists payroll_update on public.payroll_records;
 create policy payroll_update on public.payroll_records for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 drop policy if exists obligations_read on public.account_obligations;
 create policy obligations_read on public.account_obligations for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists obligations_insert on public.account_obligations;
-create policy obligations_insert on public.account_obligations for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid());
+create policy obligations_insert on public.account_obligations for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=(select auth.uid()));
 drop policy if exists obligations_update on public.account_obligations;
 create policy obligations_update on public.account_obligations for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 drop policy if exists assets_read on public.account_assets;
 create policy assets_read on public.account_assets for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists assets_insert on public.account_assets;
-create policy assets_insert on public.account_assets for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid());
+create policy assets_insert on public.account_assets for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=(select auth.uid()));
 drop policy if exists assets_update on public.account_assets;
 create policy assets_update on public.account_assets for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 grant select,insert,update on public.account_staff,public.payroll_records,public.account_obligations,public.account_assets to authenticated;
