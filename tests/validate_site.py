@@ -156,6 +156,7 @@ assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='u
 assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database module access must explicitly authorize mosque member register'
 assert "target_key='m51'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Member module 51 must allow mosque/account read access with admin-only writes'
 assert "m.n===51||m.n===61||m.g===2" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Member module 51 must be scoped to mosque records'
+assert "![51,61].includes(m.n)||profile.institution!=='foundation'" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Foundation-only custom admins must not see mosque-only member records'
 assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and '61' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Module 61 must stay private'
 # The 61-module enterprise site is not subject to the Basic package's 500-word/15-module restrictions.
 assert 'content-limits.js' not in (ROOT/'admin.html').read_text(encoding='utf-8') and 'content-limits.js' not in (ROOT/'index.html').read_text(encoding='utf-8'), 'Enterprise pages must not load the Basic 500-word limiter'
