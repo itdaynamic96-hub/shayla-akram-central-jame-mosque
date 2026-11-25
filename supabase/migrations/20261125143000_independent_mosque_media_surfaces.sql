@@ -9,5 +9,7 @@ alter table public.site_media_settings
     'mosque_360_panorama',
     'mosque_homepage',
     'mosque_accounts',
-    'mosque_admin'
+    'mosque_admin',
+    'mosque_360_video',
+    'mosque_360_video_muted'
   ));

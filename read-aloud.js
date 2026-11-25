@@ -161,7 +161,7 @@
       return;
     }
     try {
-      const result = engine.synthesize(session.chunks[session.index], {rate: Math.round(125 * speed), pitch:28});
+      const result = engine.synthesize(session.chunks[session.index], {rate: Math.round(135 * speed), pitch:32, volume:100, endPause:true});
       if (!result.samples?.length) throw new Error('এই অংশের জন্য অডিও তৈরি করা যায়নি।');
       const buffer = audioContext.createBuffer(1, result.samples.length, result.sampleRate);
       const channel = buffer.getChannelData(0);
@@ -186,7 +186,6 @@
     let context;
     try {
       context = getAudioContext();
-      context.resume?.();
     } catch (error) {
       statusText(error.message || 'অডিও চালু করা যায়নি।', statusTarget);
       return;
@@ -196,9 +195,9 @@
     setControls('loading');
     statusText('বিনামূল্যের বাংলা পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
     try {
+      await context.resume?.();
       await ensureEngine();
       if (active !== session) return;
-      await context.resume?.();
       session.state = 'playing';
       setControls('playing');
       statusText('ধীর ও স্পষ্ট বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', statusTarget);
