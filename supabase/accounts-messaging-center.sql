@@ -79,3 +79,5 @@ create policy accounts_message_attempts_read on public.accounts_message_attempts
  ));
 grant select,insert on public.accounts_message_queue to authenticated;
 grant select on public.accounts_message_attempts to authenticated;
+
+create index if not exists accounts_message_queue_created_by_idx on public.accounts_message_queue(created_by);

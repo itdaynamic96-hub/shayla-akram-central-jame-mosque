@@ -18,8 +18,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!url || !serviceKey || !anonKey) return json({ error: "Server database credentials are not configured." }, 500);
+  if (!url || !serviceKey) return json({ error: "Server database credentials are not configured." }, 500);
   const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: profile, error: profileError } = await admin.from("profiles")
     .select("role,institution").eq("id", callerId).single();

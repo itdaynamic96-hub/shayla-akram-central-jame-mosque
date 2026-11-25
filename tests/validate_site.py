@@ -193,3 +193,5 @@ chanda_source=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 assert 'chanda-status' in chanda_source and 'd.due_date<=today' in chanda_source
 assert 'next_month_start' in (ROOT/'supabase/chanda-upcoming-month-due.sql').read_text(encoding='utf-8')
 print('Accounts messaging checks passed: queue UI, RLS, WhatsApp-first/SMS fallback, webhook and monthly chanda status window.')
+
+assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')

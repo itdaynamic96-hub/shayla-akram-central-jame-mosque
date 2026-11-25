@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
   if (status === "read" && row.active_channel !== "whatsapp") return json({ error: "Read receipts are supported only for WhatsApp" }, 409);
 
   if (status === "delivered" || status === "read") {
+    if (status === "delivered" && row.status === "read") return json({ success: true, status: "read" });
     await admin.from("accounts_message_attempts").insert({
       message_id: row.id, channel: row.active_channel, status,
       provider_message_id: providerId,
