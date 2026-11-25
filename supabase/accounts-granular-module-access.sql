@@ -238,3 +238,25 @@ create policy accounts_detail_read on public.ledger_entries for select to authen
   or accounts_feature_access(institution,'m80',false)
   or accounts_feature_access(institution,'m81',false)
 );
+
+
+-- Receipt storage is controlled by the dedicated Receipts/Vouchers module (m73).
+drop policy if exists accounts_detail_upload_receipts on storage.objects;
+create policy accounts_detail_upload_receipts on storage.objects for insert to authenticated
+with check (
+ bucket_id='private-receipts' and owner_id=(select auth.uid())::text
+ and public.account_module_permission(split_part(name,'/',1),array['m73'],true)
+);
+drop policy if exists accounts_detail_read_receipts on storage.objects;
+create policy accounts_detail_read_receipts on storage.objects for select to authenticated
+using (
+ bucket_id='private-receipts'
+ and public.account_module_permission(split_part(name,'/',1),array['m73'])
+);
+drop policy if exists accounts_detail_delete_receipts on storage.objects;
+create policy accounts_detail_delete_receipts on storage.objects for delete to authenticated
+using (
+ bucket_id='private-receipts' and owner_id=(select auth.uid())::text
+ and public.receipt_is_unlinked(name)
+ and public.account_module_permission(split_part(name,'/',1),array['m73'],true)
+);
