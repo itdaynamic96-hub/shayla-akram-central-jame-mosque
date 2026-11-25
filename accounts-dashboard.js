@@ -1,9 +1,31 @@
 import {configured,supabase,currentProfile,escapeHtml,money} from './supabase-client.js';
-const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','দাতা ও অনুদান','ব্যাংক ও নগদ হিসাব','হিসাব স্থানান্তর','ক্যাশবুক ও লেজার','পাওনা ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','ফান্ড ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel এক্সপোর্ট','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','উন্নত অনুসন্ধান','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস','বার্তা ও নোটিফিকেশন','মাসিক চাঁদা আদায়'];
-let user,profile,members=[],dues=[];
+const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','দাতা ও অনুদান','ব্যাংক ও ক্যাশ','ট্রান্সফার','ক্যাশবুক ও লেজার','বকেয়া ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','তহবিল ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','সার্চ','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস'];
+let user,profile,members=[],dues=[],visibleModules=[],activeModule=0,chandaCanView=false,chandaCanWrite=false;
+const moduleKeys={0:'m41',1:'m42',2:'m42',3:'m44',4:'m46',5:'m46',6:'m46',7:'m43',8:'m43',9:'m48',10:'m44',11:'m49',12:'m47',13:'m47',14:'m50',15:'m50',16:'m46',17:'m50',18:'m50',19:'m50',20:'m50',21:'m50'};
 const dhaka=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const fmt=n=>new Intl.NumberFormat('bn-BD').format(n);
 const el=id=>document.getElementById(id);
+const currentInstitution=()=>el('adInstitution')?.value||(profile?.institution==='foundation'?'foundation':'mosque');
+async function loadModuleVisibility(){
+ const inst=currentInstitution(),keys=[...new Set(Object.values(moduleKeys))];
+ const checks=await Promise.all(keys.map(async key=>{const {data,error}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:key,write_access:false});if(error)throw error;return [key,!!data]}));
+ const allowed=new Set(checks.filter(x=>x[1]).map(x=>x[0]));
+ visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]));
+ chandaCanView=false;chandaCanWrite=false;
+ if(inst==='mosque'){
+  const [view,write]=await Promise.all([supabase.rpc('chanda_can_access',{write_access:false}),supabase.rpc('chanda_can_access',{write_access:true})]);
+  if(view.error)throw view.error;if(write.error)throw write.error;
+  chandaCanView=!!view.data;chandaCanWrite=!!write.data;
+  if(chandaCanView&&!visibleModules.includes(3))visibleModules.push(3);
+ }
+}
+function refreshNav(){
+ document.querySelectorAll('#adNav button').forEach(b=>{const i=Number(b.dataset.i);b.hidden=!visibleModules.includes(i);b.classList.toggle('active',i===activeModule)});
+}
+function movePanel(id){
+ const target=el(id);if(!target){el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[activeModule])+'</h2><p>এই অংশের পুরোনো প্যানেল পাওয়া যায়নি।</p></section>';return}
+ const panel=target.closest('.panel')||target;el('adPage').replaceChildren(panel);panel.hidden=false;panel.classList.remove('ad-legacy');
+}
 function mount(){
  if(el('accountsDashboard'))return;
  const root=document.createElement('section');root.id='accountsDashboard';
