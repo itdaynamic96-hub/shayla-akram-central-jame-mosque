@@ -84,7 +84,7 @@ async function renderDashboard(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<div class="panel"><div class="empty">লাইভ হিসাব লোড হচ্ছে…</div></div>');
  const rows=[];let offset=0;
  while(true){
-  const {data,error}=await supabase.from('ledger_entries').select('entry_type,amount,status,entry_date').eq('institution',inst).order('entry_date',{ascending:false}).range(offset,offset+999);
+  const {data,error}=await supabase.from('ledger_entries').select('entry_type,amount,status,entry_date').eq('institution',inst).order('entry_date',{ascending:false}).order('id',{ascending:true}).range(offset,offset+999);
   if(error)throw error;
   const batch=data||[];rows.push(...batch);
   if(batch.length<1000)break;
