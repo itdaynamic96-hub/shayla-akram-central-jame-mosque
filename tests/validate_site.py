@@ -262,6 +262,11 @@ assert "has(key,write?'can_write':'can_view')" in enterprise_js and "has(key,'ca
 permission_hardening=(ROOT/'supabase/accounts-module-permission-hardening.sql').read_text(encoding='utf-8')
 assert 'not write_access or amp.can_write' in permission_hardening and 'not approve_access or mp.can_approve' in permission_hardening, 'Accounts RLS must enforce write and approval capabilities'
 assert "array['m70','m80']" in permission_hardening and 'security invoker' in permission_hardening.lower(), 'Payroll approval and module permission helper must use the hardened access model'
+sequence_grants=(ROOT/'supabase/accounts-ledger-sequence-permissions.sql').read_text(encoding='utf-8')
+assert 'account_receipt_seq to authenticated' in sequence_grants and 'account_voucher_seq to authenticated' in sequence_grants, 'Accounts receipt and voucher sequences must be usable by authenticated RLS-protected writers'
+obligation_read_grant=(ROOT/'supabase/accounts-obligation-payments-read-grant.sql').read_text(encoding='utf-8')
+assert 'account_obligation_payments to authenticated' in obligation_read_grant, 'Accounts UI must be able to read RLS-filtered obligation payment history'
+assert 'accounts-enterprise.js?v=20261125-3' in accounts, 'Accounts enterprise permission fixes must use a refreshed browser cache key'
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
 assert 'account_submit_obligation_payment' in enterprise_js and 'account_obligation_payments' in enterprise_js, 'Obligation payments must enter the ledger approval flow'
 assert 'data-pending' in enterprise_js and 'অনুমোদনের অপেক্ষায়' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Pending obligation payments must be tracked separately'
