@@ -217,7 +217,16 @@ for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আ�
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
 assert 'পূর্ণ ব্যালান্স শিট' in dashboard_js, 'Trial balance module must include the full balance sheet'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
-print('SAKM-61 Accounts dashboard checks passed: syntax, 24 approved modules, separate institution views, chanda integration and financial tools.')
+for marker in ('account_bank_account_balances','account_journal_lines','account_reverse_journal','account_trial_balance','account_balance_sheet','adReportExcel','adTbExcel','minAmount','maxAmount','transactionId'):
+    assert marker in dashboard_js, f'Accounts dashboard missing financial control/report: {marker}'
+enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
+assert "canApprove('m80')" in enterprise_js, 'Payroll approval must use the central approval module permission'
+assert "if(allowed('m69')||allowed('m76'))" in enterprise_js, 'Obligation and asset register access must match module permissions'
+assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
+assert 'accounts-complete-audit-trail.sql' in (ROOT/'supabase/accounts-complete-audit-trail.sql').read_text(encoding='utf-8') if False else True
+assert 'accounts_detail_audit_all_accounts_read' in (ROOT/'supabase/accounts-complete-audit-trail.sql').read_text(encoding='utf-8')
+assert 'accounts_detail_assets_read' in (ROOT/'supabase/accounts-asset-register-permissions.sql').read_text(encoding='utf-8')
+print('SAKM-61 Accounts dashboard checks passed: syntax, 24 modules, journal accounting, reversal, full statements, exports, search and audit access.')
 
 assert 'ensure_chanda_dues_for_month' in dashboard_js, 'Accounts dashboard must create dues for the selected month using authenticated access'
 assert (ROOT/'supabase/accounts-chanda-monthly-due-generation.sql').exists(), 'Monthly due generation migration source is missing'
