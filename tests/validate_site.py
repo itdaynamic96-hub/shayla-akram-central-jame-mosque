@@ -447,3 +447,7 @@ assert 'const directApproved=canApproveAccountEntry' in accounts_html_text and "
 chanda_multi=(ROOT/'supabase/chanda-multi-month-payment.sql').read_text(encoding='utf-8')
 assert 'p_paid_amount numeric' in chanda_multi and 'set search_path = public, pg_temp' in chanda_multi, 'Chanda: multi-month RPC parameter and safe search_path must match the client'
 assert 'perform 1 from public.chanda_dues' in chanda_multi and 'if remaining_payment>0' in chanda_multi, 'Chanda: lock dues and reject partial allocation'
+
+chanda_payment_sql=(ROOT/'supabase/fix-chanda-payment-column-ambiguity.sql').read_text(encoding='utf-8')
+assert "ledger_reference:=coalesce(nullif(trim(reference),''),'CHANDA')" in chanda_payment_sql, 'Chanda: each linked ledger entry must have a unique reference'
+assert 'replace(payment_id::text' in chanda_payment_sql, 'Chanda: unique ledger references must be tied to payment IDs'
