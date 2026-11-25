@@ -13,6 +13,15 @@ if not match:
 api_key = match.group(1)
 base = "https://lmwczibsipczfymhyqba.supabase.co/functions/v1/bengali-tts"
 
+# Inspect the provider's current Bengali voice catalogue before testing our proxy.
+with urllib.request.urlopen("https://api.tts.ai/v1/voices/?language=bn", timeout=20) as response:
+    catalogue = json.loads(response.read().decode("utf-8"))
+voices = catalogue.get("voices", []) if isinstance(catalogue, dict) else catalogue
+print("Bengali provider voices:", json.dumps([
+    {key: voice.get(key) for key in ("id", "name", "model", "language", "gender")}
+    for voice in voices if isinstance(voice, dict)
+], ensure_ascii=False))
+
 def request(url, data=None, headers=None, timeout=45):
     req = urllib.request.Request(url, data=data, headers=headers or {})
     try:
