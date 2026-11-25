@@ -95,7 +95,7 @@ assert "'mosque_admin','foundation_admin'" in migration
 assert 'as '+chr(36)+'guard'+chr(36) in migration
 schema=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert "public.has_access(array['super_admin','admin','website_admin','editor'],null)" in schema
-for js in ('admin-modules.js','admin-users.js','supabase-client.js'):
+for js in ('accounts-workspace.js','admin-modules.js','admin-users.js','supabase-client.js'):
     subprocess.run(['node','--check','--input-type=module'],input=(ROOT/js).read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
 enhancements=(ROOT/'supabase/admin-panel-enhancements.sql').read_text(encoding='utf-8')
 assert 'm61' in enhancements and 'replace_admin_module_permissions' in enhancements
@@ -195,3 +195,13 @@ assert 'next_month_start' in (ROOT/'supabase/chanda-upcoming-month-due.sql').rea
 print('Accounts messaging checks passed: queue UI, RLS, WhatsApp-first/SMS fallback, webhook and monthly chanda status window.')
 
 assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')
+
+for required_id in ('accountModuleNav','donorPanel','bankPanel','transferPanel','journalPanel','reconciliationPanel','balanceSheetPanel','approvalPanel','advancedSearchPanel','reportsPanel','auditPanel','permissionPanel','settingsPanel'):
+    assert f'id="{required_id}"' in accounts, f'Accounts: missing workspace panel {required_id}'
+assert '২৪টি হিসাব সাব-মডিউল' in accounts, 'Accounts: 24-module navigation is missing'
+assert 'account_submit_manual_journal' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8'), 'Accounts: manual journal RPC is missing'
+assert 'account_submit_bank_transfer' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8'), 'Accounts: bank transfer RPC is missing'
+assert 'account_create_reconciliation' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8'), 'Accounts: bank reconciliation RPC is missing'
+assert 'account_add_reconciliation_item' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8'), 'Accounts: statement line matching is missing'
+assert 'account_trial_balance' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8') and 'account_balance_sheet' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8'), 'Accounts: financial statements are missing'
+assert 'document_no' in (ROOT/'accounts-workspace.js').read_text(encoding='utf-8'), 'Accounts: automatic receipt/voucher numbers are not surfaced'
