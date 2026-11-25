@@ -398,7 +398,7 @@ assert 'admin-modules.js?v=20261126-dashboardprefs2' in (ROOT/'admin.html').read
 admin_modules_text=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 schema_block=admin_modules_text.split('const fieldSchemas={',1)[1].split('};',1)[0]
 schema_keys={int(x) for x in re.findall(r'(?m)^([0-9]+):\\[',schema_block)}
-expected_form_modules=set([2,*range(4,13),*range(17,41),*range(51,55),*range(56,62)])
+expected_form_modules=set([*range(4,17),*range(17,41),*range(51,55),*range(56,62)])
 assert schema_keys == expected_form_modules, f'Admin: every data-entry module must have an explicit dedicated form schema; missing={sorted(expected_form_modules-schema_keys)}, extra={sorted(schema_keys-expected_form_modules)}'
 assert 'schema=fieldSchemas[m.n]' in admin_modules_text and 'fieldSchemas[m.n]||[[' not in admin_modules_text, 'Admin: generic fallback form must not be used'
 assert 'const title=String(data[titleField]||m.name)' in admin_modules_text, 'Admin: form title should be derived from the module-specific first field'
