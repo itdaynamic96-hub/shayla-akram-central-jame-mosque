@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
 
     await recordAttempt(row.id, "sms", "failed", sms.providerId, sms.code, sms.detail);
     const { error: failError } = await admin.from("accounts_message_queue").update({
-      status: "failed", active_channel: "none", attempt_count: Number(row.attempt_count || 0) + 1,
+      status: "failed", active_channel: "none", attempt_count: Number(row.attempt_count || 0) + 2,
       updated_at: new Date().toISOString(),
     }).eq("id", row.id).eq("status", "processing");
     if (failError) throw failError;
