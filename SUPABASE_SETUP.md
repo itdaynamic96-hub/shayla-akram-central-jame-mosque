@@ -108,5 +108,5 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 ## Single-operator Accounts workflow
 
-The assigned worker can create income and expense entries directly as approved. The database verifies that the same authenticated user is both creator and approver, checks the appropriate Accounts module's write permission, and posts a balanced double-entry journal automatically. Existing pending entries and workflows such as payroll, transfers, and manual journals remain available in the approval module; the same assigned worker can approve them when granted the relevant `can_approve` permission. A second employee is not required.
+The assigned worker can create income and expense entries directly as approved only when both `can_write` and `can_approve` are granted for the relevant module (or the user has a built-in approver role). A worker with write-only permission can submit a Pending entry, but cannot approve it. The database verifies that the same authenticated user is both creator and approver for direct posting, and creates a balanced double-entry journal. Payroll, transfers, and manual journals remain in the approval module; the same assigned worker can approve them with the relevant `can_approve` permission. A second employee is not required.
 
