@@ -2,7 +2,6 @@
 (() => {
   'use strict';
 
-  const ENGINE_URL = 'https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/legacy/spellophone.iife.js';
   const selectors = [
     '.article-card', '.published-content', '.content-slot.article-card',
     '.video-card', '.content-slot.video-card',
@@ -88,7 +87,7 @@
       return;
     }
     try {
-      statusText('স্বাভাবিক বাংলা পুরুষ Neural কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
+      statusText('বিনামূল্যের বাংলা পুরুষ Neural কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
       const response = await fetch(TTS_API, {
         method: 'POST',
         headers: {'Content-Type':'application/json','apikey':'sb_publishable_rcOi9VHw4tP2umMhDqD1YA_rJWwugHi'},
@@ -143,7 +142,7 @@
     };
     active = session;
     setControls('playing');
-    statusText('বাংলা Neural পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
+    statusText('বিনামূল্যের বাংলা পুরুষ Neural কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
     playNext(session);
   };
 
