@@ -29,6 +29,12 @@ function resetAdPage(html=''){
  const messageContent=el('messageContent'),messagePanel=el('accountsMessaging');
  if(messageContent&&messagePanel){
   while(messageContent.firstChild)messagePanel.appendChild(messageContent.firstChild);
+  const refresh=el('messageRefresh');
+  if(refresh){
+   let header=messagePanel.querySelector('.top');
+   if(!header){header=document.createElement('div');header.className='top';messagePanel.prepend(header)}
+   header.appendChild(refresh);
+  }
   messagePanel.hidden=true;
  }
  const page=el('adPage'),bin=el('adLegacyBin');
