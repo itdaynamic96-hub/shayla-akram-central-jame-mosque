@@ -7,9 +7,9 @@ const institution=()=> $('institution').value;
 const writeRoles=['super_admin','admin','accounts_manager','accountant','mosque_admin','foundation_admin'];
 const readRoles=[...writeRoles,'auditor'];
 const has=(key,cap='can_view')=>permissions.some(p=>p.module_key===key&&p[cap]);
-const canApprove=key=>profile?.role==='custom_admin'?has(key,'can_approve'):['super_admin','accounts_manager','mosque_admin','foundation_admin'].includes(profile?.role)&&(profile?.institution==='both'||profile?.institution===institution());
+const canApprove=key=>allowed(key,true);
 const allowed=(key,write=false)=>{
- if(profile?.role==='custom_admin') return has(key,write?'can_write':'can_view');
+ if(profile?.role==='custom_admin') return has(key,'can_view');
  if(write) return writeRoles.includes(profile?.role)&&(profile?.institution==='both'||profile?.institution===institution())&&(profile?.role!=='mosque_admin'||institution()==='mosque')&&(profile?.role!=='foundation_admin'||institution()==='foundation');
  return readRoles.includes(profile?.role)&&(profile?.institution==='both'||profile?.institution===institution())&&(profile?.role!=='mosque_admin'||institution()==='mosque')&&(profile?.role!=='foundation_admin'||institution()==='foundation');
 };
@@ -56,7 +56,7 @@ async function loadAll(){
   $('payrollStaff').innerHTML=staff.filter(s=>s.is_active).map(s=>'<option value="'+s.id+'" data-salary="'+s.monthly_salary+'">'+escapeHtml(s.full_name)+' — '+money(s.monthly_salary)+'</option>').join('');
   const syncSalary=()=>{const o=$('payrollStaff').selectedOptions[0];if(o)$('payrollBase').value=o.dataset.salary};
   $('payrollStaff').onchange=syncSalary;if(staff.length)syncSalary();
-  $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m70',true)&&canApprove('m80'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m70',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
+  $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m70',true)&&canApprove('m70'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m70',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
  }
  if(allowed('m66'))await loadBooks();
  if(allowed('m69')||allowed('m76')){
