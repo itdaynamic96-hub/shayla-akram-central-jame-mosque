@@ -148,5 +148,7 @@ for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
     assert marker in (ROOT/'accounts.html').read_text(encoding='utf-8'), f'Accounts UI missing: {marker}'
 
 assert 'data-payroll-slip' in enterprise_js, 'Accounts: printable salary slip action is missing'
+assert 'range(offset,offset+499)' in enterprise_js, 'Accounts: cash/bank report pagination is missing'
+assert "allowed('m43')" in enterprise_js and "allowed('m46')" in enterprise_js and "allowed('m50')" in enterprise_js, 'Accounts: enterprise modules must honor the existing expense, bank/cash and audit grants'
 assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: daily/monthly/yearly book filters are missing'
 print('Enterprise Accounts checks passed: external JS syntax, payroll, cash/bank books, obligations, assets and migration markers.')
