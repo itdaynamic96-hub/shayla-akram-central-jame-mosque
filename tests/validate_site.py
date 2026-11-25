@@ -153,10 +153,9 @@ reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261125-freeedge1' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-svara1' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: TTS engine must load only when a card is played in {page_name}'
-    assert 'TTS_API' in reader_js and 'functions/v1/bengali-tts' in reader_js, f'Read Aloud: server-side free Bengali TTS endpoint is missing'
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
@@ -164,7 +163,16 @@ assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Rea
 assert 'spellophone' not in reader_js.lower() and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: obsolete local TTS engine must not be loaded'
 assert 'বাংলা পুরুষ কণ্ঠ' in reader_js, 'Read Aloud: user-facing voice must be identified as Bengali male'
 assert 'speechSynthesis' not in reader_js and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: must not depend on device speech voices'
-assert 'fetch(TTS_API' in reader_js and 'new Audio(session.audioUrl)' in reader_js, 'Read Aloud: server-generated MP3 must be fetched and played'
+assert 'functions/v1/bengali-tts' not in reader_js and 'sb_publishable_' not in reader_js, 'Read Aloud: browser must not call the retired API-key-protected TTS proxy'
+assert '১.৯৫ GB' in reader_js and 'WebGPU' in reader_js, 'Read Aloud: large local model requirements must be disclosed before download'
+assert (ROOT/'svara-worker.js').exists() and (ROOT/'svara-engine.js').exists(), 'Read Aloud: Svāra worker and engine source files are required'
+assert (ROOT/'vite.tts.config.js').exists() and (ROOT/'package.json').exists(), 'Read Aloud: reproducible browser TTS build configuration is required'
+worker_source=(ROOT/'svara-worker.js').read_text(encoding='utf-8')
+assert 'Bengali (Male)' not in worker_source or 'speaker_id' in worker_source, 'Read Aloud: worker must accept the selected speaker ID'
+assert 'onnxruntime-web@1.20.0/dist/' in worker_source, 'Read Aloud: ONNX Runtime Web assets must have a stable CDN location'
+assert (ROOT/'assets/svara-build/engine.js').exists(), 'Read Aloud: bundled engine must be generated in CI before deployment'
+assert list((ROOT/'assets/svara-build').glob('*worker*.js')) or list((ROOT/'assets/svara-build').glob('*svara-worker*.js')), 'Read Aloud: bundled WebGPU worker must be generated in CI'
+assert 'createSvaraEngine' in reader_js and "speaker_id:'Bengali (Male)'" in reader_js and 'new Audio(audioUrl)' in reader_js, 'Read Aloud: local Svāra Bengali male synthesis and playback must be wired'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
