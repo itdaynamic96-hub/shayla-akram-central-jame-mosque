@@ -13,14 +13,28 @@ if not match:
 api_key = match.group(1)
 base = "https://lmwczibsipczfymhyqba.supabase.co/functions/v1/bengali-tts"
 
-# Inspect the provider's current Bengali voice catalogue before testing our proxy.
-with urllib.request.urlopen("https://api.tts.ai/v1/voices/?language=bn", timeout=20) as response:
-    catalogue = json.loads(response.read().decode("utf-8"))
-voices = catalogue.get("voices", []) if isinstance(catalogue, dict) else catalogue
-print("Bengali provider voices:", json.dumps([
-    {key: voice.get(key) for key in ("id", "name", "model", "language", "gender")}
-    for voice in voices if isinstance(voice, dict)
-], ensure_ascii=False))
+# Probe the only Bengali voices listed by the provider without sending any API key.
+payload = json.dumps({
+    "model": "indic-parler",
+    "voice": "bn_arjun",
+    "language": "bn",
+    "text": "বাংলা কণ্ঠ পরীক্ষা।",
+    "format": "mp3",
+    "speed": 0.95,
+}, ensure_ascii=False).encode("utf-8")
+probe = urllib.request.Request(
+    "https://api.tts.ai/v1/tts/",
+    data=payload,
+    headers={"Content-Type": "application/json", "Accept": "application/json"},
+)
+try:
+    with urllib.request.urlopen(probe, timeout=30) as response:
+        probe_type = response.headers.get("Content-Type", "")
+        probe_body = response.read()
+        print("No-key Indic Parler response:", response.status, probe_type, len(probe_body), probe_body[:500].decode("utf-8", "replace") if "json" in probe_type else "")
+except urllib.error.HTTPError as exc:
+    print("No-key Indic Parler response:", exc.code, exc.read().decode("utf-8", "replace")[:1000])
+    raise SystemExit(0)
 
 def request(url, data=None, headers=None, timeout=45):
     req = urllib.request.Request(url, data=data, headers=headers or {})
