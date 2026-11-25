@@ -5,11 +5,14 @@
 -- Extend module identifiers without changing or reusing existing records.
 alter table public.module_records drop constraint if exists module_records_module_key_check;
 alter table public.module_records add constraint module_records_module_key_check
-  check (module_key ~ '^m(0[1-9]|[1-5][0-9]|60|61)$');
+  check (module_key ~ '^m(0[1-9]|[1-5][0-9]|6[01])$');
 
 alter table public.admin_module_permissions drop constraint if exists admin_module_permissions_module_key_check;
 alter table public.admin_module_permissions add constraint admin_module_permissions_module_key_check
-  check (module_key ~ '^m(0[1-9]|[1-5][0-9]|60|61)$');
+  check (module_key ~ '^m(0[1-9]|[1-5][0-9]|6[01])$');
+
+alter table public.module_records drop constraint if exists module_records_m61_mosque_only_check;
+alter table public.module_records add constraint module_records_m61_mosque_only_check check (module_key <> 'm61' or institution='mosque');
 
 -- Add m61 (Muslim registration) to the existing permission model.
 create or replace function public.module_record_access(target_key text,target_institution text,write_access boolean default false)
@@ -61,8 +64,8 @@ as $$
    )
  );
 $$;
-revoke all on function public.module_record_access(text,text,boolean) from public;
-revoke all on function public.module_record_approval_access(text,text) from public;
+revoke all on function public.module_record_access(text,text,boolean) from public,anon,authenticated;
+revoke all on function public.module_record_approval_access(text,text) from public,anon,authenticated;
 grant execute on function public.module_record_access(text,text,boolean) to authenticated;
 grant execute on function public.module_record_approval_access(text,text) to authenticated;
 
@@ -115,21 +118,21 @@ using (
  )
 );
 
--- Publicly visible, explicitly published website menu and SEO records.
+-- Publicly visible, explicitly published website records. Personal, financial,
+-- audit, staff, donor and beneficiary records are excluded from this allowlist.
 grant select on public.module_records to anon;
 drop policy if exists "public can read published public module records" on public.module_records;
 create policy "public can read published public module records"
 on public.module_records for select to anon,authenticated
 using (
- status='published'
- and data->>'public_display'='true'
- and data ? 'public_module'
+ status='published' and data->>'public_display'='true' and data ? 'public_module'
  and module_key in (
-  'm07','m08','m10','m11','m12','m14','m15','m16','m17','m18','m19','m20',
+  'm04','m07','m08','m09','m10','m11','m12','m13','m14','m15','m16','m17','m18','m19','m20',
   'm21','m22','m23','m24','m25','m26','m27','m28',
-  'm31','m32','m33','m36','m37','m38','m40'
+  'm31','m32','m33','m34','m35','m36','m37','m38','m40'
  )
 );
+
 
 -- Muslim registration records remain private; no anon SELECT policy is granted.
 
