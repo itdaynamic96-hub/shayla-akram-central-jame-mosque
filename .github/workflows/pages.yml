@@ -1,15 +1,17 @@
 name: Validate and deploy static site to GitHub Pages
 on:
   push:
-    branches: ["main", "admin-panel-repair-20261122", "admin-dashboard-upgrade-20261122", "accounts-messaging-integration-20261125", "accounts-double-entry-20261125"]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.ref == 'refs/heads/main' && 'pages' || format('pages-{0}', github.ref) }}
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-latest
