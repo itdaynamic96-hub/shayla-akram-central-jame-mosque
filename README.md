@@ -55,14 +55,16 @@ This repository is the **SAKM-61** (61-module) mosque and foundation website. It
 The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
 
 
-Live Bengali TTS smoke test workflow is opt-in: commits containing `[tts-smoke]` verify the deployed no-key TTS endpoint and audio response.
+Live Bengali TTS smoke test workflow is opt-in: commits containing `[tts-smoke]` verify the deployed Google Translate Bengali TTS endpoint and audio response.
 
 Private module report uploads (m06) are stored in the non-public `private-module-files` bucket; Custom Admin write actions require the explicit `can_write` grant.
 
 TTS provider catalogue smoke check updated.
 
-Anonymous Bengali voice availability probe updated.
 
-Google Bengali no-key TTS fallback probe added.
+
+
 
 [tts-smoke] Google Bengali TTS endpoint check after Admin layout update.
+
+Bengali Read Aloud uses Google Translate TTS without a provider API key; its endpoint is unofficial and may be rate-limited or changed.
