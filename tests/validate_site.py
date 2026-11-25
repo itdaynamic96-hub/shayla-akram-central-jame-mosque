@@ -208,7 +208,7 @@ assert module_block, 'Accounts dashboard module list is missing'
 module_labels=re.findall(r"'([^']*)'",module_block.group(1))
 assert len(module_labels)==22, f'Accounts dashboard must contain exactly 22 approved modules, found {len(module_labels)}'
 assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' not in module_labels, 'Monthly chanda must be integrated into Donations, not a separate module'
-for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderReports","renderAdvancedSearch","renderReconciliation","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
+for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderReports","renderAdvancedSearch","renderReconciliation","resetAdPage","adLegacyBin","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
@@ -219,4 +219,6 @@ print('SAKM-61 Accounts dashboard checks passed: syntax, 22 approved modules, se
 assert 'ensure_chanda_dues_for_month' in dashboard_js, 'Accounts dashboard must create dues for the selected month using authenticated access'
 assert (ROOT/'supabase/accounts-chanda-monthly-due-generation.sql').exists(), 'Monthly due generation migration source is missing'
 assert (ROOT/'MESSAGING_SETUP.md').exists(), 'Provider-specific messaging setup guide is missing'
-assert 'account_create_bank_reconciliation' in (ROOT/'supabase/account-bank-reconciliation-ui.sql').read_text(encoding='utf-8'), 'Secure reconciliation creation RPC source is missing'
+recon_sql=(ROOT/'supabase/account-bank-reconciliation-ui.sql').read_text(encoding='utf-8')
+assert 'account_create_bank_reconciliation' in recon_sql and 'account_bank_reconciliation_candidates' in recon_sql, 'Secure reconciliation RPC source is missing'
+assert 'validate_account_bank_reconciliation_item' in recon_sql and 'account_bank_reconciliation_items_delete' in recon_sql, 'Reconciliation matching security controls are missing'
