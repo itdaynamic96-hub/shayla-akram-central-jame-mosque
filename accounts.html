@@ -92,7 +92,7 @@
   <div class="top"><h4>জার্নাল লাইন</h4><button type="button" id="addJournalLine">লাইন যোগ করুন</button></div>
   <div id="journalLines"></div><p id="journalTotals" class="muted">মোট ডেবিট: ৳০ · মোট ক্রেডিট: ৳০</p>
   <button type="submit">অনুমোদনের জন্য জমা দিন</button>
- </form><p id="journalError" class="error" hidden></p>
+ </form><p id="journalError" class="error" hidden></p><h4>জার্নাল রেজিস্টার</h4><div class="tablewrap"><table><thead><tr><th>জার্নাল নং</th><th>তারিখ</th><th>বিবরণ</th><th>ডেবিট</th><th>ক্রেডিট</th><th>অবস্থা</th><th>কাজ</th></tr></thead><tbody id="journalRegisterRows"></tbody></table></div>
 </div>
 <div class="panel account-workspace-panel" id="reconciliationPanel">
  <h3>ব্যাংক রিকনসিলিয়েশন</h3><p class="muted">ব্যাংক স্টেটমেন্টের ক্লোজিং ব্যালান্স ও হিসাবের বুক ব্যালান্স সমান হলে রিকনসাইলড হিসেবে নিশ্চিত করা যাবে।</p>
@@ -101,7 +101,7 @@
   <div><label>স্টেটমেন্ট তারিখ</label><input id="statementDate" type="date" required></div>
   <div><label>স্টেটমেন্ট শুরুর স্থিতি</label><input id="statementOpening" type="number" step="0.01" required></div>
   <div><label>স্টেটমেন্ট শেষের স্থিতি</label><input id="statementClosing" type="number" step="0.01" required></div>
-  <div><label>বুক ব্যালান্স</label><input id="statementBook" type="number" step="0.01" required></div>
+  <div><label>বুক ব্যালান্স (সার্ভার থেকে)</label><input id="statementBook" type="number" step="0.01" readonly></div>
   <div><label>নোট</label><input id="reconcileNotes" maxlength="400"></div>
  </div><p><button type="submit">রিকনসিলিয়েশন রেকর্ড করুন</button></p></form>
  <p id="reconciliationError" class="error" hidden></p><div class="panel"><h4>স্টেটমেন্ট লাইন মিলানো</h4>
@@ -141,7 +141,7 @@
  <div class="formgrid"><div><label>রিপোর্ট শুরু</label><input id="reportFrom" type="date"></div><div><label>রিপোর্ট শেষ</label><input id="reportTo" type="date"></div></div>
  <p><button type="button" id="buildReport">রিপোর্ট তৈরি</button> <button type="button" id="reportExcel">Excel ডাউনলোড</button> <button type="button" id="reportPrint">PDF / প্রিন্ট</button></p>
  <div class="grid"><div class="stat">মোট আয়<strong id="reportIncome">৳০</strong></div><div class="stat">মোট ব্যয়<strong id="reportExpense">৳০</strong></div><div class="stat">নিট<strong id="reportNet">৳০</strong></div></div>
- <div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>খাত</th><th>পরিমাণ</th><th>রেফারেন্স</th><th>অবস্থা</th></tr></thead><tbody id="reportRows"></tbody></table></div><p id="reportError" class="error" hidden></p>
+ <div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>খাত</th><th>পরিমাণ</th><th>রসিদ/ভাউচার নম্বর</th><th>অবস্থা</th><th>প্রিন্ট</th></tr></thead><tbody id="reportRows"></tbody></table></div><p id="reportError" class="error" hidden></p>
 </div>
 <div class="panel account-workspace-panel" id="auditPanel">
  <h3>অডিট ট্রেইল ও যাচাই</h3><p class="muted">নতুন হিসাব-ওয়ার্কফ্লো ও আর্থিক রেকর্ডের পরিবর্তন লগ।</p>
