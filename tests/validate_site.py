@@ -147,13 +147,14 @@ assert 'hasAccountModule' in (ROOT/'accounts.html').read_text(encoding='utf-8'),
 assert "account_module_permission(institution,array['m48'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Budget writes must require the budget module grant'
 assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Receipt uploads must require the receipt module grant'
 
-# Enterprise Premium additions: Bengali read-aloud and monthly chanda workflow.
+# Enterprise Premium additions: free Bengali read-aloud and monthly chanda workflow.
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
 reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture_output=True)
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-svara1' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-edge-tts2' in page_source, f'Read Aloud: free Edge TTS client is not loaded by {page_name}'
+    assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: TTS engine must load only when a card is played in {page_name}'
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
@@ -163,18 +164,11 @@ assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Rea
 assert 'spellophone' not in reader_js.lower() and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: obsolete local TTS engine must not be loaded'
 assert 'বাংলা পুরুষ কণ্ঠ' in reader_js, 'Read Aloud: user-facing voice must be identified as Bengali male'
 assert 'speechSynthesis' not in reader_js and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: must not depend on device speech voices'
-assert 'functions/v1/bengali-tts' not in reader_js and 'sb_publishable_' not in reader_js, 'Read Aloud: browser must not call the retired API-key-protected TTS proxy'
-assert '১.৯৫ GB' in reader_js and 'WebGPU' in reader_js, 'Read Aloud: large local model requirements must be disclosed before download'
-assert (ROOT/'svara-worker.js').exists() and (ROOT/'svara-engine.js').exists(), 'Read Aloud: Svāra worker and engine source files are required'
-assert (ROOT/'vite.tts.config.js').exists() and (ROOT/'package.json').exists(), 'Read Aloud: reproducible browser TTS build configuration is required'
-worker_source=(ROOT/'svara-worker.js').read_text(encoding='utf-8')
-assert 'Bengali (Male)' not in worker_source or 'speaker_id' in worker_source, 'Read Aloud: worker must accept the selected speaker ID'
-assert 'onnxruntime-web@1.20.0/dist/' in worker_source, 'Read Aloud: ONNX Runtime Web assets must have a stable CDN location'
-assert (ROOT/'assets/svara-build/engine.js').exists(), 'Read Aloud: bundled engine must be generated in CI before deployment'
-assert list((ROOT/'assets/svara-build').rglob('*worker*.js')) or list((ROOT/'assets/svara-build').rglob('*svara-worker*.js')), 'Read Aloud: bundled WebGPU worker must be generated in CI'
-engine_bundle=(ROOT/'assets/svara-build/engine.js').read_text(encoding='utf-8')
-assert 'new Worker' in engine_bundle and 'svara-worker' in engine_bundle, 'Read Aloud: engine entry must retain its worker factory export'
-assert 'createSvaraEngine' in reader_js and "speaker_id:'Bengali (Male)'" in reader_js and 'new Audio(audioUrl)' in reader_js, 'Read Aloud: local Svāra Bengali male synthesis and playback must be wired'
+assert 'functions/v1/bengali-tts' in reader_js and 'window.SUPABASE_CONFIG' in reader_js, 'Read Aloud: must call the configured no-provider-key Bengali TTS Edge Function'
+assert 'ensureSvaraModel' not in reader_js and 'svara-build' not in reader_js and '1.95 GB' not in reader_js, 'Read Aloud: must not depend on the multi-GB local model'
+tts_function=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
+assert 'bn-BD-PradeepNeural' in tts_function and 'text.length > 1800' in tts_function, 'Read Aloud: Edge Function must use the Bengali male voice and enforce a text limit'
+assert 'new Audio(audioUrl)' in reader_js, 'Read Aloud: audio playback is not wired'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
@@ -393,11 +387,3 @@ assert 'mp.can_view and mp.can_write and mp.can_approve' in hardening_sql, 'Modu
 assert "'m81',false" in hardening_sql, 'Audit Trail module must have its own audit-log read permission'
 assert 'admin_dashboard_settings_updated_by_idx' in hardening_sql, 'Admin dashboard settings foreign key must be indexed'
 
-# Bengali TTS regression: use the deployed no-key Edge TTS endpoint, not a missing multi-GB local model.
-reader_source=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
-assert "functions/v1/bengali-tts" in reader_source and "window.SUPABASE_CONFIG" in reader_source, 'Read aloud must call the configured free Bengali TTS Edge Function'
-assert 'ensureSvaraModel' not in reader_source and 'svara-build' not in reader_source and '1.95 GB' not in reader_source, 'Read aloud must not depend on the missing multi-GB Svara model'
-assert (ROOT/'supabase/functions/bengali-tts/index.ts').exists(), 'Bengali TTS Edge Function source must be versioned with the site'
-for page in ('index.html','admin.html','accounts.html'):
-    assert 'read-aloud.js?v=20261126-edge-tts2' in (ROOT/page).read_text(encoding='utf-8'), f'{page}: Bengali TTS cache key must be refreshed'
-subprocess.run(['node','--check'],input=reader_source,text=True,capture_output=True,check=True)
