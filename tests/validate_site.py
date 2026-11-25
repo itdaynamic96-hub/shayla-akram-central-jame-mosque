@@ -215,7 +215,7 @@ for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_paym
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
-assert 'ব্যালান্স শিট সারসংক্ষেপ' in dashboard_js, 'Trial balance module must include a balance-sheet summary'
+assert 'পূর্ণ ব্যালান্স শিট' in dashboard_js, 'Trial balance module must include the full balance sheet'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
 print('SAKM-61 Accounts dashboard checks passed: syntax, 24 approved modules, separate institution views, chanda integration and financial tools.')
 
