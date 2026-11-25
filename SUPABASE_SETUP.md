@@ -117,3 +117,8 @@ The assigned worker can create income and expense entries directly as approved o
 
 The live Supabase project currently records 62 applied migration versions. The repository currently contains 14 timestamped migration SQL files; 48 older migration bodies are not present in the Git history available here. This does not affect the already-running live project, but the timestamped migration folder alone is not a complete clean-room replay of the historical database. Do not invent or blindly replay missing versions. Use the setup steps and current standalone SQL files for a new project until the historical migration archive is reconstructed.
 
+
+## Multi-month Chanda collection
+
+Run `supabase/chanda-multi-month-payment.sql` after `supabase/chanda-enterprise.sql`. The Admin Chanda page sends `p_paid_amount` to `record_chanda_payment_months`; the function locks selected monthly dues, restricts a collection to one member, allocates oldest month first, and rolls back the entire collection if any amount cannot be allocated.
+
