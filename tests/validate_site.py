@@ -408,3 +408,15 @@ assert 'id="recordStatus"' in admin_modules_text, 'Admin: record status must rem
 admin_html_text=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert '#adminSidebar a{font-size:15px' in admin_html_text and '#adminWorkspace .admin-entry-grid' in admin_html_text, 'Admin: larger readable typography and module forms styling are required'
 assert '#adminWorkspace .module-card b{font-size:18px' in admin_html_text, 'Admin: module cards must use larger text'
+
+# Private report storage and custom-admin write permission regression checks.
+module_permissions_text=(ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8')
+assert 'not write_access or mp.can_write' in module_permissions_text, 'Custom admins with view-only grants must not write module records'
+private_migration=(ROOT/'supabase/migrations/20261125194105_private_module_reports_and_module_write_hardening.sql').read_text(encoding='utf-8')
+assert 'private-module-files' in private_migration and 'public = false' not in private_migration, 'Private module report storage bucket and policies must be present'
+assert "name not like 'modules/m06/%'" in private_migration, 'Private reports must not be uploaded to the public site-media bucket'
+admin_modules_private=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert "['file_url','প্রতিবেদন ফাইল','private-file']" in admin_modules_private, 'Admin reports must use private-file field type'
+assert "supabase.storage.from('private-module-files').createSignedUrl(path,300)" in admin_modules_private, 'Private report downloads must use short-lived signed URLs'
+assert "kind==='video'?52428800" in admin_modules_private, 'Video upload validation must match the 50 MB Storage bucket limit'
+assert 'admin-modules.js?v=20261126-dashboardprefs3' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
