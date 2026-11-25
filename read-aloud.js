@@ -91,7 +91,7 @@
       statusText('স্বাভাবিক বাংলা পুরুষ Neural কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
       const response = await fetch(TTS_API, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: {'Content-Type':'application/json','apikey':'sb_publishable_rcOi9VHw4tP2umMhDqD1YA_rJWwugHi'},
         body: JSON.stringify({text:session.chunks[session.index]})
       });
       if (!response.ok) {
