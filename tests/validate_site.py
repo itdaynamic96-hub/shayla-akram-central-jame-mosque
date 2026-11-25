@@ -141,6 +141,13 @@ assert 'speechSynthesis' not in reader_js and 'SpeechSynthesisUtterance' not in 
 assert 'engine.synthesize' in reader_js and 'AudioContext' in reader_js, 'Read Aloud: browser-side audio synthesis is missing'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
+assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
+assert 'navigator.share' in reader_js and 'navigator.clipboard' in reader_js, 'Share: native share and copy-link actions are required'
+for platform in ('facebook.com/sharer','wa.me/?text=','t.me/share/url','twitter.com/intent/tweet','linkedin.com/sharing/share-offsite','mailto:'):
+    assert platform in reader_js, f'Share: missing platform {platform}'
+assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran ayah and Hadith cards must be covered'
+assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
+
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 assert "from('chanda_members')" in chanda_js
