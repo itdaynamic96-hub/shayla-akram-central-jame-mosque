@@ -185,7 +185,7 @@ chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
 assert "from('chanda_members')" in chanda_js
 assert "from('chanda_dues')" in chanda_js
-assert "rpc('record_chanda_payment_months'" in chanda_js and "p_paid_amount:n" in chanda_js
+assert "rpc('record_chanda_payment_months'" in chanda_js and "p_paid_amount:amount" in chanda_js
 assert "from('chanda_message_logs')" in chanda_js
 chanda_sql=(ROOT/'supabase/chanda-enterprise.sql').read_text(encoding='utf-8')
 for marker in ('create table if not exists public.chanda_members','create table if not exists public.chanda_dues','create table if not exists public.chanda_payments','create table if not exists public.chanda_message_logs','enable row level security','record_chanda_payment','chanda-daily-reminder-queue'):
