@@ -26,3 +26,52 @@
 #accountsDashboard .message-body .message-info{background:#e7f2ff;border:1px solid #afd2ff;color:#164c87;padding:9px 12px;border-radius:8px}
 @media(max-width:900px){#accountsDashboard .message-body #messageForm .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){#accountsDashboard .message-body{padding:9px}#accountsDashboard .message-body #messageForm .formgrid{grid-template-columns:1fr}#accountsDashboard .message-body #messageForm .wide{grid-column:auto}}
+
+
+/* Print-friendly financial reports: keep the report, hide application navigation and controls. */
+@media print {
+  body { background: #fff !important; }
+  #accountsDashboard .side,
+  #accountsDashboard .top,
+  #accountsDashboard .hero,
+  #adReportFilter,
+  #adReportExcel,
+  #adReportPrint,
+  #adTbPrint,
+  #adTbExcel,
+  #adAdd,
+  #adReport,
+  #adLogout,
+  #adMonth,
+  #adInstitution,
+  #accountsDashboard .note {
+    display: none !important;
+  }
+  #accountsDashboard,
+  #accountsDashboard .layout,
+  #accountsDashboard .main,
+  #accountsDashboard #adPage {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  #accountsDashboard .panel {
+    border: 0 !important;
+    box-shadow: none !important;
+    break-inside: auto;
+  }
+  #accountsDashboard .tablewrap {
+    overflow: visible !important;
+  }
+  #accountsDashboard table {
+    width: 100% !important;
+    font-size: 9pt !important;
+    border-collapse: collapse !important;
+  }
+  #accountsDashboard tr {
+    break-inside: avoid;
+  }
+}
