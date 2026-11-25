@@ -184,7 +184,7 @@ assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 assert "from('chanda_members')" in chanda_js
 assert "from('chanda_dues')" in chanda_js
-assert "rpc('record_chanda_payment'" in chanda_js
+assert "rpc('record_chanda_payment_months'" in chanda_js and "p_paid_amount:n" in chanda_js
 assert "from('chanda_message_logs')" in chanda_js
 chanda_sql=(ROOT/'supabase/chanda-enterprise.sql').read_text(encoding='utf-8')
 for marker in ('create table if not exists public.chanda_members','create table if not exists public.chanda_dues','create table if not exists public.chanda_payments','create table if not exists public.chanda_message_logs','enable row level security','record_chanda_payment','chanda-daily-reminder-queue'):
@@ -443,3 +443,7 @@ assert 'account_module_permission(institution,array[\'m63\',\'m80\'],true,true)'
 assert "approved_by=(select auth.uid())" in approval_hardening and "approved_at is not null" in approval_hardening, 'Accounts: approval updates must be attributed to the current user'
 accounts_html_text=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'const directApproved=canApproveAccountEntry' in accounts_html_text and "status:directApproved?'approved':'pending'" in accounts_html_text, 'Accounts: UI must submit pending when the operator lacks approval rights'
+
+chanda_multi=(ROOT/'supabase/chanda-multi-month-payment.sql').read_text(encoding='utf-8')
+assert 'p_paid_amount numeric' in chanda_multi and 'set search_path = public, pg_temp' in chanda_multi, 'Chanda: multi-month RPC parameter and safe search_path must match the client'
+assert 'perform 1 from public.chanda_dues' in chanda_multi and 'if remaining_payment>0' in chanda_multi, 'Chanda: lock dues and reject partial allocation'
