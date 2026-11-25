@@ -337,8 +337,8 @@ media_js=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
 assert "mosque_360_panorama" in media_js and "mosque360Start" in media_js, '360 panorama setting and homepage launch control are missing'
 assert "createImageBitmap(file)" in media_js and "ratio<1.8||ratio>2.2" in media_js, '360 panorama must validate an approximately 2:1 equirectangular image'
 assert "pannellum.viewer" in media_js and "type:'equirectangular'" in media_js, '360 panorama must use a real equirectangular viewer'
-for panel in ((ROOT/'admin.html').read_text(encoding='utf-8'),(ROOT/'accounts.html').read_text(encoding='utf-8')):
-    assert 'mosquePanoramaForm' in panel and 'mosquePanoramaRemove' in panel, 'Admin and Accounts must provide 360 panorama upload/removal controls'
+admin_html=(ROOT/'admin.html').read_text(encoding='utf-8')
+assert 'mosquePanoramaForm' in admin_html and 'mosquePanoramaRemove' in admin_html, 'Dedicated Admin media module must provide 360 panorama upload/removal controls'
 assert 'id="mosque360Stage"' in html and 'id="mosque360Start"' in html, 'Homepage must include a real 360 viewer stage and explicit start button'
 
 assert 'class="mosque-hero"' in html and 'data-mosque-image' in html, 'Homepage: user-supplied mosque hero image is missing'
@@ -346,8 +346,9 @@ assert 'id="intro-notices-column"' in html and 'arrangeHomepageColumns' in html,
 assert 'class="tour-cover"' in html, 'Homepage: mosque photo must be used as the 360-degree tour cover'
 assert 'content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important' in html, 'Homepage: 10-card photo/knowledge grids must display in three desktop rows'
 assert 'grid-template-columns:minmax(220px,3in) minmax(300px,1fr) minmax(220px,3in)' in html, 'Homepage: history and bani columns must be 3 inches wide'
-assert 'id="mosqueMediaAdmin"' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: shared mosque image editor is missing'
-assert 'id="mosqueMediaAdmin"' in accounts and 'mosque-media.js' in accounts, 'Accounts: shared mosque image editor/loader is missing'
+assert 'id="mosqueMediaAdmin"' in admin_html and 'মিডিয়া ব্যবস্থাপনা' in admin_html, 'Admin: dedicated media module is missing'
+assert 'id="mosqueMediaAdmin"' not in accounts and 'data-mosque-image="accounts"' in accounts and 'mosque-media.js' in accounts, 'Accounts: image display must be independent with no direct media controls'
+assert 'data-mosque-image="homepage"' in html and 'data-mosque-image="admin"' in admin_html, 'Homepage and Admin Panel must each have their own image surface'
 assert (ROOT/'mosque-media.js').exists(), 'Shared mosque media manager script is missing'
 assert (ROOT/'assets/mosque-hero.webp').exists(), 'User-provided mosque image fallback is missing'
 assert (ROOT/'supabase/central-mosque-brand-image-settings.sql').exists(), 'Central mosque media RLS migration source is missing'
