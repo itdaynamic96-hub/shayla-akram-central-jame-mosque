@@ -1,0 +1,14 @@
+alter function public.ensure_chanda_dues_for_month(date) security invoker;
+revoke execute on function public.ensure_chanda_dues_for_month(date) from public, anon;
+grant execute on function public.ensure_chanda_dues_for_month(date) to authenticated;
+create index if not exists account_approval_requests_approved_by_idx on public.account_approval_requests(approved_by);
+create index if not exists account_approval_requests_created_by_idx on public.account_approval_requests(created_by);
+create index if not exists account_approval_requests_journal_id_idx on public.account_approval_requests(journal_id);
+create index if not exists account_bank_accounts_created_by_idx on public.account_bank_accounts(created_by);
+create index if not exists account_bank_reconciliation_items_reconciliation_id_idx on public.account_bank_reconciliation_items(reconciliation_id);
+create index if not exists account_bank_reconciliations_bank_account_id_idx on public.account_bank_reconciliations(bank_account_id);
+create index if not exists account_bank_reconciliations_created_by_idx on public.account_bank_reconciliations(created_by);
+create index if not exists account_bank_reconciliations_reconciled_by_idx on public.account_bank_reconciliations(reconciled_by);
+create index if not exists account_donors_created_by_idx on public.account_donors(created_by);
+create index if not exists account_journal_entries_created_by_idx on public.account_journal_entries(created_by);
+create index if not exists ledger_entries_donor_id_idx on public.ledger_entries(donor_id);
