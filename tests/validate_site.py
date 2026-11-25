@@ -126,6 +126,8 @@ reversal_migration=(ROOT/'supabase/migrations/20261125111837_accounts_single_ope
 assert 'journal creator cannot approve their own reversal' not in reversal_migration.lower(), 'Accounts: the assigned single operator must be allowed to reverse their own journal'
 assert 'source_id' in reversal_migration and "set status='reversed'" in reversal_migration, 'Accounts: journal reversal must retain its audit link and original status history'
 assert 'replace_admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Permissions must be replaced atomically by a server-only RPC'
+assert 'jsonb_array_length(permission_rows) > 85' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Fresh database setup must accept all 85 Admin modules'
+assert "replace(d,'jsonb_array_length(permission_rows) > 60','jsonb_array_length(permission_rows) > 85')" in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8'), 'Granular permission migration must repair legacy 60-module permission caps'
 assert 'admin.rpc("replace_admin_module_permissions"' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Edge Function must use the atomic permission RPC'
 
 assert 'hasAccountModule' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts panel must honor per-module grants'
