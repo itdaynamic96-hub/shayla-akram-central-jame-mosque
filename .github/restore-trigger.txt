@@ -3,3 +3,5 @@ Run an isolated local Supabase restore validation using the latest successful en
 Retry isolated restore after pg import fix.
 
 Retry restore with unused Inbucket disabled.
+
+Retry restore with robust Inbucket configuration edit.
