@@ -28,7 +28,8 @@ async function init(){
   }
   const payroll=allowed('m43'),books=allowed('m46'),extra=allowed('m43'),audit=allowed('m50');
   setPanel('payrollPanel',payroll);setPanel('cashBankPanel',books);setPanel('obligationsPanel',extra);setPanel('assetsPanel',extra);setPanel('accountAuditPanel',audit);
-  if(!payroll&&!books&&!extra){$('enterpriseAccounts').hidden=true;return}
+  if(!payroll&&!books&&!extra&&!audit){$('enterpriseAccounts').hidden=true;return}
+  $('enterpriseAccounts').hidden=false;
   $('payrollMonth').value=month();
   $('institution').addEventListener('change',()=>loadAll().catch(fail));
   $('bookType').addEventListener('change',()=>loadBooks().catch(fail));
