@@ -1,1 +1,3 @@
 Update this file to trigger the SAKM-61 encrypted database backup workflow. No credentials or secrets belong here.
+
+Source snapshot added; run fresh encrypted recovery bundle.
