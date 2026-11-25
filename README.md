@@ -49,3 +49,7 @@ This repository is the **SAKM-61** (61-module) mosque and foundation website. It
 ## কেন্দ্রীয় মসজিদের ছবি ব্যবস্থাপনা
 
 `supabase/central-mosque-brand-image-settings.sql` migration creates a public-read, admin-write `site_media_settings` record for the shared mosque photo and adds an authenticated admin-only upload policy under the `site-media` bucket. The same setting is read by the homepage, Admin Panel, Accounts page and 360° tour cover. The default fallback is `assets/mosque-hero.webp`. Image replacement is available to Super Admin, Admin and Website Admin accounts; upload limit is 10 MB.
+
+
+### Admin dashboard preferences
+The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
