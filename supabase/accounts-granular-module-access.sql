@@ -204,3 +204,37 @@ create policy accounts_detail_enterprise_audit_read on public.audit_logs for sel
    or accounts_feature_access(coalesce(after_data->>'institution',before_data->>'institution','mosque'),'m72',false)
    or accounts_feature_access(coalesce(after_data->>'institution',before_data->>'institution','mosque'),'m81',false))
 );
+
+
+-- Payroll payout and cash/bank book require their dedicated module permissions.
+do $$
+declare d text;
+begin
+ select pg_get_functiondef('public.mark_payroll_paid(uuid,date,text,text)'::regprocedure) into d;
+ d:=replace(d,'''m43''','''m70''');
+ execute d;
+end $$;
+
+drop policy if exists accounts_detail_read on public.ledger_entries;
+create policy accounts_detail_read on public.ledger_entries for select to authenticated using (
+  accounts_feature_access(institution,'m62',false)
+  or (entry_type='income' and accounts_feature_access(institution,'m63',false))
+  or (entry_type='expense' and accounts_feature_access(institution,'m64',false))
+  or accounts_feature_access(institution,'m65',false)
+  or accounts_feature_access(institution,'m66',false)
+  or accounts_feature_access(institution,'m67',false)
+  or accounts_feature_access(institution,'m68',false)
+  or accounts_feature_access(institution,'m69',false)
+  or accounts_feature_access(institution,'m70',false)
+  or accounts_feature_access(institution,'m71',false)
+  or accounts_feature_access(institution,'m72',false)
+  or accounts_feature_access(institution,'m73',false)
+  or accounts_feature_access(institution,'m74',false)
+  or accounts_feature_access(institution,'m75',false)
+  or accounts_feature_access(institution,'m76',false)
+  or accounts_feature_access(institution,'m77',false)
+  or accounts_feature_access(institution,'m78',false)
+  or accounts_feature_access(institution,'m79',false)
+  or accounts_feature_access(institution,'m80',false)
+  or accounts_feature_access(institution,'m81',false)
+);
