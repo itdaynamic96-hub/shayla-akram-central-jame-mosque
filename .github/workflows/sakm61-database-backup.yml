@@ -66,6 +66,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Snapshot repository source
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/sakm61-backup/repository-source"
+          tar -C "$GITHUB_WORKSPACE" --exclude=.git --exclude=node_modules -cf - . |
+            tar -C "$RUNNER_TEMP/sakm61-backup/repository-source" -xf -
+
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v2
         with:
@@ -106,6 +115,7 @@ jobs:
           - PostgreSQL roles, public schema and data from Supabase CLI dump.
           - Auth user profile/metadata and provider identity metadata (not password hashes, sessions, refresh tokens, MFA secrets, or provider credentials).
           - Storage bucket settings and object bytes accessible through the Storage API.
+          - Full repository source snapshot at the workflow's checked-out commit (excluding .git and node_modules).
           - Edge Function source files committed in this repository at the workflow's checked-out commit.
           Not included / restore caveats:
           - Supabase-managed Auth/Storage schemas and internal service state.
@@ -138,6 +148,8 @@ jobs:
           grep -q 'sakm61-backup/database/schema.sql' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
           grep -q 'sakm61-backup/database/data.sql' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
           grep -q 'sakm61-backup/BACKUP-SCOPE.txt' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
+          grep -q 'sakm61-backup/repository-source/accounts.html' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
+          grep -q 'sakm61-backup/repository-source/accounts-dashboard.js' "$RUNNER_TEMP/SAKM-61-backup-files.txt"
           cd "$RUNNER_TEMP"
           sha256sum SAKM-61-backup.tar.gz.enc > SAKM-61-backup.tar.gz.enc.sha256
           rm -rf "$BACKUP_DIR" "$RUNNER_TEMP/node_modules" "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-backup-verify.tar.gz" "$RUNNER_TEMP/SAKM-61-backup-files.txt"
