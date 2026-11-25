@@ -365,3 +365,15 @@ assert (ROOT/'mosque-media.js').exists(), 'Shared mosque media manager script is
 assert (ROOT/'assets/mosque-hero.webp').exists(), 'User-provided mosque image fallback is missing'
 assert (ROOT/'supabase/central-mosque-brand-image-settings.sql').exists(), 'Central mosque media RLS migration source is missing'
 subprocess.run(['node','--check','--input-type=module'],input=(ROOT/'mosque-media.js').read_text(encoding='utf-8'),text=True,capture_output=True,check=True)
+
+# Admin-panel regression checks: stable message placement, distinct audit views,
+# complete dashboard pagination, and explicit approval capability enforcement.
+assert "panel.classList.add('ad-legacy-panel','message-module')" in dashboard_js, 'Accounts messaging must mount as one self-contained dashboard panel'
+assert "async function renderAuditReview()" in dashboard_js and "async function renderAuditTrail()" in dashboard_js, 'Audit review and audit trail must have separate implementations'
+assert "canApprove=!!(grant?.can_view&&grant?.can_write&&grant?.can_approve)" in dashboard_js, 'Custom Accounts approvers must have explicit view, write and approve grants'
+assert ".range(offset,offset+999)" in dashboard_js, 'Accounts dashboard totals must paginate beyond the first 1,000 ledger rows'
+message_css=(ROOT/'accounts-dashboard.css').read_text(encoding='utf-8')
+assert '#accountsDashboard #accountsMessaging.message-module' in message_css and '@media(max-width:600px)' in message_css, 'Accounts messaging must have scoped responsive layout'
+admin_css=(ROOT/'admin.html').read_text(encoding='utf-8')
+assert admin_css.count('#adminSidebar{position:fixed')==1, 'Admin sidebar rules must not be duplicated'
+assert 'accounts-dashboard.css?v=20261125-5' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts dashboard CSS cache key must be refreshed'
