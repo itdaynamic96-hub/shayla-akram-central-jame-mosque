@@ -60,13 +60,14 @@ function openModule(i){
  if(i===3){renderDonations().catch(showError);return}
  if(i===4){renderBankAccounts().catch(showError);return}
  if(i===5){renderTransfers().catch(showError);return}
+ if(i===12){renderReports().catch(showError);return}
  if(i===14){renderTrialBalance().catch(showError);return}
  if(i===15){renderAdvancedSearch().catch(showError);return}
  if(i===16){renderReconciliation().catch(showError);return}
  if(i===18){renderApprovals().catch(showError);return}
  if(i===20){renderUserPermissions().catch(showError);return}
  if(i===21){renderSettings().catch(showError);return}
- const map={1:'entryForm',2:'entryForm',6:'cashBankPanel',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',12:'entries',13:'entries',17:'accountAuditPanel',19:'accountAuditPanel'};
+ const map={1:'entryForm',2:'entryForm',6:'cashBankPanel',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries',13:'entries',17:'accountAuditPanel',19:'accountAuditPanel'};
  const id=map[i];if(id){movePanel(id);if((i===1||i===2)&&el('type'))el('type').value=i===1?'income':'expense';return}
  el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলটি এই প্রতিষ্ঠানের জন্য এখনো সংযুক্ত নয়।</p></section>';
 }
@@ -109,8 +110,11 @@ async function renderTrialBalance(){
  ]);
  if(chart.error)throw chart.error;if(lines.error)throw lines.error;
  const totals=new Map();for(const x of lines.data||[]){const t=totals.get(x.account_code)||{debit:0,credit:0};t.debit+=Number(x.debit||0);t.credit+=Number(x.credit||0);totals.set(x.account_code,t)}
- const rows=(chart.data||[]).map(a=>{const t=totals.get(a.account_code)||{debit:0,credit:0};return{...a,...t,balance:t.debit-t.credit}}),debit=rows.reduce((n,x)=>n+x.debit,0),credit=rows.reduce((n,x)=>n+x.credit,0);
- p.innerHTML='<section class="panel"><div class="head"><h2>ট্রায়াল ব্যালান্স / ব্যালান্স শিট ভিত্তি</h2><span>'+escapeHtml(inst)+'</span></div><div class="body"><div class="stats"><div class="stat bluestat"><div><small>মোট ডেবিট</small><strong>'+money(debit)+'</strong></div></div><div class="stat greenstat"><div><small>মোট ক্রেডিট</small><strong>'+money(credit)+'</strong></div></div><div class="stat '+(Math.abs(debit-credit)<0.01?'greenstat':'redstat')+'"><div><small>পার্থক্য</small><strong>'+money(debit-credit)+'</strong></div></div></div><div class="tablewrap"><table><thead><tr><th>কোড</th><th>হিসাবের নাম</th><th>ধরন</th><th>ডেবিট</th><th>ক্রেডিট</th><th>নিট (ডেবিট-ক্রেডিট)</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+escapeHtml(x.account_code)+'</td><td>'+escapeHtml(x.account_name)+'</td><td>'+escapeHtml(x.account_type)+'</td><td>'+money(x.debit)+'</td><td>'+money(x.credit)+'</td><td>'+money(x.balance)+'</td></tr>').join('')+'</tbody></table></div><div class="note">শুধু অনুমোদিত/পোস্টেড জার্নাল এন্ট্রি অন্তর্ভুক্ত। ডেবিট ও ক্রেডিট সমান না হলে হিসাব যাচাই প্রয়োজন।</div></div></section>';
+ const rows=(chart.data||[]).map(a=>{const t=totals.get(a.account_code)||{debit:0,credit:0};return{...a,...t,balance:t.debit-t.credit}});
+ const debit=rows.reduce((n,x)=>n+x.debit,0),credit=rows.reduce((n,x)=>n+x.credit,0);
+ const sum=(type,side)=>rows.filter(x=>x.account_type===type).reduce((n,x)=>n+(side==='debit'?x.debit-x.credit:x.credit-x.debit),0);
+ const assets=sum('asset','debit'),liabilities=sum('liability','credit'),equity=sum('equity','credit'),income=sum('income','credit'),expenses=sum('expense','debit'),surplus=income-expenses,bsDifference=assets-liabilities-equity-surplus;
+ p.innerHTML='<section class="panel"><div class="head"><h2>ট্রায়াল ব্যালান্স</h2><span>'+escapeHtml(inst)+'</span></div><div class="body"><div class="stats"><div class="stat bluestat"><div><small>মোট ডেবিট</small><strong>'+money(debit)+'</strong></div></div><div class="stat greenstat"><div><small>মোট ক্রেডিট</small><strong>'+money(credit)+'</strong></div></div><div class="stat '+(Math.abs(debit-credit)<0.01?'greenstat':'redstat')+'"><div><small>ট্রায়াল ব্যালান্স পার্থক্য</small><strong>'+money(debit-credit)+'</strong></div></div></div><div class="tablewrap"><table><thead><tr><th>কোড</th><th>হিসাবের নাম</th><th>ধরন</th><th>ডেবিট</th><th>ক্রেডিট</th><th>নিট (ডেবিট-ক্রেডিট)</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+escapeHtml(x.account_code)+'</td><td>'+escapeHtml(x.account_name)+'</td><td>'+escapeHtml(x.account_type)+'</td><td>'+money(x.debit)+'</td><td>'+money(x.credit)+'</td><td>'+money(x.balance)+'</td></tr>').join('')+'</tbody></table></div></div></section><section class="panel"><div class="head"><h2>ব্যালান্স শিট সারসংক্ষেপ</h2></div><div class="body"><div class="tablewrap"><table><thead><tr><th>শ্রেণি</th><th>পরিমাণ</th></tr></thead><tbody><tr><td>সম্পদ (Assets)</td><td>'+money(assets)+'</td></tr><tr><td>দায় (Liabilities)</td><td>'+money(liabilities)+'</td></tr><tr><td>মূলধন/তহবিল (Equity)</td><td>'+money(equity)+'</td></tr><tr><td>চলতি উদ্বৃত্ত (Income − Expense)</td><td>'+money(surplus)+'</td></tr><tr><th>দায় + মূলধন + উদ্বৃত্ত</th><th>'+money(liabilities+equity+surplus)+'</th></tr></tbody></table></div><div class="note '+(Math.abs(bsDifference)<0.01?'':'warning')+'">ব্যালান্স শিট পার্থক্য: '+money(bsDifference)+' · শুধু পোস্টেড জার্নাল এন্ট্রি অন্তর্ভুক্ত।</div></div></section>';
 }
 async function renderAdvancedSearch(){
  const p=el('adPage'),inst=currentInstitution();
@@ -153,6 +157,18 @@ async function renderReconciliation(){
   if(finalize)finalize.onclick=async()=>{const notes=prompt('Reconciliation নোট (ঐচ্ছিক)','')??'';try{const {error}=await supabase.rpc('account_reconcile_bank',{p_id:draft.id,p_notes:notes});if(error)throw error;alert('Bank Reconciliation সম্পন্ন হয়েছে।');await renderReconciliation()}catch(err){alert(err.message||String(err))}};
  }
  if(!(drafts.data||[]).length)host.innerHTML='<section class="panel empty">এখনো কোনো Reconciliation Draft নেই।</section>';
+}
+async function renderReports(){
+ const p=el('adPage'),inst=currentInstitution(),year=Number(dhaka().slice(0,4)),from=year+'-01-01',to=dhaka();
+ resetAdPage('<section class="panel"><div class="head"><h2>আর্থিক রিপোর্ট · '+year+'</h2></div><div class="body"><div class="empty">রিপোর্ট তৈরি হচ্ছে…</div></div></section>');
+ const {data,error}=await supabase.from('ledger_entries').select('entry_date,entry_type,category,amount').eq('institution',inst).eq('status','approved').gte('entry_date',from).lte('entry_date',to).order('entry_date',{ascending:false}).limit(10000);
+ if(error)throw error;
+ const groups=new Map();for(const x of data||[]){const key=x.entry_type+'|'+(x.category||'অন্যান্য'),g=groups.get(key)||{type:x.entry_type,category:x.category||'অন্যান্য',amount:0,count:0};g.amount+=Number(x.amount||0);g.count++;groups.set(key,g)}
+ const rows=[...groups.values()].sort((a,b)=>a.type.localeCompare(b.type)||a.category.localeCompare(b.category));
+ const income=(data||[]).filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount||0),0),expense=(data||[]).filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount||0),0);
+ p.innerHTML='<section class="panel"><div class="head"><h2>বার্ষিক আর্থিক সারসংক্ষেপ</h2><span>'+escapeHtml(inst)+' · '+year+'</span></div><div class="body"><div class="stats"><div class="stat greenstat"><div><small>মোট আয়</small><strong>'+money(income)+'</strong></div></div><div class="stat redstat"><div><small>মোট ব্যয়</small><strong>'+money(expense)+'</strong></div></div><div class="stat bluestat"><div><small>উদ্বৃত্ত / ঘাটতি</small><strong>'+money(income-expense)+'</strong></div></div></div><div class="toolbar"><button class="action" id="adReportPrint">প্রিন্ট / PDF</button><button class="action green" id="adReportCsv">CSV ডাউনলোড</button></div><div class="tablewrap"><table><thead><tr><th>ধরন</th><th>খাত</th><th>লেনদেন সংখ্যা</th><th>মোট পরিমাণ</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+escapeHtml(x.type)+'</td><td>'+escapeHtml(x.category)+'</td><td>'+fmt(x.count)+'</td><td>'+money(x.amount)+'</td></tr>').join('')+'</tbody></table></div></div></section>';
+ el('adReportPrint').onclick=()=>window.print();
+ el('adReportCsv').onclick=()=>{const csv=['ধরন,খাত,লেনদেন সংখ্যা,মোট পরিমাণ',...rows.map(x=>[x.type,x.category,x.count,x.amount].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='SAKM-61-financial-report-'+inst+'-'+year+'.csv';a.click();URL.revokeObjectURL(a.href)};
 }
 async function renderApprovals(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="empty">অনুমোদনের অনুরোধ লোড হচ্ছে…</div></section>');
