@@ -62,3 +62,5 @@ Private module report uploads (m06) are stored in the non-public `private-module
 TTS provider catalogue smoke check updated.
 
 Anonymous Bengali voice availability probe updated.
+
+Google Bengali no-key TTS fallback probe added.
