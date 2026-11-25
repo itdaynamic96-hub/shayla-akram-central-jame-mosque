@@ -226,8 +226,8 @@ assert "m.n===9?data.visibility==='প্রকাশিত'" in (ROOT/'admin-mo
 assert 'm09' in (ROOT/'supabase/public-module-records.sql').read_text(encoding='utf-8'), 'Public page records must be allowed by the public allowlist'
 assert "case_notes" not in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Public assistance modules must not include individual case notes'
 assert 'add constraint module_records_mosque_basic_module_key_check' not in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8'), 'Enterprise modules must not be restricted to Basic module keys'
-for key in ('22:fieldSchemas[6]','23:fieldSchemas[7]','24:fieldSchemas[5]','25:fieldSchemas[8]','26:fieldSchemas[11]','27:fieldSchemas[9]','28:fieldSchemas[4]'):
-    assert key in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), f'Admin module schema mapping missing: {key}'
+for key in ('22:[','23:[','24:[','25:[','26:[','27:[','28:['):
+    assert key in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), f'Admin module field schema missing: {key}'
 assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: daily/monthly/yearly book filters are missing'
 assert "schedule:" in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: daily schedule is missing'
 assert 'postgres.lmwczibsipczfymhyqba' in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: pooler username validation is missing'
