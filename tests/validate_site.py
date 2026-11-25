@@ -335,6 +335,8 @@ assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)
 # Mosque homepage layout and shared image management.
 media_js=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
 assert "mosque_360_panorama" in media_js and "mosque360Start" in media_js, '360 panorama setting and homepage launch control are missing'
+independent_media_migration=(ROOT/'supabase/migrations/20261125143000_independent_mosque_media_surfaces.sql').read_text(encoding='utf-8')
+assert all(k in independent_media_migration for k in ('mosque_homepage','mosque_accounts','mosque_admin','mosque_360_panorama')), 'Media: database must allow three independent image keys and the 360 panorama'
 assert "createImageBitmap(file)" in media_js and "ratio<1.8||ratio>2.2" in media_js, '360 panorama must validate an approximately 2:1 equirectangular image'
 assert "pannellum.viewer" in media_js and "type:'equirectangular'" in media_js, '360 panorama must use a real equirectangular viewer'
 admin_html=(ROOT/'admin.html').read_text(encoding='utf-8')
