@@ -452,3 +452,6 @@ assert 'perform 1 from public.chanda_dues' in chanda_multi and 'if remaining_pay
 chanda_payment_sql=(ROOT/'supabase/fix-chanda-payment-column-ambiguity.sql').read_text(encoding='utf-8')
 assert "ledger_reference:=coalesce(nullif(trim(reference),''),'CHANDA')" in chanda_payment_sql, 'Chanda: each linked ledger entry must have a unique reference'
 assert 'replace(payment_id::text' in chanda_payment_sql, 'Chanda: unique ledger references must be tied to payment IDs'
+
+assert (ROOT/'supabase/migrations/20261125200429_chanda_multi_month_payment_atomic_locking.sql').exists(), 'Chanda: atomic multi-month RPC migration must be tracked'
+assert (ROOT/'supabase/migrations/20261125200558_chanda_unique_ledger_reference_per_payment.sql').exists(), 'Chanda: unique ledger reference migration must be tracked'
