@@ -17,6 +17,7 @@ do $$
 declare d text;
 begin
  select pg_get_functiondef('public.replace_admin_module_permissions(uuid,jsonb)'::regprocedure) into d;
+ d:=replace(d,'jsonb_array_length(permission_rows) > 60','jsonb_array_length(permission_rows) > 85');
  d:=replace(d,'jsonb_array_length(permission_rows) > 61','jsonb_array_length(permission_rows) > 85');
  execute d;
 
