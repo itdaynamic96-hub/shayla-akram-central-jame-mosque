@@ -153,4 +153,4 @@ jobs:
         shell: bash
         run: |
           rm -rf "$RUNNER_TEMP/sakm61-backup" "$RUNNER_TEMP/node_modules"
-          rm -f "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc" "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc.sha256"
+          rm -f "$RUNNER_TEMP/backup-supabase-assets.mjs" "$RUNNER_TEMP/SAKM-61-backup.tar.gz" "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc" "$RUNNER_TEMP/SAKM-61-backup.tar.gz.enc.sha256" "$RUNNER_TEMP/SAKM-61-backup-verify.tar.gz" "$RUNNER_TEMP/SAKM-61-backup-files.txt"
