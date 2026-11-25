@@ -1,6 +1,6 @@
 import { configured, supabase, currentProfile, escapeHtml, showError } from "./supabase-client.js";
 const $ = (id) => document.getElementById(id);
-let profile = null, permissions = [], institution = "mosque", rows = [], attempts = [], ready = false;
+let profile = null, permissions = [], institution = "mosque", rows = [], attempts = [], ready = false, started = false;
 const canWrite = () => {
   if (!profile) return false;
   if (profile.role === "custom_admin") return permissions.some(p => /^m(4[1-9]|50)$/.test(p.module_key) && p.can_view && p.can_write);
@@ -59,10 +59,11 @@ async function load() {
     '<tr><td colspan="5">কোনো চেষ্টা/ডেলিভারি ইতিহাস নেই।</td></tr>';
 }
 async function boot() {
-  if (!configured) return;
+  if (!configured || started) return;
   const current = await currentProfile();
   profile = current.profile;
   if (!current.user || !profile) return;
+  started = true;
   if (profile.role === "custom_admin") {
     const { data, error } = await supabase.from("admin_module_permissions")
       .select("module_key,can_view,can_write").eq("user_id", current.user.id);
@@ -114,4 +115,15 @@ async function boot() {
   };
   try { await refreshConfig(); await load(); } catch(e) { showError($("messageError"),e); }
 }
+const appRoot = $("app");
+if (appRoot) {
+  const observer = new MutationObserver(() => {
+    if (!appRoot.hidden) boot().catch(e => showError($("messageError"),e));
+  });
+  observer.observe(appRoot, { attributes:true, attributeFilter:["hidden"] });
+}
+if (configured) supabase.auth.onAuthStateChange((_event, session) => {
+  if (session) { started = false; boot().catch(e => showError($("messageError"),e)); }
+  else { started = false; profile = null; const panel=$("accountsMessaging"); if(panel) panel.hidden=true; }
+});
 boot().catch(e => showError($("messageError"),e));
