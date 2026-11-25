@@ -223,7 +223,6 @@ enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
 assert "canApprove('m80')" in enterprise_js, 'Payroll approval must use the central approval module permission'
 assert "if(allowed('m69')||allowed('m76'))" in enterprise_js, 'Obligation and asset register access must match module permissions'
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
-assert 'accounts-complete-audit-trail.sql' in (ROOT/'supabase/accounts-complete-audit-trail.sql').read_text(encoding='utf-8') if False else True
 assert 'accounts_detail_audit_all_accounts_read' in (ROOT/'supabase/accounts-complete-audit-trail.sql').read_text(encoding='utf-8')
 assert 'accounts_detail_assets_read' in (ROOT/'supabase/accounts-asset-register-permissions.sql').read_text(encoding='utf-8')
 print('SAKM-61 Accounts dashboard checks passed: syntax, 24 modules, journal accounting, reversal, full statements, exports, search and audit access.')
