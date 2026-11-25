@@ -59,29 +59,29 @@ alter table public.payroll_records enable row level security;
 alter table public.account_obligations enable row level security;
 alter table public.account_assets enable row level security;
 drop policy if exists account_staff_read on public.account_staff;
-create policy account_staff_read on public.account_staff for select to authenticated using(public.accounts_feature_access(institution,'m46',false));
+create policy account_staff_read on public.account_staff for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists account_staff_insert on public.account_staff;
-create policy account_staff_insert on public.account_staff for insert to authenticated with check(public.accounts_feature_access(institution,'m46',true) and created_by=auth.uid());
+create policy account_staff_insert on public.account_staff for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid());
 drop policy if exists account_staff_update on public.account_staff;
-create policy account_staff_update on public.account_staff for update to authenticated using(public.accounts_feature_access(institution,'m46',true)) with check(public.accounts_feature_access(institution,'m46',true));
+create policy account_staff_update on public.account_staff for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 drop policy if exists payroll_read on public.payroll_records;
-create policy payroll_read on public.payroll_records for select to authenticated using(public.accounts_feature_access(institution,'m46',false));
+create policy payroll_read on public.payroll_records for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists payroll_insert on public.payroll_records;
-create policy payroll_insert on public.payroll_records for insert to authenticated with check(public.accounts_feature_access(institution,'m46',true) and created_by=auth.uid() and status='pending');
+create policy payroll_insert on public.payroll_records for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid() and status='pending');
 drop policy if exists payroll_update on public.payroll_records;
-create policy payroll_update on public.payroll_records for update to authenticated using(public.accounts_feature_access(institution,'m46',true)) with check(public.accounts_feature_access(institution,'m46',true));
+create policy payroll_update on public.payroll_records for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 drop policy if exists obligations_read on public.account_obligations;
-create policy obligations_read on public.account_obligations for select to authenticated using(public.accounts_feature_access(institution,'m49',false));
+create policy obligations_read on public.account_obligations for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists obligations_insert on public.account_obligations;
-create policy obligations_insert on public.account_obligations for insert to authenticated with check(public.accounts_feature_access(institution,'m49',true) and created_by=auth.uid());
+create policy obligations_insert on public.account_obligations for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid());
 drop policy if exists obligations_update on public.account_obligations;
-create policy obligations_update on public.account_obligations for update to authenticated using(public.accounts_feature_access(institution,'m49',true)) with check(public.accounts_feature_access(institution,'m49',true));
+create policy obligations_update on public.account_obligations for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 drop policy if exists assets_read on public.account_assets;
-create policy assets_read on public.account_assets for select to authenticated using(public.accounts_feature_access(institution,'m49',false));
+create policy assets_read on public.account_assets for select to authenticated using(public.accounts_feature_access(institution,'m43',false));
 drop policy if exists assets_insert on public.account_assets;
-create policy assets_insert on public.account_assets for insert to authenticated with check(public.accounts_feature_access(institution,'m49',true) and created_by=auth.uid());
+create policy assets_insert on public.account_assets for insert to authenticated with check(public.accounts_feature_access(institution,'m43',true) and created_by=auth.uid());
 drop policy if exists assets_update on public.account_assets;
-create policy assets_update on public.account_assets for update to authenticated using(public.accounts_feature_access(institution,'m49',true)) with check(public.accounts_feature_access(institution,'m49',true));
+create policy assets_update on public.account_assets for update to authenticated using(public.accounts_feature_access(institution,'m43',true)) with check(public.accounts_feature_access(institution,'m43',true));
 grant select,insert,update on public.account_staff,public.payroll_records,public.account_obligations,public.account_assets to authenticated;
 create or replace function public.log_account_feature_change()
 returns trigger language plpgsql security definer set search_path=public,pg_temp as $$
@@ -105,8 +105,8 @@ alter table public.payroll_records add column if not exists ledger_entry_id uuid
 drop policy if exists "accounts staff read enterprise audit logs" on public.audit_logs;
 create policy "accounts staff read enterprise audit logs" on public.audit_logs for select to authenticated using(
  table_name in('account_staff','payroll_records','account_obligations','account_assets')
- and (public.accounts_feature_access(coalesce(after_data->>'institution',before_data->>'institution','mosque'),'m49',false)
- or public.accounts_feature_access(coalesce(after_data->>'institution',before_data->>'institution','mosque'),'m46',false))
+ and (public.accounts_feature_access(coalesce(after_data->>'institution',before_data->>'institution','mosque'),'m43',false)
+ or public.accounts_feature_access(coalesce(after_data->>'institution',before_data->>'institution','mosque'),'m50',false))
 );
 create or replace function public.mark_payroll_paid(target_payroll uuid,paid_on date,paid_via text,payment_reference text default '')
 returns uuid language plpgsql security definer set search_path=public,pg_temp as $$
@@ -115,7 +115,7 @@ begin
  if auth.uid() is null then raise exception 'Authentication required'; end if;
  select * into p from public.payroll_records where id=target_payroll for update;
  if not found then raise exception 'Payroll record not found'; end if;
- if not public.accounts_feature_access(p.institution,'m46',true) then raise exception 'Not authorized'; end if;
+ if not public.accounts_feature_access(p.institution,'m43',true) then raise exception 'Not authorized'; end if;
  if p.status<>'approved' then raise exception 'Only approved payroll can be marked paid'; end if;
  if p.ledger_entry_id is not null then raise exception 'Payroll already has a ledger entry'; end if;
  if paid_via not in('cash','bank','mobile_banking','other') then raise exception 'Invalid payment method'; end if;
