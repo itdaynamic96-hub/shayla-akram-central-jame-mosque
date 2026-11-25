@@ -154,6 +154,8 @@ assert "allowed('m43')" in enterprise_js and "allowed('m46')" in enterprise_js a
 assert "m61" in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin users: module 61 is missing from permission assignment'
 assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database permissions must accept module 61'
 assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database module access must explicitly authorize mosque member register'
+assert "target_key='m51'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Member module 51 must allow mosque/account read access with admin-only writes'
+assert "m.n===51||m.n===61||m.g===2" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Member module 51 must be scoped to mosque records'
 assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and '61' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Module 61 must stay private'
 # The 61-module enterprise site is not subject to the Basic package's 500-word/15-module restrictions.
 assert 'content-limits.js' not in (ROOT/'admin.html').read_text(encoding='utf-8') and 'content-limits.js' not in (ROOT/'index.html').read_text(encoding='utf-8'), 'Enterprise pages must not load the Basic 500-word limiter'
