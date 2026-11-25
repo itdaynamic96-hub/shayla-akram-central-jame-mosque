@@ -33,7 +33,7 @@ This repository and Supabase project are the **SAKM-61** 61-module Enterprise we
 - Supabase project status observed as `ACTIVE_HEALTHY`.
 - All inspected public-schema tables had RLS enabled.
 - Storage buckets observed: `private-receipts` (private), `mosque-media` (public), and `site-media` (public).
-- Edge Functions observed as active: `message-dispatch` (v4), `message-status-webhook` (v4), and `admin-create-user`. `receipt_is_unlinked` now requires authenticated institution/module access before checking receipt references.
+- Edge Functions observed as active: `message-dispatch` (v5), `message-status-webhook` (v8), and `admin-create-user`. `receipt_is_unlinked` now requires authenticated institution/module access before checking receipt references.
 - Backup workflow Run #15 succeeded and uploaded one encrypted artifact. Restore into a fresh Supabase project has not been tested.
 - Supabase Security Advisor still reported SECURITY DEFINER function warnings and disabled leaked-password protection at the time of inspection.
 - Full end-to-end testing of all 61 modules, authenticated role permutations, real WhatsApp/SMS delivery, and restore has not yet been completed.
