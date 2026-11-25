@@ -39,6 +39,9 @@ for category in ('article','gallery','video'):
     minimum={'article':10,'gallery':3,'video':5}[category]
     assert count>=minimum, f'{category}: expected at least {minimum} curated starter cards, found {count}'
 assert 'create table if not exists public.site_content' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+site_content_policy=(ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
+public_site_policy=re.search(r'create policy "public can read published site content"[^;]+;',site_content_policy,re.I)
+assert public_site_policy and 'to anon,authenticated using(status=\'published\')' in public_site_policy.group(0), 'Homepage: anonymous published-content policy must not call authenticated-only has_access()'
 assert 'source_url text' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'media_credit text' in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert "insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)" in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
