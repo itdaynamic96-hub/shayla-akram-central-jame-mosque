@@ -1,0 +1,8 @@
+{
+  "name": "shayla-akram-mosque-static-tts",
+  "private": true,
+  "type": "module",
+  "scripts": { "build:tts": "vite build --config vite.tts.config.js" },
+  "dependencies": { "@huggingface/transformers": "4.0.0", "onnxruntime-web": "1.20.0" },
+  "devDependencies": { "vite": "6.0.1" }
+}
