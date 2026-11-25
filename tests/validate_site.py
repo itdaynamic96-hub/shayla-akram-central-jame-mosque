@@ -232,3 +232,5 @@ assert '.status.overdue,#accountsDashboard .status.collect' in (ROOT/'accounts-d
 assert 'record_chanda_payment' in (ROOT/'supabase/fix-chanda-payment-column-ambiguity.sql').read_text(encoding='utf-8')
 assert 'cd.paid_amount+record_chanda_payment.paid_amount' in (ROOT/'supabase/fix-chanda-payment-column-ambiguity.sql').read_text(encoding='utf-8'), 'Chanda payment update must qualify the target table column'
 assert (ROOT/'supabase/accounts-dashboard-quality-and-index-fixes.sql').exists(), 'Accounts security/index migration source is missing'
+
+assert 'async function renderCashbookJournal()' in dashboard_js and 'account_submit_manual_journal' in dashboard_js, 'Cashbook module must expose the balanced manual journal workflow'
