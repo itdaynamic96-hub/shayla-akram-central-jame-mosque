@@ -55,7 +55,7 @@ alter table public.chanda_message_logs enable row level security;
 drop policy if exists "chanda members read authorized" on public.chanda_members;
 create policy "chanda members read authorized" on public.chanda_members for select to authenticated using(public.chanda_can_access(false));
 drop policy if exists "chanda members insert authorized" on public.chanda_members;
-create policy "chanda members insert authorized" on public.chanda_members for insert to authenticated with check(public.chanda_can_access(true) and created_by=auth.uid());
+create policy "chanda members insert authorized" on public.chanda_members for insert to authenticated with check(public.chanda_can_access(true) and created_by=(select auth.uid()));
 drop policy if exists "chanda members update authorized" on public.chanda_members;
 create policy "chanda members update authorized" on public.chanda_members for update to authenticated using(public.chanda_can_access(true)) with check(public.chanda_can_access(true));
 drop policy if exists "chanda dues read authorized" on public.chanda_dues;
