@@ -1,0 +1,55 @@
+name: SAKM-61 Accounting UI and Export Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/accounting-e2e-trigger.txt"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sakm-61-accounting-e2e
+  cancel-in-progress: false
+
+jobs:
+  browser-tests:
+    name: Test all 24 modules, role access, PDF and Excel downloads
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_URL: https://lmwczibsipczfymhyqba.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_OUTPUT_DIR: ${{ runner.temp }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pinned browser test dependencies
+        run: |
+          npm install --no-save --no-package-lock @supabase/supabase-js@2.49.1 playwright@1.51.1
+          npx playwright install --with-deps chromium
+
+      - name: Run isolated temporary-account UI tests
+        run: node tests/accounting-ui-e2e.mjs
+
+      - name: Upload test exports for verification
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SAKM-61-ui-test-exports
+          path: |
+            ${{ runner.temp }}/SAKM-61-e2e-report.xlsx
+            ${{ runner.temp }}/SAKM-61-e2e-report.pdf
+          retention-days: 1
+
+      - name: Remove generated test exports
+        if: always()
+        run: rm -f "${{ runner.temp }}/SAKM-61-e2e-report.xlsx" "${{ runner.temp }}/SAKM-61-e2e-report.pdf"
