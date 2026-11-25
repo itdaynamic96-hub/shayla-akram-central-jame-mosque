@@ -94,3 +94,13 @@ For an existing database created before this fix, run `supabase/fix-public-site-
 
 ### Admin dashboard preferences
 The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
+
+## API Key ছাড়া বাংলা ভয়েস
+
+ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি Supabase Edge Function `bengali-tts` দিয়ে TTS.ai-এর বিনামূল্যের Bengali Piper voice ব্যবহার করে। আলাদা Google/Microsoft/TTS provider API key বা paid subscription প্রয়োজন নেই; Supabase-এর public publishable key কেবল নিজের Edge Function-এ অনুরোধ পাঠাতে ব্যবহৃত হয়।
+
+- Anonymous free tier: প্রতি IP-তে দৈনিক ৫,০০০ অক্ষর; প্রতি অনুরোধে সর্বোচ্চ ৫০০ অক্ষর।
+- ওয়েবসাইট ৪৫০ অক্ষরের ছোট অংশে লেখা পাঠায়, যাতে API-এর সীমার মধ্যে থাকে।
+- ফ্রি API সীমা বা তৃতীয় পক্ষের সার্ভিস বন্ধ থাকলে অডিও সাময়িকভাবে তৈরি নাও হতে পারে।
+- ফ্রি ভয়েসের লাইসেন্স ব্যক্তিগত/অ-বাণিজ্যিক ব্যবহারের জন্য; বাণিজ্যিক ব্যবহারের আগে TTS.ai-এর বর্তমান শর্ত যাচাই করতে হবে।
+
