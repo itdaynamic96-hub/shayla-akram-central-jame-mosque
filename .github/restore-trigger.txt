@@ -1,1 +1,3 @@
 Run an isolated local Supabase restore validation using the latest successful encrypted backup. This does not modify production.
+
+Retry isolated restore after pg import fix.
