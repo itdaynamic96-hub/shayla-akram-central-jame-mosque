@@ -253,5 +253,6 @@ assert (ROOT/'supabase/accounts-granular-module-access.sql').exists(), 'Detailed
 assert 'jsonb_array_length(permission_rows) > 85' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8'), 'Permission replacement RPC must support all 85 modules'
 assert 'm84' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8') and 'm85' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8'), 'Messaging and monthly chanda must be separately secured'
 assert 'max-width:none' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8'), 'Accounts dashboard must use full available width'
+assert "hasAccountModule('m71','can_write')" in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Budget form must use its dedicated Accounts permission'
 assert 'main{width:100%;max-width:none' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts outer page must not constrain the dashboard width'
 assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view)" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin dashboard Accounts shortcut must use the new granular permissions'
