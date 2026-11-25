@@ -87,3 +87,6 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 4. This grants public read access only to records that are explicitly marked for public display, have status `published`, and belong to the approved public module allowlist. Drafts, pending approvals, and private staff/beneficiary/financial records remain unavailable to visitors.
 5. In Admin Panel, enter the module-specific fields, save as draft/pending, then have an authorized approver approve and publish. Published records appear in the matching website module page. Prayer-time records also update the homepage prayer-time panel; published notice records can update the homepage notice panel. Photo/video modules continue to use their dedicated media manager and homepage slots.
 6. After running the SQL, reload the website with Ctrl+F5. Test with one non-sensitive sample record before publishing real information.
+
+## 12. Repair anonymous homepage published-content access on existing databases
+For an existing database created before this fix, run `supabase/fix-public-site-content-anon-read.sql` once in SQL Editor. It separates public published-content reads from authenticated website-admin access, preventing anonymous homepage requests from failing with `permission denied for function has_access`. The live SAKM-61 database has already received and passed this policy repair.
