@@ -210,3 +210,6 @@ for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আ�
     assert marker in dashboard_js, f'Accounts dashboard missing status/receipt behavior: {marker}'
 assert dashboard_js.count("'") > 24, 'Accounts dashboard script appears truncated'
 print('SAKM-61 Accounts dashboard checks passed: module syntax, 24-item navigation and live chanda integration.')
+
+assert 'ensure_chanda_dues_for_month' in dashboard_js, 'Accounts dashboard must create dues for the selected month using authenticated access'
+assert (ROOT/'supabase/accounts-chanda-monthly-due-generation.sql').exists(), 'Monthly due generation migration source is missing'
