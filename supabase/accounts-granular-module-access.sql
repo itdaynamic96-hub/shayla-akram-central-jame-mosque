@@ -61,13 +61,13 @@ begin
  select pg_get_functiondef('public.module_record_access(text,text,boolean)'::regprocedure) into d;
  d:=replace(d,
    'or (target_key=''m61'' and p.role in (''admin'',''mosque_admin'',''manager'')',
-   'or (substring(target_key from 2)::integer between 62 and 84 and p.role in (''admin'',''accounts_manager'',''accountant'',''mosque_admin'',''foundation_admin'') and (p.institution=''both'' or p.institution=target_institution) and target_institution in (''mosque'',''foundation''))\n    or (target_key=''m85'' and p.role in (''admin'',''mosque_admin'',''accounts_manager'',''accountant'') and p.institution in (''both'',''mosque'') and target_institution=''mosque'')\n    or (target_key=''m61'' and p.role in (''admin'',''mosque_admin'',''manager'')');
+   'or (substring(target_key from 2)::integer between 62 and 84 and p.role in (''admin'',''accounts_manager'',''accountant'',''mosque_admin'',''foundation_admin'') and (p.institution=''both'' or p.institution=target_institution) and target_institution in (''mosque'',''foundation''))     or (target_key=''m85'' and p.role in (''admin'',''mosque_admin'',''accounts_manager'',''accountant'') and p.institution in (''both'',''mosque'') and target_institution=''mosque'')     or (target_key=''m61'' and p.role in (''admin'',''mosque_admin'',''manager'')');
  execute d;
 
  select pg_get_functiondef('public.module_record_approval_access(text,text)'::regprocedure) into d;
  d:=replace(d,
    'or (target_key=''m61'' and p.role in (''admin'',''mosque_admin'')',
-   'or (substring(target_key from 2)::integer between 62 and 84 and p.role in (''admin'',''accounts_manager'') and (p.institution=''both'' or p.institution=target_institution) and target_institution in (''mosque'',''foundation''))\n    or (target_key=''m85'' and p.role in (''admin'',''mosque_admin'',''accounts_manager'') and p.institution in (''both'',''mosque'') and target_institution=''mosque'')\n    or (target_key=''m61'' and p.role in (''admin'',''mosque_admin'')');
+   'or (substring(target_key from 2)::integer between 62 and 84 and p.role in (''admin'',''accounts_manager'') and (p.institution=''both'' or p.institution=target_institution) and target_institution in (''mosque'',''foundation''))     or (target_key=''m85'' and p.role in (''admin'',''mosque_admin'',''accounts_manager'') and p.institution in (''both'',''mosque'') and target_institution=''mosque'')     or (target_key=''m61'' and p.role in (''admin'',''mosque_admin'')');
  execute d;
 end $$;
 
