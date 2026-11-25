@@ -25,3 +25,59 @@
 #accountsDashboard #accountsMessaging .message-status.failed{background:#ffe0df;color:#b5121b}
 @media(max-width:1000px){#accountsDashboard #accountsMessaging #messageForm .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){#accountsDashboard #accountsMessaging #messageForm .formgrid{grid-template-columns:1fr}#accountsDashboard #accountsMessaging #messageForm .wide{grid-column:auto}}
+
+
+/* Accessible high-contrast palette and refined mosque identity header */
+#accountsDashboard{color:#142b45;background:#f3f6fb}
+#accountsDashboard .top{min-height:124px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;background:#fff;margin:0 -17px 14px;padding:14px 22px;border-bottom:1px solid #d5dfec;box-shadow:0 4px 16px rgba(19,48,78,.07)}
+#accountsDashboard .top-brand{display:flex;align-items:center;gap:16px;min-width:260px}
+#accountsDashboard .top-brand img{display:block;width:112px;height:96px;flex:0 0 112px;object-fit:cover;object-position:center;border-radius:13px;border:1px solid #c8d5e4;box-shadow:0 5px 14px rgba(14,45,77,.16)}
+#accountsDashboard .top-brand-copy{display:grid;gap:5px}
+#accountsDashboard .top-brand-copy b{font-size:22px;line-height:1.35;color:#12365b}
+#accountsDashboard .top-brand-copy span{font-size:15px;font-weight:700;color:#1b456b}
+#accountsDashboard .top-brand-copy small{font-size:13px;color:#52677e}
+#accountsDashboard .top-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+#accountsDashboard .top select{min-height:44px;color:#173653;background:#fff;border:1px solid #b9cadd;font-size:14px}
+#accountsDashboard #adUser{font-size:13px!important;font-weight:600;color:#29445f!important;text-align:right}
+#accountsDashboard .hero{background:linear-gradient(110deg,#d9f6e5,#edf9f2);border:1px solid #b9e6cc}
+#accountsDashboard .hero h1{color:#103b60}
+#accountsDashboard .hero p{color:#294d68}
+#accountsDashboard .head{background:#123f68;color:#fff}
+#accountsDashboard .head h1,#accountsDashboard .head h2,#accountsDashboard .head h3,#accountsDashboard .head b,#accountsDashboard .head span{color:#fff!important}
+#accountsDashboard .head small{color:#e6f0fa!important}
+#accountsDashboard .panel,#accountsDashboard .module{color:#193550}
+#accountsDashboard .panel h1,#accountsDashboard .panel h2:not(.head h2),#accountsDashboard .panel h3,#accountsDashboard .module h1,#accountsDashboard .module h2,#accountsDashboard .module h3{color:#153e63}
+#accountsDashboard label,#accountsDashboard .form label{color:#344f6b}
+#accountsDashboard .stat small{color:#243e5a}
+#accountsDashboard .stat em{color:#344c65}
+#accountsDashboard .tablewrap{background:#fff}
+#accountsDashboard th{background:#e8eff8;color:#173a5d}
+#accountsDashboard td{color:#243d59}
+#accountsDashboard .empty{color:#4c637d}
+#accountsDashboard .note{background:#e8f2ff;color:#16466f;border-color:#b7d2f0}
+#accountsDashboard .toolbar input,#accountsDashboard .toolbar select,#accountsDashboard .form input,#accountsDashboard .form select,#accountsDashboard .form textarea{color:#173653;background:#fff;border-color:#b9cadd}
+#accountsDashboard input::placeholder,#accountsDashboard textarea::placeholder{color:#718198;opacity:1}
+#accountsDashboard button.action{color:#fff;background:#075fae}
+#accountsDashboard button.green{background:#087c49;color:#fff}
+#accountsDashboard button.purple{background:#65318c;color:#fff}
+#accountsDashboard nav button{color:#f2f7ff}
+#accountsDashboard nav button.active{background:#087f50;color:#fff}
+#accountsDashboard .mini{background:#f5f8fc;color:#24435f;border-color:#d2deeb}
+#accountsDashboard .mini b{color:#123f68}
+#accountsDashboard #accountsMessaging.message-module{color:#183455}
+#accountsDashboard #accountsMessaging #messageForm label{color:#344f6b}
+#accountsDashboard #accountsMessaging h4{color:#153e63}
+@media(max-width:760px){
+ #accountsDashboard .top{margin:0 -10px;padding:12px;min-height:0;align-items:flex-start}
+ #accountsDashboard .top-brand{min-width:0;gap:11px}
+ #accountsDashboard .top-brand img{width:82px;height:76px;flex-basis:82px}
+ #accountsDashboard .top-brand-copy b{font-size:18px}
+ #accountsDashboard .top-brand-copy span{font-size:13px}
+ #accountsDashboard .top-controls{width:100%;justify-content:flex-start}
+ #accountsDashboard #adUser{text-align:left!important}
+}
+@media(max-width:420px){
+ #accountsDashboard .top-brand img{width:70px;height:68px;flex-basis:70px}
+ #accountsDashboard .top-brand-copy b{font-size:16px}
+ #accountsDashboard .top-brand-copy span{font-size:12px}
+}
