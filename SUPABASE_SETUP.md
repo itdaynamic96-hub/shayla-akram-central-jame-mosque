@@ -95,20 +95,13 @@ For an existing database created before this fix, run `supabase/fix-public-site-
 ### Admin dashboard preferences
 The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
 
+
 ## API Key ছাড়া বাংলা ভয়েস
 
-ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি Supabase Edge Function `bengali-tts` দিয়ে TTS.ai-এর বিনামূল্যের Bengali Piper voice ব্যবহার করে। আলাদা Google/Microsoft/TTS provider API key বা paid subscription প্রয়োজন নেই; Supabase-এর public publishable key কেবল নিজের Edge Function-এ অনুরোধ পাঠাতে ব্যবহৃত হয়।
+ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি Supabase Edge Function `bengali-tts` দিয়ে Google Translate-এর Bengali TTS RPC ব্যবহার করে। আলাদা Google Cloud API key, Microsoft key বা paid subscription লাগে না।
 
-- Anonymous free tier: প্রতি IP-তে দৈনিক ৫,০০০ অক্ষর; প্রতি অনুরোধে সর্বোচ্চ ৫০০ অক্ষর।
-- ওয়েবসাইট ৪৫০ অক্ষরের ছোট অংশে লেখা পাঠায়, যাতে API-এর সীমার মধ্যে থাকে।
-- ফ্রি API সীমা বা তৃতীয় পক্ষের সার্ভিস বন্ধ থাকলে অডিও সাময়িকভাবে তৈরি নাও হতে পারে।
-- ফ্রি ভয়েসের লাইসেন্স ব্যক্তিগত/অ-বাণিজ্যিক ব্যবহারের জন্য; বাণিজ্যিক ব্যবহারের আগে TTS.ai-এর বর্তমান শর্ত যাচাই করতে হবে।
-
-
-## Private Admin report files and module write permissions
-
-- The private report module (m06) stores uploaded reports in the private `private-module-files` bucket. Downloads are issued as five-minute signed URLs only after the module access check.
-- The public `site-media` bucket rejects `modules/m06/*` uploads. Public photos/videos remain in `site-media`.
-- Custom Admin writes require both `can_view` and `can_write`; approval separately requires `can_approve`.
-- The private bucket is limited to PDF/JPEG/PNG/WebP files up to 25 MB. Public site videos are limited to 50 MB to match the bucket cap.
+- Google-এর বর্তমান gTTS-compatible RPC ব্যবহার করা হয়েছে; প্রতি upstream অনুরোধে সর্বোচ্চ ১০০ অক্ষর পাঠানো হয়।
+- ওয়েবসাইটের ৪৫০ অক্ষরের অংশকে Edge Function স্বয়ংক্রিয়ভাবে ১০০ অক্ষরের ছোট অংশে ভাগ করে অডিও একত্র করে।
+- এটি Google-এর undocumented Translate speech endpoint; official Google Cloud TTS নয়। Google চাইলে endpoint বদলাতে পারে বা rate-limit করতে পারে, তাই কোনো uptime/quota guarantee নেই।
+- অডিও তৈরি না হলে কিছুক্ষণ পর আবার চেষ্টা করতে হবে।
 
