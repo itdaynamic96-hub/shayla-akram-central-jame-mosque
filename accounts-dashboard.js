@@ -11,15 +11,16 @@ async function loadModuleVisibility(){
  const inst=currentInstitution(),keys=[...new Set(Object.values(moduleKeys))];
  const checks=await Promise.all(keys.map(async key=>{const {data,error}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:key,write_access:false});if(error)throw error;return [key,!!data]}));
  const allowed=new Set(checks.filter(x=>x[1]).map(x=>x[0]));
- visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>!([22,23].includes(i))&&allowed.has(moduleKeys[i]));
  chandaCanView=false;chandaCanWrite=false;
  if(inst==='mosque'){
   const [view,write]=await Promise.all([supabase.rpc('chanda_can_access',{write_access:false}),supabase.rpc('chanda_can_access',{write_access:true})]);
   if(view.error)throw view.error;if(write.error)throw write.error;
   chandaCanView=!!view.data;chandaCanWrite=!!write.data;
-  if(chandaCanView)visibleModules.push(23);
+  if(chandaCanView)allowed.add(moduleKeys[23]);
  }
- const {data:messageAccess,error:messageError}=await supabase.rpc('accounts_message_access',{target_institution:inst,write_access:false});if(messageError)throw messageError;if(messageAccess)visibleModules.push(22);
+ const {data:messageAccess,error:messageError}=await supabase.rpc('accounts_message_access',{target_institution:inst,write_access:false});if(messageError)throw messageError;if(messageAccess)allowed.add(moduleKeys[22]);
+ // Keep every visible item in the original 24-module order, independent of permission lookup order.
+ visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]));
 }
 function refreshNav(){
  document.querySelectorAll('#adNav button').forEach(b=>{const i=Number(b.dataset.i);b.hidden=!visibleModules.includes(i);b.classList.toggle('active',i===activeModule)});
