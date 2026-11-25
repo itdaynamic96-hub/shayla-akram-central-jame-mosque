@@ -115,6 +115,10 @@ assert all(x in admin_modules for x in ('dashIncome','dashExpense','dashPending'
 assert 'ledger_entries' in admin_modules and 'dashboardRefresh' in admin_modules, 'Admin: dashboard must load live account data and support refresh'
 assert 'dash-shortcuts' in admin_modules and 'dashUpcoming' in admin_modules and 'dashRecent' in admin_modules, 'Admin: dashboard quick links and activity panels are missing'
 assert 'dash-metrics' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: responsive dashboard styles are missing'
+assert 'admin_dashboard_settings' in admin_modules and 'dashboardSettingsToggle' in admin_modules, 'Admin: Super Admin dashboard controls are missing'
+assert 'data-dash-metric' in admin_modules and 'data-dash-section' in admin_modules and 'data-dash-module' in admin_modules, 'Admin: dashboard visibility controls are incomplete'
+assert 'admin_dashboard_settings' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8'), 'Admin: dashboard settings schema is missing'
+assert 'super admins update dashboard settings' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8').lower(), 'Admin: dashboard settings must be Super Admin controlled'
 print('Admin Panel checks passed: 85 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
