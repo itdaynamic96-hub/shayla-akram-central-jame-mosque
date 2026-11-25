@@ -18,8 +18,8 @@ function shell(){const app=$('app');if(!app||app.hidden||$('adminSidebar'))retur
 async function dashboard(version=renderVersion){
  const w=$('adminWorkspace');if(!w||version!==renderVersion)return;
  const today=dhakaDate(),dateLabel=new Intl.DateTimeFormat('bn-BD',{timeZone:'Asia/Dhaka',weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
- const canSeeAccounts=['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'].includes(profile.role)||(profile.role==='custom_admin'&&modulePermissions.some(p=>/^m(4[1-9]|50)$/.test(p.module_key)&&p.can_view));
- const quick=[4,5,6,13,14,15,16,32,61].map(n=>mods[n-1]).filter(m=>m&&readable(m));
+ const canSeeAccounts=['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'].includes(profile.role)||(profile.role==='custom_admin'&&modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view));
+ const quick=[4,5,6,13,14,15,16,32,61,62,63,64,74].map(n=>mods[n-1]).filter(m=>m&&readable(m));
  w.innerHTML='<div class="dash-head"><div><p class="dash-eyebrow">ADMIN CONTROL CENTER</p><h2>প্রশাসনিক ড্যাশবোর্ড</h2><p class="muted">স্বাগতম, '+escapeHtml(profile.full_name||user.email)+' · '+escapeHtml(roleNames[profile.role]||profile.role)+'</p><p class="dash-date">'+escapeHtml(dateLabel)+'</p></div><div class="dash-head-actions"><button id="dashboardRefresh" type="button">↻ রিফ্রেশ</button>'+(canSeeAccounts?'<a class="dash-link-button" href="./accounts.html">হিসাব ব্যবস্থাপনা ↗</a>':'')+'</div></div>'+
  '<div class="dash-metrics">'+
  '<article class="dash-metric"><span class="dash-icon">৳</span><span class="dash-label">আজকের অনুমোদিত আয়</span><strong id="dashIncome">লোড হচ্ছে…</strong><small>আজকের তারিখ: '+escapeHtml(today)+'</small></article>'+
