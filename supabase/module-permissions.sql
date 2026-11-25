@@ -96,7 +96,7 @@ begin
  if auth.role() <> 'service_role' then
    raise exception 'Only the trusted server function may replace module permissions.';
  end if;
- if jsonb_typeof(permission_rows) <> 'array' or jsonb_array_length(permission_rows) > 60 then
+ if jsonb_typeof(permission_rows) <> 'array' or jsonb_array_length(permission_rows) > 85 then
    raise exception 'Invalid module permission list.';
  end if;
  delete from public.admin_module_permissions where user_id=target_user;
