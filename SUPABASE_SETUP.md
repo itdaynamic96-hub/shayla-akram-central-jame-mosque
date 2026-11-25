@@ -10,7 +10,7 @@
 2. Open this repository file: `supabase/schema.sql`.
 3. Copy the complete file and run it once.
 4. Confirm that the tables `profiles`, `ledger_entries`, `announcements`, `audit_logs`, `site_content`, and `budgets` exist, and that the `private-receipts` and `site-media` Storage buckets are present.
-5. The SQL also creates a private Storage bucket named `private-receipts`. Keep it private.
+5. The SQL also creates a private Storage bucket named `private-receipts`. Keep it private. The separate `private-module-files` bucket is created by the later private-report migration.
 
 ## 3. Connect the website
 1. Open Project Settings → API.
@@ -48,7 +48,8 @@ Roles:
 2. Open `supabase/accounts-permissions-fix.sql` in GitHub and copy the entire file.
 3. Paste it into SQL Editor and press Run. It is safe to run again if needed.
 4. This grants the signed-in `authenticated` role SELECT/INSERT/UPDATE on ledger entries (the missing SQL privilege that causes `permission denied for table ledger_entries`), while RLS still limits access by role and institution. It keeps receipt files private and does not grant ledger DELETE.
-5. Sign out of Accounts, sign in again, and test with a small pending entry before entering real financial data.
+5. Run `supabase/accounts-direct-posting.sql` after the Accounts tables/functions are present. It allows direct Approved posting only for users with both write and approval permission; write-only staff can submit Pending entries.
+6. Sign out of Accounts, sign in again, and test one write-only Pending entry and one fully authorized direct Approved entry before entering real financial data.
 
 ## 8. Configure Auth URLs
 In Authentication → URL Configuration, set the Site URL to:
@@ -59,7 +60,7 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 1. Sign in at /admin.html with the Super Admin.
 2. Add one test article, one test photo URL, and one YouTube video URL; publish and verify each on the homepage.
 3. Create separate mosque and foundation accountant users and confirm each can only see their own institution.
-4. Add a small test income and expense; confirm they remain pending until a manager approves them.
+4. Test both permission paths: a write-only user must create a Pending entry; a user with both `can_write` and `can_approve` may post directly as Approved. Confirm the double-entry journal has equal debit and credit.
 5. Upload a test PDF receipt and confirm only authorized accounts users can open it.
 6. Add a test monthly budget and export CSV/XLSX or print to PDF.
 7. Delete the test records only if they are still drafts; approved/rejected ledger rows are intentionally immutable and must be corrected with a reversing entry.
@@ -72,13 +73,14 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 - The live SAKM-61 site is connected to Supabase project `lmwczibsipczfymhyqba`. Admin/Accounts login additionally requires a valid Auth user, a matching `profiles` row with the correct role/institution, deployed Edge Functions where used, and the current migrations.
 
 \n## 10. Enable Super Admin-created staff accounts and per-module permissions
-1. Run `supabase/module-permissions.sql` after the base schema and Admin module SQL. This file now accepts the complete 85-module permission payload.
-2. Run `supabase/accounts-granular-module-access.sql` to extend the permission-key range and apply the separate Accounts module policies. For the latest 85-module permission validation and index fixes, also apply `supabase/migrations/20261125111114_accounts_permission_cap_85_and_missing_fk_indexes.sql`.
-3. In Supabase Dashboard → Edge Functions, deploy the function in `supabase/functions/admin-create-user/index.ts` with the name `admin-create-user`.
-4. Ensure the Edge Function has the server secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Supabase normally supplies these; if adding a secret manually, add it only in Edge Function Secrets, never in GitHub Pages or browser code.
-5. Sign in as the existing Super Admin and open `/admin.html`. Use “সুপার অ্যাডমিন — কর্মী অ্যাকাউন্ট ও মডিউল অনুমতি” to create a worker with name, email, password, institution, and selected modules.
-6. Each selected module grants the assigned worker full view, write and approval control. Permissions are also enforced by database RLS; hiding a menu alone is not the security boundary.
-7. Existing non-Super-Admin accounts keep their current role-based permissions. New staff accounts use the restricted `custom_admin` role and can access only selected modules.
+1. Run `supabase/module-permissions.sql` after the base schema and Admin module SQL. This file now accepts the complete 85-module permission payload and requires `can_write` for Custom Admin record changes.
+2. Apply `supabase/migrations/20261125194105_private_module_reports_and_module_write_hardening.sql` to create the private `private-module-files` bucket, keep m06 reports out of public `site-media`, and enforce module write permissions.
+3. Run `supabase/accounts-granular-module-access.sql` to extend the permission-key range and apply the separate Accounts module policies. For the latest 85-module permission validation and index fixes, also apply `supabase/migrations/20261125111114_accounts_permission_cap_85_and_missing_fk_indexes.sql`.
+4. In Supabase Dashboard → Edge Functions, deploy the function in `supabase/functions/admin-create-user/index.ts` with the name `admin-create-user`.
+5. Ensure the Edge Function has the server secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Supabase normally supplies these; if adding a secret manually, add it only in Edge Function Secrets, never in GitHub Pages or browser code.
+6. Sign in as the existing Super Admin and open `/admin.html`. Use “সুপার অ্যাডমিন — কর্মী অ্যাকাউন্ট ও মডিউল অনুমতি” to create a worker with name, email, password, institution, and selected modules.
+7. Each selected module grants the assigned worker full view, write and approval control. Permissions are also enforced by database RLS; hiding a menu alone is not the security boundary.
+8. Existing non-Super-Admin accounts keep their current role-based permissions. New staff accounts use the restricted `custom_admin` role and can access only selected modules.
 
 ## 11. Publish module-specific Admin Panel records to the matching website section
 1. First complete steps 6 and 10 above. The `module_records` table and module-permission policies must already exist.
@@ -109,4 +111,9 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 ## Single-operator Accounts workflow
 
 The assigned worker can create income and expense entries directly as approved only when both `can_write` and `can_approve` are granted for the relevant module (or the user has a built-in approver role). A worker with write-only permission can submit a Pending entry, but cannot approve it. The database verifies that the same authenticated user is both creator and approver for direct posting, and creates a balanced double-entry journal. Payroll, transfers, and manual journals remain in the approval module; the same assigned worker can approve them with the relevant `can_approve` permission. A second employee is not required.
+
+
+## Migration archive status
+
+The live Supabase project currently records 62 applied migration versions. The repository currently contains 14 timestamped migration SQL files; 48 older migration bodies are not present in the Git history available here. This does not affect the already-running live project, but the timestamped migration folder alone is not a complete clean-room replay of the historical database. Do not invent or blindly replay missing versions. Use the setup steps and current standalone SQL files for a new project until the historical migration archive is reconstructed.
 
