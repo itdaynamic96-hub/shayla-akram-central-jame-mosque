@@ -142,3 +142,17 @@ do $$ begin
  perform cron.schedule('chanda-daily-reminder-queue','15 0 * * *','select public.run_chanda_daily_jobs();');
 end $$;
 select public.run_chanda_daily_jobs();
+
+-- Chanda RPCs are signed-in-only; the due-creation function is trigger-only.
+revoke all on function public.chanda_can_access(boolean) from public,anon;
+grant execute on function public.chanda_can_access(boolean) to authenticated;
+revoke all on function public.record_chanda_payment(uuid,numeric,date,text,text,text) from public,anon;
+grant execute on function public.record_chanda_payment(uuid,numeric,date,text,text,text) to authenticated;
+revoke all on function public.create_current_chanda_due() from public,anon,authenticated;
+create index if not exists chanda_members_created_by_idx on public.chanda_members(created_by);
+create index if not exists chanda_message_logs_member_id_idx on public.chanda_message_logs(member_id);
+create index if not exists chanda_payments_due_id_idx on public.chanda_payments(due_id);
+create index if not exists chanda_payments_received_by_idx on public.chanda_payments(received_by);
+drop policy if exists "chanda members insert authorized" on public.chanda_members;
+create policy "chanda members insert authorized" on public.chanda_members
+ for insert to authenticated with check(public.chanda_can_access(true) and created_by=(select auth.uid()));
