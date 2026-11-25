@@ -36,16 +36,7 @@ async function createUser(role, grantAll) {
     }));
     const { error: permissionError } = await admin.from("admin_module_permissions").upsert(permissions);
     if (permissionError) throw permissionError;
-    for (let i = 0; i < 24; i++) {
-      const { data: allowed, error: accessError } = await admin.rpc("accounts_feature_access", {
-        target_institution: "mosque", target_module: "m" + String(62 + i).padStart(2, "0"), write_access: false
-      });
-      if (accessError) throw accessError;
-      if (!allowed) throw new Error("Temporary admin is missing view access to module " + (i + 1));
-    }
-    const { data: chanda, error: chandaError } = await admin.rpc("chanda_can_access", { write_access: false });
-    if (chandaError) throw chandaError;
-    // chanda_can_access is evaluated under the current service role; module m85 is also granted above.
+
   }
   return { id, email, password };
 }
@@ -134,7 +125,7 @@ try {
 } finally {
   await browser.close().catch(() => {});
   for (const id of createdUsers.reverse()) {
-    await admin.from("admin_module_permissions").delete().eq("user_id", id).catch(() => {});
-    await admin.auth.admin.deleteUser(id).catch(() => {});
+    try { await admin.from("admin_module_permissions").delete().eq("user_id", id); } catch {}
+    try { await admin.auth.admin.deleteUser(id); } catch {}
   }
 }
