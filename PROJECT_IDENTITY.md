@@ -24,6 +24,13 @@ This repository and Supabase project are the **SAKM-61** 61-module Enterprise we
 - Messaging provider selection is Meta WhatsApp Cloud API first and eSMS Bangladesh second. The dispatch function uses the eSMS form-encoded API; the webhook supports Meta's GET verification challenge and HMAC-SHA256 POST signature. No external messages are sent until credentials are supplied. Live delivery and eSMS delivery-status polling remain unverified; see MESSAGING_SETUP.md. An approved WhatsApp Utility template with one body parameter is required for out-of-session reminders.
 - Encrypted backups are best-effort recovery bundles, not guaranteed one-click project clones. They exclude password hashes, active sessions, provider credentials, Supabase project secrets, dashboard-only settings, and a verified fresh-project restore.
 
+## Accounts Panel scope
+- The approved Accounts Panel has **22 core modules** and separate Mosque/Foundation institution views, scoped by the signed-in profile and module permissions.
+- Monthly chanda collection is integrated inside **Donors & Donations**; it is not a separate top-level module. Messaging and notification management is available inside **Settings**.
+- The 22 modules include income, expenses, donors/donations, bank/cash, transfers, cashbook/ledger, receivables/bills, payroll, budgets, funds, receipts/vouchers, financial reports, PDF/Excel, trial balance/balance sheet, search, bank reconciliation, audit/verification, approvals, audit trail, users/permissions, and settings.
+- Bank reconciliation creation calculates book balance server-side. Statement lines must match posted journal lines for the same bank account, amount, direction, institution, and statement date; draft records can be removed by their creator.
+- Bank account numbers are masked server-side; only the last four digits are retained in the masked field.
+
 ## Operational references
 - Supabase project: https://supabase.com/dashboard/project/lmwczibsipczfymhyqba
 - GitHub Actions secrets: https://github.com/itdaynamic96-hub/shayla-akram-central-jame-mosque/settings/secrets/actions
