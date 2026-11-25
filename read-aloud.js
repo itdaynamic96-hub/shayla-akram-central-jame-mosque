@@ -92,13 +92,14 @@
       finish('পড়া শেষ হয়েছে।');
       return;
     }
+    const session = active;
     const utterance = new Utterance(chunks[chunkIndex++]);
     utterance.lang = voice.lang || 'bn-BD';
     utterance.voice = voice;
     utterance.rate = speed;
-    utterance.onend = () => { if (active) speakNext(); };
+    utterance.onend = () => { if (active === session) speakNext(); };
     utterance.onerror = event => {
-      if (!active) return;
+      if (active !== session) return;
       const reason = event && event.error === 'canceled' ? 'পড়া বন্ধ করা হয়েছে।' : 'বাংলা কণ্ঠে পড়া যায়নি। ব্রাউজারের বাংলা ভয়েস সেটিং পরীক্ষা করুন।';
       finish(reason);
     };
@@ -123,7 +124,7 @@
       return;
     }
     synth.cancel();
-    active = {statusTarget};
+    active = {statusTarget,buttons};
     chunks = splitText(clean);
     chunkIndex = 0;
     setControls('playing');
@@ -170,13 +171,14 @@
     });
     buttons?.play.addEventListener('click', () => start(readableText(pageRoot()), buttons));
     buttons?.pause.addEventListener('click', () => {
-      if (active && synth) { synth.pause(); setControls('paused'); statusText('পড়া বিরতিতে আছে।'); }
+      if (active?.buttons === buttons && synth) { synth.pause(); setControls('paused'); statusText('পড়া বিরতিতে আছে।'); }
     });
     buttons?.resume.addEventListener('click', () => {
-      if (active && synth) { synth.resume(); setControls('playing'); statusText('আবার পড়া হচ্ছে।'); }
+      if (active?.buttons === buttons && synth) { synth.resume(); setControls('playing'); statusText('আবার পড়া হচ্ছে।'); }
     });
-    buttons?.stop.addEventListener('click', () => stop());
+    buttons?.stop.addEventListener('click', () => { if (active?.buttons === buttons) stop(); });
     currentButtons = buttons;
+    setControls('idle');
     if (!synth || !Utterance) statusText('এই ব্রাউজারে কণ্ঠে পড়ে শোনানোর সুবিধা নেই।');
     else if (!chooseVoice()) statusText('বাংলা কণ্ঠ খুঁজে দেখা হচ্ছে…');
     else statusText('বর্তমান পৃষ্ঠার বাংলা লেখা শুনতে শুরু করুন।');
@@ -206,12 +208,12 @@
     const buttons = {play,pause,resume,stop:halt};
     play.addEventListener('click', () => start(readableText(card), buttons, status));
     pause.addEventListener('click', () => {
-      if (active && synth) { synth.pause(); setControls('paused'); statusText('বিরতি দেওয়া হয়েছে।',status); }
+      if (active?.buttons === buttons && synth) { synth.pause(); setControls('paused'); statusText('বিরতি দেওয়া হয়েছে।',status); }
     });
     resume.addEventListener('click', () => {
-      if (active && synth) { synth.resume(); setControls('playing'); statusText('আবার পড়া হচ্ছে।',status); }
+      if (active?.buttons === buttons && synth) { synth.resume(); setControls('playing'); statusText('আবার পড়া হচ্ছে।',status); }
     });
-    halt.addEventListener('click', () => stop('পড়া বন্ধ করা হয়েছে।'));
+    halt.addEventListener('click', () => { if (active?.buttons === buttons) stop('পড়া বন্ধ করা হয়েছে।'); });
   }
   function scanCards(root = document) {
     if (root instanceof Element && root.matches(selectors)) addCardReader(root);
