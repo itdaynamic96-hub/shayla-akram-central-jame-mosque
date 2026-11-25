@@ -35,3 +35,9 @@ For existing projects where the Accounts page reports `permission denied for tab
 - পাবলিক পেজ ও অ্যাডমিন প্যানেলের দীর্ঘ লেখার প্রতিটি textarea-তে সর্বোচ্চ ৫০০ শব্দের লাইভ গণনা ও সীমা প্রয়োগ হয়।
 - অ্যাডমিন মডিউল ফর্মে সংরক্ষণের আগেও ৫০০ শব্দ যাচাই হয়।
 - ডেটাবেস পর্যায়ে সীমা কার্যকর করতে Supabase SQL Editor-এ `supabase/basic-package-500-word-limit.sql` একবার চালাতে হবে।
+
+## Enterprise Accounts additions
+
+The live Supabase project includes account_staff, payroll_records, account_obligations, and account_assets, with row-level security and audit triggers. The Accounts page loads accounts-enterprise.js for payroll, cashbook/bankbook, receivables/payables, asset register, and audit history. The cash/bank books are read-only projections of approved ledger entries to avoid double counting. Payroll payment creates a pending expense ledger entry that still requires normal ledger approval.
+
+For a fresh database after the base schema and Accounts permission repair, run supabase/accounts-enterprise-extensions.sql in the Supabase SQL Editor. Never add sample financial or staff data to production without authorization.
