@@ -153,7 +153,7 @@ reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-google-bn1' in page_source, f'Read Aloud: free Bengali Piper client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-google-bn1' in page_source, f'Read Aloud: Google no-key Bengali client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
@@ -166,7 +166,7 @@ assert 'functions/v1/bengali-tts' in reader_js and 'window.SUPABASE_CONFIG' in r
 assert 'rest.length > 450' in reader_js, 'Read Aloud: text chunks must stay below the anonymous provider limit'
 assert 'বাংলা কণ্ঠ' in reader_js, 'Read Aloud: user-facing voice must be identified as Bengali'
 tts_function=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
-assert 'https://api.tts.ai/v1' in tts_function and '"/voices/?language=bn&model=piper"' in tts_function, 'Read Aloud: free Piper voice discovery must be configured'
+assert 'https://translate.google.com/_/TranslateWebserverUi/data/batchexecute' in tts_function, 'Read Aloud: Google no-key TTS RPC endpoint must be configured'
 assert 'GOOGLE_TTS_RPC = "jQ1olc"' in tts_function and 'GOOGLE_TTS_MAX_CHARS = 100' in tts_function and 'text.length > 450' in tts_function, 'Read Aloud: Google Bengali TTS must split within its 100-character upstream limit'
 assert 'api_key_required: false' in tts_function, 'Read Aloud: Bengali TTS must not require a provider API key'
 assert 'new Audio(audioUrl)' in reader_js, 'Read Aloud: audio playback is not wired'
