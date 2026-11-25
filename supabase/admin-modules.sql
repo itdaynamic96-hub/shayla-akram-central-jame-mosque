@@ -29,7 +29,7 @@ alter table public.profiles add constraint profiles_role_check check (role in (
 ));
 create table if not exists public.module_records(
  id uuid primary key default gen_random_uuid(),
- module_key text not null check(module_key ~ '^m(0[1-9]|[1-5][0-9]|60)$'),
+ module_key text not null check(module_key ~ '^m(0[1-9]|[1-5][0-9]|6[01])$'),
  institution text not null check(institution in ('mosque','foundation','both')),
  title text not null check(length(trim(title)) between 1 and 180),
  data jsonb not null default '{}'::jsonb,
@@ -56,6 +56,7 @@ as $$
    or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and (p.institution in ('both','foundation')) and target_institution='foundation')
    or (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager','accountant') and (p.institution='both' or p.institution=target_institution) and target_institution in ('mosque','foundation'))
    or (substring(target_key from 2)::integer between 51 and 60 and p.role='admin')
+   or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
  ) and (not write_access or p.role not in ('auditor','viewer')));
 $$;
 create or replace function public.module_record_approval_access(target_key text,target_institution text)
@@ -66,7 +67,8 @@ as $$
   (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque')) or
   (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin') and p.institution in ('both','foundation')) or
   (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution)) or
-  (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin'))));
+  (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin')) or
+  (target_key='m61' and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque') and target_institution='mosque')));
 $$;
 create or replace function public.guard_module_record_publication()
 returns trigger language plpgsql security definer set search_path=public
