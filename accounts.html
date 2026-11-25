@@ -9,7 +9,7 @@
 @media(max-width:700px){.read-aloud{right:10px;bottom:10px}}
 
 
-</style><link rel="stylesheet" href="./accounts-dashboard.css?v=20261125-5">
+</style><link rel="stylesheet" href="./accounts-dashboard.css?v=20261126-contrast-top">
 <style id="modern-refresh">
 :root{color-scheme:light;--bg:#f4f5ef;--panel:#fffefa;--line:#e2e7dc;--gold:#a9853d;--text:#20372b;--muted:#66756b;--red:#b42318}
 body{background:radial-gradient(ellipse at 8% 0%,#fffdf6 0,transparent 40%),linear-gradient(145deg,#f6f5ef,#edf2eb);color:var(--text);font-family:'Noto Sans Bengali',sans-serif;line-height:1.65}
@@ -32,11 +32,48 @@ th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;paddin
 :focus-visible{outline:3px solid #c5a45b!important;outline-offset:2px}
 @media(max-width:700px){main{padding:12px}.top{padding:15px;border-radius:14px}.panel,.stat{padding:15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat strong{font-size:21px}}
 @media(max-width:390px){.grid{grid-template-columns:1fr}}
+
+/* 2026-11-26: force readable contrast across every Accounts module */
+.site-top{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:24px!important;min-height:220px!important;padding:22px 28px!important;background:linear-gradient(115deg,#073b2c,#145b40)!important;color:#fff!important}
+.site-top-brand{display:flex!important;align-items:center!important;gap:24px!important;min-width:0}
+.site-top-brand>img{display:block!important;width:190px!important;height:160px!important;flex:0 0 190px!important;object-fit:cover!important;object-position:center!important;border:2px solid #e5c36f!important;border-radius:15px!important;box-shadow:0 8px 22px #001c1280!important}
+.site-top .brand,.site-top .brand small,.site-top h1,.site-top p,.site-top .muted{color:#fff!important}
+.site-top .brand{font-size:19px!important;font-weight:800!important}
+.site-top h1{font-size:clamp(27px,3vw,40px)!important;line-height:1.2!important}
+.site-top .muted{font-size:17px!important;color:#f0f7f2!important}
+.site-top a{color:#fff!important;text-decoration:underline!important;font-weight:700!important}
+.site-top-links{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#accountsDashboard{color:#172b40!important;background:#f1f5fa!important}
+#accountsDashboard *{text-shadow:none}
+#accountsDashboard .top{background:#fff!important;color:#173653!important}
+#accountsDashboard .top *{color:#173653!important}
+#accountsDashboard .top .top-brand-copy b{color:#12365b!important}
+#accountsDashboard .hero{background:#e3f5eb!important;color:#123653!important}
+#accountsDashboard .hero *{color:#123653!important}
+#accountsDashboard .head{background:#123f68!important;color:#fff!important}
+#accountsDashboard .head *{color:#fff!important}
+#accountsDashboard .panel,#accountsDashboard .module{background:#fff!important;color:#172f49!important}
+#accountsDashboard .panel h1,#accountsDashboard .panel h2,#accountsDashboard .panel h3,#accountsDashboard .panel h4,#accountsDashboard .module h1,#accountsDashboard .module h2,#accountsDashboard .module h3,#accountsDashboard .module h4{color:#123e65!important}
+#accountsDashboard label,#accountsDashboard .form label{color:#263f59!important;font-weight:700!important}
+#accountsDashboard p,#accountsDashboard small,#accountsDashboard .muted,#accountsDashboard .empty{color:#40566e!important}
+#accountsDashboard input,#accountsDashboard select,#accountsDashboard textarea{background:#fff!important;color:#142f49!important;border:1px solid #8ea5bd!important}
+#accountsDashboard input::placeholder,#accountsDashboard textarea::placeholder{color:#66788c!important;opacity:1!important}
+#accountsDashboard th{background:#e5edf6!important;color:#12395f!important}
+#accountsDashboard td{background:#fff!important;color:#243c55!important}
+#accountsDashboard a{color:#075b9b!important}
+#accountsDashboard button{color:#fff!important}
+#accountsDashboard .stat{color:#18334d!important}
+#accountsDashboard .stat small{color:#263f59!important}
+#accountsDashboard .stat strong{color:#075b43!important}
+#accountsDashboard nav button{color:#fff!important}
+#accountsDashboard nav button.active{background:#087f50!important;color:#fff!important}
+@media(max-width:760px){.site-top{align-items:flex-start!important;padding:14px!important;min-height:0!important}.site-top-brand{gap:12px!important}.site-top-brand>img{width:100px!important;height:92px!important;flex-basis:100px!important}.site-top .brand{font-size:14px!important}.site-top .muted{font-size:13px!important}.site-top-links{width:100%}}
+@media(max-width:430px){.site-top-brand>img{width:78px!important;height:76px!important;flex-basis:78px!important}.site-top h1{font-size:23px!important}}
 </style>
-</head><body><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Accounts Management</h1><p class="muted">শুধু অনুমোদিত হিসাব বিভাগের জন্য · Public Website থেকে পৃথক</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<button id="logout" hidden>লগআউট</button></div></div>
+</head><body><main><div class="top site-top"><div class="site-top-brand"><img src="./assets/mosque-hero.webp" alt="শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Accounts Management</h1><p class="muted">শুধু অনুমোদিত হিসাব বিভাগের জন্য · Public Website থেকে পৃথক</p></div></div><div class="site-top-links"><a href="./index.html">মূল ওয়েবসাইট</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। সেটআপ নির্দেশিকা README-তে দেওয়া আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" autocomplete="username" required><label>পাসওয়ার্ড</label><input id="password" type="password" autocomplete="current-password" required><p><button>লগইন</button></p></form><p class="muted">অ্যাকাউন্ট তৈরি করবেন Supabase-এর অনুমোদিত Auth ব্যবস্থাপক। এখানে Public Sign-up নেই।</p><p id="loginError" class="error" hidden></p></section>
-<section id="app" hidden><div class="top"><div><img data-mosque-image="accounts" src="./assets/mosque-hero.webp" alt="মসজিদের ছবি" style="display:block;width:min(100%,340px);height:96px;object-fit:cover;border-radius:10px;margin-bottom:8px"><h2 id="welcome">Accounts Admin Panel — হিসাব ও আর্থিক ব্যবস্থাপনা</h2></div><span class="tag" id="role"></span></div><p class="panel"><a href="./admin.html">ওয়েবসাইট Admin Panel</a>　|　<a href="./index.html">মূল ওয়েবসাইট</a></p><div class="panel"><label>হিসাবের বিভাগ</label><select id="institution"><option value="mosque">মসজিদ</option><option value="foundation">ফাউন্ডেশন</option></select></div>
+<section id="app" hidden><div class="top"><div><h2 id="welcome">Accounts Admin Panel — হিসাব ও আর্থিক ব্যবস্থাপনা</h2></div><span class="tag" id="role"></span></div><p class="panel"><a href="./admin.html">ওয়েবসাইট Admin Panel</a>　|　<a href="./index.html">মূল ওয়েবসাইট</a></p><div class="panel"><label>হিসাবের বিভাগ</label><select id="institution"><option value="mosque">মসজিদ</option><option value="foundation">ফাউন্ডেশন</option></select></div>
 <div class="grid"><div class="stat">অনুমোদিত মোট আয়<strong id="income">৳০</strong></div><div class="stat">অনুমোদিত মোট ব্যয়<strong id="expense">৳০</strong></div><div class="stat">বর্তমান স্থিতি<strong id="balance">৳০</strong></div><div class="stat">অনুমোদনের অপেক্ষায়<strong id="pending">০</strong></div></div>
 <div class="panel"><h3>নতুন লেনদেন</h3><form id="entryForm"><div class="formgrid"><div><label>ধরন</label><select id="type"><option value="income">আয়</option><option value="expense">ব্যয়</option></select></div><div><label>তারিখ</label><input id="date" type="date" required></div><div><label>খাত</label><input id="category" required maxlength="100" placeholder="যেমন: অনুদান / বিদ্যুৎ বিল"></div><div><label>ফান্ড</label><select id="fund"><option value="general">সাধারণ অনুদান</option><option value="zakat">যাকাত</option><option value="sadaqah">সদকা</option><option value="orphan">এতিম সহায়তা</option><option value="poor_relief">অসহায় পরিবার</option><option value="medical">চিকিৎসা সহায়তা</option><option value="education">শিক্ষা সহায়তা</option><option value="construction">নির্মাণ ও রক্ষণাবেক্ষণ</option></select></div><div><label>পরিমাণ (টাকা)</label><input id="amount" type="number" min="0.01" step="0.01" required></div><div><label>দাতা / প্রাপক</label><input id="party" maxlength="160"></div><div><label>পেমেন্ট মাধ্যম</label><select id="method"><option value="cash">নগদ</option><option value="bank">ব্যাংক</option><option value="mobile_banking">মোবাইল ব্যাংকিং</option><option value="other">অন্যান্য</option></select></div><div><label>নির্দিষ্ট নগদ/ব্যাংক হিসাব (ঐচ্ছিক)</label><select id="bankAccount"><option value="">ডিফল্ট হিসাব</option></select></div><div><label>রেফারেন্স / রসিদ নম্বর</label><input id="reference" maxlength="100"></div><div><label>বিবরণ</label><input id="note" maxlength="500"></div><div><label>রসিদ / ভাউচার (ছবি বা PDF)</label><input id="receipt" type="file" accept="image/*,application/pdf"></div></div><p><button type="submit">সরাসরি জমা দিন</button></p></form><p id="formError" class="error" hidden></p></div>
 <div class="panel"><div class="top"><h3>ফান্ড ও অনুদানের হিসাব</h3><span class="muted">অনুমোদিত লেনদেন থেকে স্বয়ংক্রিয় হিসাব</span></div><div class="tablewrap"><table><thead><tr><th>ফান্ড</th><th>আয়</th><th>ব্যয়</th><th>অবশিষ্ট</th></tr></thead><tbody id="fundRows"></tbody></table></div></div>
