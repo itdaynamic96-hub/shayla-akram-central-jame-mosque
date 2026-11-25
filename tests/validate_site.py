@@ -175,3 +175,21 @@ assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 
 assert "schedule:" in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: daily schedule is missing'
 assert 'postgres.lmwczibsipczfymhyqba' in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: pooler username validation is missing'
 print('Enterprise Accounts checks passed: external JS syntax, payroll, cash/bank books, obligations, assets and migration markers.')
+
+# Accounts messaging center and upcoming monthly chanda dues.
+messaging_js=(ROOT/'accounts-messaging.js').read_text(encoding='utf-8')
+subprocess.run(['node','--check','--input-type=module'],input=messaging_js,text=True,capture_output=True,check=True)
+assert 'accountsMessaging' in (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert 'accounts-messaging.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
+message_sql=(ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')
+for marker in ('accounts_message_queue','accounts_message_attempts','enable row level security','accounts_message_access'):
+    assert marker in message_sql, f'Accounts messaging migration missing: {marker}'
+dispatch=(ROOT/'supabase/functions/message-dispatch/index.ts').read_text(encoding='utf-8')
+webhook=(ROOT/'supabase/functions/message-status-webhook/index.ts').read_text(encoding='utf-8')
+assert 'WHATSAPP_ACCESS_TOKEN' in dispatch and 'SMS_API_TOKEN' in dispatch
+assert 'awaiting_delivery' in dispatch and 'MESSAGE_WEBHOOK_SECRET' not in dispatch
+assert 'MESSAGE_WEBHOOK_SECRET' in webhook and 'provider_message_id' in webhook
+chanda_source=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
+assert 'chanda-status' in chanda_source and 'd.due_date<=today' in chanda_source
+assert 'next_month_start' in (ROOT/'supabase/chanda-upcoming-month-due.sql').read_text(encoding='utf-8')
+print('Accounts messaging checks passed: queue UI, RLS, WhatsApp-first/SMS fallback, webhook and monthly chanda status window.')
