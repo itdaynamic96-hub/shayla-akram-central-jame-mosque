@@ -6,7 +6,6 @@ const fmt=n=>new Intl.NumberFormat('bn-BD').format(n);
 const el=id=>document.getElementById(id);
 function mount(){
  if(el('accountsDashboard'))return;
- const style=document.createElement('link');style.rel='stylesheet';style.href='./accounts-dashboard.css?v=20261125-1';document.head.appendChild(style);
  const root=document.createElement('section');root.id='accountsDashboard';
  root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div><b>🕌 মসজিদ Accounts</b><div style="font-size:11px;color:#657b97">সাকছিপাড়া শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</div></div><select id="adMonth" aria-label="মাস"></select><div id="adUser" style="font-size:13px;text-align:right"></div></header><section class="hero"><div><h1 id="adTitle">মাসিক চাঁদা আদায় ব্যবস্থাপনা</h1><p id="adSub">মসজিদের নিয়মিত মাসিক চাঁদার হিসাব ও অগ্রগতি</p></div><div><button class="action green" id="adAdd">＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport">▥ রিপোর্ট</button></div></section><div id="adPage"></div></main></div>';
  const app=el('app');app.prepend(root);[...app.children].filter(x=>x!==root).forEach(x=>{x.hidden=true});
