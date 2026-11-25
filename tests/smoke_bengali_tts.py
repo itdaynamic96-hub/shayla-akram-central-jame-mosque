@@ -7,7 +7,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = (ROOT / "supabase-config.js").read_text(encoding="utf-8")
-match = re.search(r"anonKey\\s*:\\s*['\"]([^'\"]+)['\"]", CONFIG)
+match = re.search(r"anonKey\s*:\s*['\"]([^'\"]+)['\"]", CONFIG)
 if not match:
     raise SystemExit("Could not read the Supabase publishable key from supabase-config.js")
 api_key = match.group(1)
