@@ -2,6 +2,10 @@ name: SAKM-61 Encrypted Full Backup (best-effort)
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/backup-trigger.txt"
   schedule:
     - cron: '45 20 * * *' # Daily at 02:45 Bangladesh time (UTC+6)
 
