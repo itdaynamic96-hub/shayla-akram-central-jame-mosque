@@ -159,6 +159,7 @@ assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encod
 assert 'content-limits.js' not in (ROOT/'admin.html').read_text(encoding='utf-8') and 'content-limits.js' not in (ROOT/'index.html').read_text(encoding='utf-8'), 'Enterprise pages must not load the Basic 500-word limiter'
 assert 'countWords500' not in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Enterprise module records must not enforce the Basic 500-word cap'
 assert 'function openPublishedPage' in (ROOT/'index.html').read_text(encoding='utf-8'), 'Published custom pages must open from dynamic navigation'
+assert '০৪:৫৯' not in (ROOT/'index.html').read_text(encoding='utf-8') and 'সময় প্রকাশিত হয়নি' in (ROOT/'index.html').read_text(encoding='utf-8'), 'Do not show unverified fixed prayer times'
 assert "m.n===9?data.visibility==='প্রকাশিত'" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Page publishing must honor the explicit visibility setting'
 assert 'm09' in (ROOT/'supabase/public-module-records.sql').read_text(encoding='utf-8'), 'Public page records must be allowed by the public allowlist'
 assert "case_notes" not in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Public assistance modules must not include individual case notes'
