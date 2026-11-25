@@ -166,7 +166,7 @@ assert 'functions/v1/bengali-tts' in reader_js and 'window.SUPABASE_CONFIG' in r
 assert 'rest.length > 450' in reader_js, 'Read Aloud: text chunks must stay below the anonymous provider limit'
 assert 'বাংলা কণ্ঠ' in reader_js, 'Read Aloud: user-facing voice must be identified as Bengali'
 tts_function=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
-assert 'api.tts.ai/v1/voices/' in tts_function and 'api.tts.ai/v1' in tts_function, 'Read Aloud: free Piper voice discovery must be configured'
+assert 'https://api.tts.ai/v1' in tts_function and '"/voices/?language=bn&model=piper"' in tts_function, 'Read Aloud: free Piper voice discovery must be configured'
 assert 'model: "piper"' in tts_function and 'text.length > 500' in tts_function, 'Read Aloud: Edge Function must use free Bengali Piper and enforce anonymous text limit'
 assert 'Authorization' not in tts_function, 'Read Aloud: TTS.ai must not require a provider API key'
 assert 'new Audio(audioUrl)' in reader_js, 'Read Aloud: audio playback is not wired'
