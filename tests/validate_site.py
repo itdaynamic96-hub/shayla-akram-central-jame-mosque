@@ -129,17 +129,19 @@ reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261125-universal' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261125-male-wasm' in page_source, f'Read Aloud: shared engine is not loaded by {page_name}'
+    assert '@spelling-creator/spellophone@0.2.1/dist/legacy/spellophone.iife.js' in page_source, f'Read Aloud: free Bengali TTS engine is not loaded by {page_name}'
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
 assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Read Aloud: Arabic text must not be passed to Bengali TTS as if it were Bengali'
-assert 'if (!chooseVoice())' in reader_js and 'utterance.voice = voice' in reader_js, 'Read Aloud: must require an available Bengali voice instead of silently falling back to another language'
+assert 'Spellophone.createEspeak' in reader_js and "languages:['bn']" in reader_js, 'Read Aloud: must use bundled free Bengali TTS, not device voices'
+assert "item.gender === 'male'" in reader_js and "language.name || ''" in reader_js, 'Read Aloud: must select only a verified Bengali male voice'
+assert 'speechSynthesis' not in reader_js and 'SpeechSynthesisUtterance' not in reader_js, 'Read Aloud: must not depend on device speech voices'
+assert 'engine.synthesize' in reader_js and 'AudioContext' in reader_js, 'Read Aloud: browser-side audio synthesis is missing'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
-assert 'SpeechSynthesisUtterance' in (ROOT/'read-aloud.js').read_text(encoding='utf-8')
-assert 'bn-BD' in (ROOT/'read-aloud.js').read_text(encoding='utf-8')
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 assert "from('chanda_members')" in chanda_js
 assert "from('chanda_dues')" in chanda_js
