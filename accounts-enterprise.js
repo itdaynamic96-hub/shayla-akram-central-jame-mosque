@@ -132,7 +132,16 @@ async function payrollAction(e){
  }
  try{
   if(approve){const {error}=await supabase.from('payroll_records').update({status:'approved',approved_by:user.id,approved_at:new Date().toISOString()}).eq('id',approve).eq('status','pending');if(error)throw error}
-  else{const method=prompt('পেমেন্ট মাধ্যম: cash / bank / mobile_banking / other','cash');if(method===null)return;const ref=prompt('ট্রানজেকশন/রেফারেন্স নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';const {error}=await supabase.rpc('mark_payroll_paid',{target_payroll:pay,paid_on:today(),paid_via:method,payment_reference:ref});if(error)throw error}
+  else{
+   const {data:destinations,error:destError}=await supabase.from('account_payment_methods').select('id,method_type,provider_name,holder_name,holder_role,phone_number,account_number,bank_branch').eq('institution',institution()).eq('is_active',true).order('provider_name');
+   if(destError)throw destError;
+   const choices=['0. নগদ (Cash)',...(destinations||[]).map((x,i)=>(i+1)+'. '+({bkash:'বিকাশ',nagad:'নগদ',bank:'ব্যাংক',other:'অন্যান্য'}[x.method_type])+' · '+x.provider_name+' · '+x.holder_name+(x.holder_role?' ('+x.holder_role+')':'')+' · '+(x.phone_number||x.account_number||'')+(x.bank_branch?' · '+x.bank_branch:''))];
+   const picked=prompt('যে মাধ্যমে বেতন পরিশোধ করবেন তার নম্বর লিখুন:\\n'+choices.join('\\n'),'0');if(picked===null)return;
+   const choice=Number(picked);if(!Number.isInteger(choice)||choice<0||choice>destinations.length)throw new Error('তালিকা থেকে সঠিক নম্বর নির্বাচন করুন।');
+   const selected=choice===0?null:destinations[choice-1],method=selected?(selected.method_type==='bank'?'bank':selected.method_type==='other'?'other':'mobile_banking'):'cash';
+   const ref=prompt('ট্রানজেকশন/রেফারেন্স নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';
+   const {error}=await supabase.rpc('mark_payroll_paid_with_method',{target_payroll:pay,paid_on:today(),paid_via:method,payment_reference:ref,selected_payment_method:selected?.id||null});if(error)throw error
+  }
   await loadAll()
  }catch(ex){fail(ex)}
 }
