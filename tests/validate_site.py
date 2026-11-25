@@ -318,6 +318,14 @@ assert 'main{width:100%;max-width:none' in (ROOT/'accounts.html').read_text(enco
 assert "modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view)" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin dashboard Accounts shortcut must use the new granular permissions'
 
 # Mosque homepage layout and shared image management.
+media_js=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
+assert "mosque_360_panorama" in media_js and "mosque360Start" in media_js, '360 panorama setting and homepage launch control are missing'
+assert "createImageBitmap(file)" in media_js and "ratio<1.8||ratio>2.2" in media_js, '360 panorama must validate an approximately 2:1 equirectangular image'
+assert "pannellum.viewer" in media_js and "type:'equirectangular'" in media_js, '360 panorama must use a real equirectangular viewer'
+for panel in ((ROOT/'admin.html').read_text(encoding='utf-8'),(ROOT/'accounts.html').read_text(encoding='utf-8')):
+    assert 'mosquePanoramaForm' in panel and 'mosquePanoramaRemove' in panel, 'Admin and Accounts must provide 360 panorama upload/removal controls'
+assert 'id="mosque360Stage"' in html and 'id="mosque360Start"' in html, 'Homepage must include a real 360 viewer stage and explicit start button'
+
 assert 'class="mosque-hero"' in html and 'data-mosque-image' in html, 'Homepage: user-supplied mosque hero image is missing'
 assert 'id="intro-notices-column"' in html and 'arrangeHomepageColumns' in html, 'Homepage: three-column notices/video layout is missing'
 assert 'class="tour-cover"' in html, 'Homepage: mosque photo must be used as the 360-degree tour cover'
