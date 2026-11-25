@@ -1,4 +1,4 @@
-/* Free, device-independent Bengali male TTS powered by local eSpeak NG/WASM (Spellophone). */
+/* Bengali male neural TTS via the protected Supabase Speech proxy. */
 (() => {
   'use strict';
 
@@ -15,10 +15,7 @@
     '[lang="ar"]','.arabic','.arabic-pronunciation'
   ].join(',');
 
-  let enginePromise = null;
-  let engine = null;
-  let maleVoice = null;
-  let audioContext = null;
+  const TTS_API = 'https://lmwczibsipczfymhyqba.supabase.co/functions/v1/bengali-tts';
   let active = null;
   let currentButtons = null;
   let speed = 1;
@@ -71,106 +68,63 @@
 
   const finish = message => {
     const target = active?.statusTarget;
-    if (active?.source) {
-      active.source.onended = null;
-      try { active.source.stop(); } catch (_) {}
+    if (active?.audio) {
+      active.audio.onended = null;
+      active.audio.onerror = null;
+      active.audio.pause();
+      active.audio.removeAttribute('src');
+      active.audio.load();
     }
+    if (active?.audioUrl) URL.revokeObjectURL(active.audioUrl);
     active = null;
     setControls('idle');
     statusText(message, target);
   };
 
-  const loadEngineScript = () => new Promise((resolve, reject) => {
-    if (window.Spellophone?.createEspeak) return resolve();
-    const existing = document.querySelector('script[data-bengali-tts-engine]');
-    if (existing) {
-      existing.addEventListener('load', () => window.Spellophone?.createEspeak ? resolve() : reject(new Error('বাংলা কণ্ঠের ইঞ্জিন লোড হয়নি।')), {once:true});
-      existing.addEventListener('error', () => reject(new Error('বিনামূল্যের বাংলা কণ্ঠের ইঞ্জিন ডাউনলোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।')), {once:true});
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = ENGINE_URL;
-    script.async = true;
-    script.dataset.bengaliTtsEngine = '1';
-    script.onload = () => window.Spellophone?.createEspeak ? resolve() : reject(new Error('বাংলা কণ্ঠের ইঞ্জিন পাওয়া যায়নি।'));
-    script.onerror = () => reject(new Error('বিনামূল্যের বাংলা কণ্ঠের ইঞ্জিন ডাউনলোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।'));
-    document.head.appendChild(script);
-  });
-
-  const ensureEngine = async () => {
-    if (engine) return engine;
-    if (!enginePromise) enginePromise = (async () => {
-      await loadEngineScript();
-      const instance = await window.Spellophone.createEspeak({cdn:'jsdelivr', languages:['bn']});
-      const voice = instance.listVoices().find(item =>
-        item.gender === 'male' &&
-        item.languages?.some(language => /^bn(?:-|$)/i.test(language.name || ''))
-      );
-      if (!voice) {
-        instance.dispose?.();
-        throw new Error('ইঞ্জিনে যাচাইকৃত বাংলা পুরুষ কণ্ঠ পাওয়া যায়নি। নারী বা অন্য ভাষার কণ্ঠ চালু করা হবে না।');
-      }
-      await instance.loadVoice(voice.name);
-      instance.setVoice(voice.name);
-      engine = instance;
-      maleVoice = voice;
-      return engine;
-    })().catch(error => {
-      enginePromise = null;
-      throw error;
-    });
-    return enginePromise;
-  };
-
-  const getAudioContext = () => {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) throw new Error('এই ব্রাউজারে অডিও চালানোর সুবিধা নেই।');
-    if (!audioContext || audioContext.state === 'closed') audioContext = new AudioContextClass();
-    return audioContext;
-  };
-
-  const playCurrentBuffer = session => {
-    if (active !== session || session.state !== 'playing') return;
-    if (session.offset >= session.buffer.duration) {
-      session.index += 1;
-      session.buffer = null;
-      session.offset = 0;
-      playNext(session);
-      return;
-    }
-    const source = audioContext.createBufferSource();
-    source.buffer = session.buffer;
-    source.connect(audioContext.destination);
-    session.source = source;
-    session.startedAt = audioContext.currentTime;
-    source.onended = () => {
-      if (active !== session || session.state !== 'playing' || session.source !== source) return;
-      session.source = null;
-      session.index += 1;
-      session.buffer = null;
-      session.offset = 0;
-      playNext(session);
-    };
-    source.start(0, session.offset);
-  };
-
-  const playNext = session => {
+  const playNext = async session => {
     if (active !== session || session.state !== 'playing') return;
     if (session.index >= session.chunks.length) {
       finish('পড়া শেষ হয়েছে।');
       return;
     }
     try {
-      const result = engine.synthesize(session.chunks[session.index], {rate: Math.round(135 * speed), pitch:32, volume:100, endPause:true});
-      if (!result.samples?.length) throw new Error('এই অংশের জন্য অডিও তৈরি করা যায়নি।');
-      const buffer = audioContext.createBuffer(1, result.samples.length, result.sampleRate);
-      const channel = buffer.getChannelData(0);
-      for (let i=0;i<result.samples.length;i++) channel[i] = result.samples[i] / 32768;
-      session.buffer = buffer;
-      session.offset = 0;
-      playCurrentBuffer(session);
+      statusText('স্বাভাবিক বাংলা পুরুষ Neural কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
+      const response = await fetch(TTS_API, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({text:session.chunks[session.index]})
+      });
+      if (!response.ok) {
+        let message = 'বাংলা Neural কণ্ঠ চালু করা যায়নি।';
+        try {
+          const detail = await response.json();
+          if (response.status === 503) message = 'Neural কণ্ঠ চালু করতে Azure Speech-এর API Key যুক্ত করা হয়নি।';
+          else if (response.status === 429) message = 'অডিও সেবায় সাময়িক সীমা অতিক্রম হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন।';
+          else message = detail.error || message;
+        } catch (_) {}
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      if (!blob.size || active !== session) return;
+      session.audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(session.audioUrl);
+      session.audio = audio;
+      audio.preload = 'auto';
+      audio.onended = () => {
+        if (active !== session || session.state !== 'playing') return;
+        if (session.audioUrl) URL.revokeObjectURL(session.audioUrl);
+        session.audioUrl = null;
+        session.audio = null;
+        session.index += 1;
+        playNext(session);
+      };
+      audio.onerror = () => {
+        if (active === session) finish('অডিও চালাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      };
+      statusText('বাংলাদেশি স্বাভাবিক পুরুষ কণ্ঠে পড়া হচ্ছে…', session.statusTarget);
+      await audio.play();
     } catch (error) {
-      finish(error.message || 'বাংলা অডিও তৈরি করা যায়নি।');
+      if (active === session) finish(error.message || 'বাংলা Neural অডিও তৈরি করা যায়নি।');
     }
   };
 
@@ -183,42 +137,22 @@
       return;
     }
     if (active) finish('আগের পড়া বন্ধ করা হয়েছে।');
-    let context;
-    try {
-      context = getAudioContext();
-    } catch (error) {
-      statusText(error.message || 'অডিও চালু করা যায়নি।', statusTarget);
-      return;
-    }
-    const session = {statusTarget,buttons,chunks:splitText(clean),index:0,buffer:null,offset:0,source:null,startedAt:0,state:'loading'};
+    const session = {
+      statusTarget, buttons, chunks:splitText(clean), index:0,
+      audio:null, audioUrl:null, state:'playing'
+    };
     active = session;
-    setControls('loading');
-    statusText('বিনামূল্যের বাংলা পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
-    try {
-      await context.resume?.();
-      await ensureEngine();
-      if (active !== session) return;
-      session.state = 'playing';
-      setControls('playing');
-      statusText('ধীর ও স্পষ্ট বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', statusTarget);
-      playNext(session);
-    } catch (error) {
-      finish(error.message || 'বাংলা পুরুষ কণ্ঠ চালু করা যায়নি।');
-    }
+    setControls('playing');
+    statusText('বাংলা Neural পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
+    playNext(session);
   };
 
   const pause = buttons => {
     if (!active || active.buttons !== buttons || active.state !== 'playing') return;
-    const session = active;
-    if (session.source && session.buffer) {
-      session.offset = Math.min(session.buffer.duration, session.offset + audioContext.currentTime - session.startedAt);
-      session.source.onended = null;
-      try { session.source.stop(); } catch (_) {}
-      session.source = null;
-    }
-    session.state = 'paused';
+    active.audio?.pause();
+    active.state = 'paused';
     setControls('paused');
-    statusText('পড়া বিরতিতে আছে।', session.statusTarget);
+    statusText('পড়া বিরতিতে আছে।', active.statusTarget);
   };
 
   const resume = buttons => {
@@ -227,12 +161,11 @@
     session.state = 'playing';
     setControls('playing');
     statusText('আবার পড়া হচ্ছে।', session.statusTarget);
-    audioContext.resume?.().then(() => {
-      if (active === session && session.state === 'playing') {
-        if (session.buffer) playCurrentBuffer(session);
-        else playNext(session);
-      }
-    }).catch(() => finish('অডিও আবার চালু করা যায়নি।'));
+    if (session.audio) {
+      session.audio.play().catch(() => finish('অডিও আবার চালু করা যায়নি।'));
+    } else {
+      playNext(session);
+    }
   };
 
   const stop = (message = 'পড়া বন্ধ করা হয়েছে।') => finish(message);
@@ -390,7 +323,7 @@
     });
     observer.observe(document.documentElement,{childList:true,subtree:true});
     window.addEventListener('hashchange',()=>stop('নতুন পৃষ্ঠা খোলা হয়েছে।'));
-    window.addEventListener('pagehide',()=>{stop('পৃষ্ঠা বন্ধ করা হয়েছে।');audioContext?.close?.();});
+    window.addEventListener('pagehide',()=>stop('পৃষ্ঠা বন্ধ করা হয়েছে।'));
   };
 
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
