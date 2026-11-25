@@ -9,3 +9,5 @@ Retry restore with robust Inbucket configuration edit.
 Retry with corrected config section boundary.
 
 Retry restore using explicit local Supabase config.
+
+Retry with Supabase CLI v3 local_smtp section.
