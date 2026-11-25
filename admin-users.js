@@ -108,11 +108,30 @@ function renderChecks(selected = []) {
   const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return !(n >= 41 && n <= 50) && (n !== 61 || institution !== "foundation") && (n !== 85 || institution !== "foundation") && (n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31)); });
   const heading = $("staffModuleHeading");
   if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৮৫টি)`;
-  $("staffModules").innerHTML = visibleModules.map(m => {
-    const old = selectedMap.get(m.key) || {};
-    return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
-      <span>${String(Number(m.key.slice(1))).padStart(2,"0")}. ${escapeHtml(m.name)} — পূর্ণ কার্যক্রমের অনুমতি</span></label></div>`;
-  }).join("");
+  const accountsModules = visibleModules.filter(m => Number(m.key.slice(1)) >= 62 && Number(m.key.slice(1)) <= 85);
+  const accountsAllSelected = accountsModules.length > 0 && accountsModules.every(m => selectedMap.has(m.key));
+  $("staffModules").innerHTML =
+    (accountsModules.length ? `<div class="staff-module staff-module-master"><label><input id="staffAccountsAllModules" type="checkbox" ${accountsAllSelected ? "checked" : ""}>
+      <strong>সম্পূর্ণ অ্যাকাউন্টিং সফটওয়্যার — ${accountsModules.length}টি প্রযোজ্য মডিউল</strong></label>
+      <small>এটি নির্বাচন করলে নির্বাচিত কর্মী অ্যাকাউন্টিংয়ের সব প্রযোজ্য মডিউলে দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ পূর্ণ কার্যক্রম পরিচালনা করতে পারবেন। আলাদা Approver লাগবে না।</small></div>` : "") +
+    visibleModules.map(m => {
+      const old = selectedMap.get(m.key) || {};
+      return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
+        <span>${String(Number(m.key.slice(1))).padStart(2,"0")}. ${escapeHtml(m.name)} — পূর্ণ কার্যক্রমের অনুমতি</span></label></div>`;
+    }).join("");
+  const master = $("staffAccountsAllModules");
+  if (master) master.addEventListener("change", () => {
+    $("staffModules").querySelectorAll('[data-module]').forEach(input => {
+      const n = Number(input.dataset.module.slice(1));
+      if (n >= 62 && n <= 85) input.checked = master.checked;
+    });
+  });
+  $("staffModules").querySelectorAll('[data-module]').forEach(input => input.addEventListener("change", () => {
+    const boxes = [...$("staffModules").querySelectorAll('[data-module]')].filter(x => {
+      const n = Number(x.dataset.module.slice(1)); return n >= 62 && n <= 85;
+    });
+    if (master) master.checked = boxes.length > 0 && boxes.every(x => x.checked);
+  }));
 }
 function readChecks() {
   return [...$("staffModules").querySelectorAll("[data-module]:checked")].map(el => ({ module_key: el.dataset.module }));
