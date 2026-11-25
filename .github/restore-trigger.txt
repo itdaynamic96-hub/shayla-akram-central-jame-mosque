@@ -5,3 +5,5 @@ Retry isolated restore after pg import fix.
 Retry restore with unused Inbucket disabled.
 
 Retry restore with robust Inbucket configuration edit.
+
+Retry with corrected config section boundary.
