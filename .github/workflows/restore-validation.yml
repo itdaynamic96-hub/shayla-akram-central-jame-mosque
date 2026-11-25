@@ -65,7 +65,18 @@ jobs:
           sudo apt-get install -y postgresql-client
           supabase init
           # The runner may already use the default Inbucket port; mail is not needed for a restore test.
-          sed -i '/^\\[inbucket\\]/,/^\\[/{s/^enabled = true/enabled = false/;}' supabase/config.toml
+          python3 - <<'PY'
+          from pathlib import Path
+          config = Path("supabase/config.toml")
+          content = config.read_text()
+          start = content.find("[inbucket]")
+          if start >= 0:
+              next_section = content.find("\\n[", start + 1)
+              end = len(content) if next_section < 0 else next_section + 1
+              section = content[start:end].replace("enabled = true", "enabled = false", 1)
+              content = content[:start] + section + content[end:]
+              config.write_text(content)
+          PY
           supabase start
           supabase status -o env > "$RUNNER_TEMP/local-supabase.env"
           cat "$RUNNER_TEMP/local-supabase.env" | sed -E 's/(KEY|URL)=.*/\1=[redacted]/'
