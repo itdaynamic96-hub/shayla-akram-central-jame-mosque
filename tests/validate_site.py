@@ -424,3 +424,5 @@ assert "['file_url','প্রতিবেদন ফাইল','private-file']" 
 assert "supabase.storage.from('private-module-files').createSignedUrl(path,300)" in admin_modules_private, 'Private report downloads must use short-lived signed URLs'
 assert "kind==='video'?52428800" in admin_modules_private, 'Video upload validation must match the 50 MB Storage bucket limit'
 assert 'admin-modules.js?v=20261126-dashboardprefs4' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
+
+# CI rerun after rebasing this feature branch onto the current site baseline.
