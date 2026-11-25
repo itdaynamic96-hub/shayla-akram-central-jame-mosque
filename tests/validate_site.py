@@ -158,6 +158,8 @@ assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(
 assert "target_key='m51'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Member module 51 must allow mosque/account read access with admin-only writes'
 assert "m.n===51||m.n===61||m.n===85||m.g===2" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Member module 51 must be scoped to mosque records'
 assert 'function customInstitutionAllowed(m)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Custom admins must be limited to their institution for mosque/foundation modules'
+assert 'mods.filter(m=>m.g===i)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and 'mods.slice(i*10,i*10+10)' not in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin sidebar must render every module in its declared group, including all 24 Accounts modules'
+assert 'i>=61?4:Math.floor(i/10)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Detailed Accounts modules must remain in the Accounts group'
 assert '[4,7,8,9,10].includes(m.n)' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Website editors must access the home/menu/page/calendar content modules'
 assert "target_key='m04'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Calendar module 4 must be accessible to website editors'
 assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and '61' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Module 61 must stay private'
