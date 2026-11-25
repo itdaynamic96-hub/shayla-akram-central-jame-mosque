@@ -26,6 +26,11 @@ function refreshNav(){
  document.querySelectorAll('#adNav button').forEach(b=>{const i=Number(b.dataset.i);b.hidden=!visibleModules.includes(i);b.classList.toggle('active',i===activeModule)});
 }
 function resetAdPage(html=''){
+ const messageContent=el('messageContent'),messagePanel=el('accountsMessaging');
+ if(messageContent&&messagePanel){
+  while(messageContent.firstChild)messagePanel.appendChild(messageContent.firstChild);
+  messagePanel.hidden=true;
+ }
  const page=el('adPage'),bin=el('adLegacyBin');
  [...page.children].forEach(node=>{if(node.classList.contains('ad-legacy-panel'))bin.appendChild(node);else node.remove()});
  if(html)page.innerHTML=html;
@@ -105,7 +110,18 @@ async function renderDonations(){
  if(inst==='mosque'&&chandaCanView){p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায়</h2></div><div class="body" id="adChandaContent"><div class="empty">চাঁদার তথ্য লোড হচ্ছে…</div></div></section>');await loadChanda()}
 }
 async function renderMonthlyChanda(){const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায় ব্যবস্থাপনা</h2></div><div class="body" id="adChandaContent"><div class="empty">মাসিক চাঁদার তথ্য লোড হচ্ছে…</div></div></section>');if(currentInstitution()!=='mosque'){el('adChandaContent').innerHTML='<div class="note">মাসিক চাঁদা মসজিদ প্রতিষ্ঠানের হিসাবের অংশ; ফাউন্ডেশনের হিসাব আলাদা রাখা হয়েছে।</div>';return}await loadChanda()}
-async function renderMessageCenter(){const p=el('adPage');resetAdPage('<section class="panel"><div class="head"><h2>বার্তা ও নোটিফিকেশন ব্যবস্থাপনা</h2></div><div class="body"><div class="empty">বার্তার ডেলিভারি রিপোর্ট লোড হচ্ছে…</div></div></section>');const panel=el('accountsMessaging');if(!panel){el('adPage').insertAdjacentHTML('beforeend','<div class="note">বার্তা ব্যবস্থাপনা প্যানেল পাওয়া যায়নি।</div>');return}panel.hidden=false;panel.classList.add('ad-legacy-panel');p.appendChild(panel)}
+async function renderMessageCenter(){
+ const p=el('adPage');
+ resetAdPage('<section class="module message-module"><div class="head"><h2>বার্তা ও নোটিফিকেশন ব্যবস্থাপনা</h2><div id="messageRefreshHost"></div></div><div class="message-body"><div id="messageContent"></div></div></section>');
+ const panel=el('accountsMessaging');
+ if(!panel){p.insertAdjacentHTML('beforeend','<div class="note">বার্তা ব্যবস্থাপনা প্যানেল পাওয়া যায়নি।</div>');return}
+ const oldHeader=panel.querySelector('.top'),refresh=el('messageRefresh');
+ if(oldHeader)oldHeader.remove();
+ if(refresh)el('messageRefreshHost').appendChild(refresh);
+ const content=el('messageContent');
+ while(panel.firstChild)content.appendChild(panel.firstChild);
+ panel.hidden=true;
+}
 async function renderBankAccounts(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>ব্যাংক ও নগদ হিসাব</h2></div><div class="body"><div id="adBankAccounts"></div></div></section>');
  const host=el('adBankAccounts');
