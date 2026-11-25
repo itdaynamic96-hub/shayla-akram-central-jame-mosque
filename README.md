@@ -56,3 +56,5 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 
 Live Bengali TTS smoke test workflow is opt-in: commits containing `[tts-smoke]` verify the deployed no-key TTS endpoint and audio response.
+
+Private module report uploads (m06) are stored in the non-public `private-module-files` bucket; Custom Admin write actions require the explicit `can_write` grant.
