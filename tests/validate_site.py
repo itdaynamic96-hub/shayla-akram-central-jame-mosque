@@ -156,4 +156,6 @@ assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='u
 assert "target_key='m61'" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database module access must explicitly authorize mosque member register'
 assert 'privateOnlyModules=new Set' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and '61' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Module 61 must stay private'
 assert 'id="bookPeriod"' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts: daily/monthly/yearly book filters are missing'
+assert "schedule:" in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: daily schedule is missing'
+assert 'postgres.lmwczibsipczfymhyqba' in (ROOT/'.github/workflows/sakm61-database-backup.yml').read_text(encoding='utf-8'), 'Backup: pooler username validation is missing'
 print('Enterprise Accounts checks passed: external JS syntax, payroll, cash/bank books, obligations, assets and migration markers.')
