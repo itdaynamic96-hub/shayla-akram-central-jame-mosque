@@ -50,6 +50,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build local Bengali TTS engine
         run: npm run build:tts
+      - name: Remove build-only dependencies before publishing
+        run: rm -rf node_modules package-lock.json
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Upload site
