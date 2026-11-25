@@ -56,7 +56,7 @@ async function loadAll(){
   $('payrollStaff').innerHTML=staff.filter(s=>s.is_active).map(s=>'<option value="'+s.id+'" data-salary="'+s.monthly_salary+'">'+escapeHtml(s.full_name)+' — '+money(s.monthly_salary)+'</option>').join('');
   const syncSalary=()=>{const o=$('payrollStaff').selectedOptions[0];if(o)$('payrollBase').value=o.dataset.salary};
   $('payrollStaff').onchange=syncSalary;if(staff.length)syncSalary();
-  $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m70',true)&&canApprove('m70'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m43',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
+  $('payrollRows').innerHTML=payroll.map(p=>{const s=byId.get(p.staff_id);let action='—';if(p.status==='pending'&&allowed('m70',true)&&canApprove('m70'))action='<button type="button" data-payroll-approve="'+p.id+'">অনুমোদন</button>';else if(p.status==='pending')action='অনুমোদনের অপেক্ষায়';else if(p.status==='approved'&&allowed('m70',true))action='<button type="button" data-payroll-pay="'+p.id+'">বেতন পরিশোধ</button>';if(p.status==='paid')action+=' <button type="button" data-payroll-slip="'+p.id+'">বেতন স্লিপ</button>';return '<tr><td>'+escapeHtml(p.payroll_month)+'</td><td>'+escapeHtml(s?.full_name||'অজানা')+'</td><td>'+money(p.net_amount)+'</td><td>'+escapeHtml(p.status)+'</td><td>'+action+'</td></tr>'}).join('')||'<tr><td colspan="5">বেতনের রেকর্ড নেই।</td></tr>';
  }
  if(allowed('m66'))await loadBooks();
  if(allowed('m69')||allowed('m72')){
@@ -118,7 +118,7 @@ async function settleObligation(e){
  try{const total=Number(e.target.dataset.amount),old=Number(e.target.dataset.settled),left=total-old;const answer=prompt('এ পর্যন্ত মোট কত টাকা আদায়/পরিশোধ হয়েছে? বাকি '+money(left),String(old));if(answer===null)return;const settled=Number(answer);if(!Number.isFinite(settled)||settled<0||settled>total)throw new Error('সঠিক পরিমাণ দিন।');const status=settled===total?'settled':settled>0?'partial':'open';const {error}=await supabase.from('account_obligations').update({settled_amount:settled,status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;await loadAll()}catch(ex){fail(ex)}
 }
 async function saveAsset(e){
- e.preventDefault();if(!allowed('m43',true)){fail(new Error('সম্পদ যোগ করার অনুমতি নেই।'));return}
+ e.preventDefault();if(!allowed('m72',true)){fail(new Error('সম্পদ যোগ করার অনুমতি নেই।'));return}
  try{const payload={institution:institution(),asset_name:val('assetName'),asset_category:val('assetCategory')||'অন্যান্য',acquisition_date:val('assetDate')||null,acquisition_cost:Number(val('assetCost')),location:val('assetLocation'),condition_note:val('assetCondition'),asset_status:val('assetStatus'),reference_no:val('assetReference'),created_by:user.id};
  const {error}=await supabase.from('account_assets').insert(payload);if(error)throw error;e.target.reset();await loadAll()}catch(ex){fail(ex)}
 }
