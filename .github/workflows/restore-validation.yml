@@ -64,6 +64,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
           supabase init
+          # The runner may already use the default Inbucket port; mail is not needed for a restore test.
+          sed -i '/^\\[inbucket\\]/,/^\\[/{s/^enabled = true/enabled = false/;}' supabase/config.toml
           supabase start
           supabase status -o env > "$RUNNER_TEMP/local-supabase.env"
           cat "$RUNNER_TEMP/local-supabase.env" | sed -E 's/(KEY|URL)=.*/\1=[redacted]/'
