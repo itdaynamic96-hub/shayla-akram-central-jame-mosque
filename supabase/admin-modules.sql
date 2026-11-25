@@ -58,7 +58,6 @@ as $$
    or (target_key='m51' and p.role in ('admin','mosque_admin','accounts_manager','accountant') and p.institution in ('both','mosque') and target_institution='mosque' and (not write_access or p.role='admin'))
       or (substring(target_key from 2)::integer between 52 and 60 and p.role='admin')
    or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
-   or (target_key='m61' and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
  ) and (not write_access or p.role not in ('auditor','viewer')));
 $$;
 create or replace function public.module_record_approval_access(target_key text,target_institution text)
@@ -70,6 +69,7 @@ as $$
   (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin') and p.institution in ('both','foundation')) or
   (substring(target_key from 2)::integer between 41 and 50 and p.role in ('admin','accounts_manager') and (p.institution='both' or p.institution=target_institution)) or
   (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin')) or
+  (target_key='m51' and p.role='admin' and p.institution in ('both','mosque') and target_institution='mosque') or
   (target_key='m61' and p.role in ('admin','mosque_admin') and p.institution in ('both','mosque') and target_institution='mosque')));
 $$;
 create or replace function public.guard_module_record_publication()
