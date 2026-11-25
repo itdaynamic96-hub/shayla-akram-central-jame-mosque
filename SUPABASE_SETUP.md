@@ -90,3 +90,7 @@ Add the same site URL and the two page URLs ending in `/admin.html` and `/accoun
 
 ## 12. Repair anonymous homepage published-content access on existing databases
 For an existing database created before this fix, run `supabase/fix-public-site-content-anon-read.sql` once in SQL Editor. It separates public published-content reads from authenticated website-admin access, preventing anonymous homepage requests from failing with `permission denied for function has_access`. The live SAKM-61 database has already received and passed this policy repair.
+
+
+### Admin dashboard preferences
+The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
