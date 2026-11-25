@@ -44,7 +44,8 @@ public_site_policy=re.search(r'create policy "public can read published site con
 assert public_site_policy and 'to anon,authenticated using(status=\'published\')' in public_site_policy.group(0), 'Homepage: anonymous published-content policy must not call authenticated-only has_access()'
 assert 'source_url text' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 assert 'media_credit text' in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
-assert "insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)" in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
+bucket_seed=(ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
+assert "insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)" in bucket_seed and "video/*" in bucket_seed and "52428800" in bucket_seed, 'Storage bucket must allow common video MIME types within the 50 MB Free-plan limit'
 assert "site media approvers upload" in (ROOT/'supabase/admin-modules.sql').read_text(encoding='utf-8')
 assert "contentUpload" in (ROOT/'admin.html').read_text(encoding='utf-8')
 assert "site-media').upload" in (ROOT/'admin.html').read_text(encoding='utf-8')
