@@ -47,6 +47,7 @@ as $$
         )
       )
       or (substring(target_key from 2)::integer between 1 and 6 and p.role='admin')
+      or (target_key='m04' and p.role in ('admin','website_admin','editor') and p.institution in ('both','mosque') and target_institution='mosque')
       or (substring(target_key from 2)::integer between 7 and 20 and p.role in ('admin','website_admin','editor'))
       or (substring(target_key from 2)::integer between 21 and 30 and p.role in ('admin','mosque_admin','manager') and p.institution in ('both','mosque') and target_institution='mosque')
       or (substring(target_key from 2)::integer between 31 and 40 and p.role in ('admin','foundation_admin','manager') and p.institution in ('both','foundation') and target_institution='foundation')
