@@ -149,9 +149,6 @@ create trigger validate_account_bank_reconciliation_item
 before insert or update on public.account_bank_reconciliation_items
 for each row execute function public.validate_account_bank_reconciliation_item();
 
-create unique index if not exists account_bank_reconciliation_items_unique_match_idx
-on public.account_bank_reconciliation_items(matched_journal_line_id)
-where matched_journal_line_id is not null;
 
 -- Allow owners to remove only their own unfinalized reconciliation drafts and lines.
 drop policy if exists account_bank_reconciliation_items_delete on public.account_bank_reconciliation_items;
