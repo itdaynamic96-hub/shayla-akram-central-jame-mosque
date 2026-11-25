@@ -95,6 +95,15 @@ async function fetchAudio(text: string): Promise<ArrayBuffer> {
 Deno.serve(async (req: Request) => {
   const headers = corsHeaders();
   const origin = req.headers.get("origin");
+  if (req.method === "GET" && new URL(req.url).searchParams.get("health") === "1") {
+    try {
+      const voice = await getBengaliFreeVoice();
+      return Response.json({ status: "ok", provider: "TTS.ai", model: "piper", language: "bn", voice_id: voice }, { headers });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Voice discovery failed";
+      return Response.json({ status: "unavailable", detail: detail.slice(0, 200) }, { status: 502, headers });
+    }
+  }
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers });
   if (origin !== ALLOWED_ORIGIN || req.headers.get("apikey") !== PUBLIC_API_KEY) {
