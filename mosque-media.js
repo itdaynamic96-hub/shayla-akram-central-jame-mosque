@@ -87,10 +87,12 @@ async function uploadTourVideo({file,user,errorBox,statusBox,input}){
   if(!file)throw new Error('প্রথমে একটি ভিডিও নির্বাচন করুন।');
   const ext=(file.name.split('.').pop()||'').toLowerCase();
   const supportedVideoExtensions=new Set(['mp4','m4v','mov','webm','ogv','ogg','mkv','avi','wmv','flv','3gp','3g2','mpeg','mpg','mpe','m1v','m2v','ts','mts','m2ts','vob','asf','divx','f4v','rm','rmvb','mxf']);
-  if(!supportedVideoExtensions.has(ext))throw new Error('ভিডিও ফাইলটি সমর্থিত এক্সটেনশনের নয়। MP4, MOV, M4V, WebM, MKV, AVI, WMV, FLV, 3GP, MPEG, TS, VOBসহ প্রচলিত ভিডিও ফরম্যাট দিন।');
+  const hasVideoMime=typeof file.type==='string'&&file.type.toLowerCase().startsWith('video/');
+  if(!hasVideoMime&&!supportedVideoExtensions.has(ext))throw new Error('এটি ভিডিও ফাইল হিসেবে শনাক্ত হয়নি। MP4, MOV, M4V, WebM, MKV, AVI, WMV, FLV, 3GP, MPEG, TS, VOBসহ প্রচলিত ভিডিও ফরম্যাট দিন।');
   if(file.size===0||file.size>50*1024*1024)throw new Error('Free প্ল্যানের সীমা অনুযায়ী ভিডিওর সাইজ ১ বাইট থেকে সর্বোচ্চ ৫০ MB হতে হবে।');
-  const contentType=file.type&&file.type.toLowerCase().startsWith('video/')?file.type:'application/octet-stream';
-  path='mosque-brand/'+user.id+'/mosque_360_video-'+crypto.randomUUID()+'.'+ext;
+  const contentType=hasVideoMime?file.type:'application/octet-stream';
+  const safeExt=/^[a-z0-9]{1,10}$/.test(ext)?ext:'video';
+  path='mosque-brand/'+user.id+'/mosque_360_video-'+crypto.randomUUID()+'.'+safeExt;
   const{error:uploadError}=await supabase.storage.from('site-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType});
   if(uploadError)throw uploadError;
   const publicUrl=supabase.storage.from('site-media').getPublicUrl(path).data.publicUrl;
