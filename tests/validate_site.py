@@ -256,7 +256,12 @@ for marker in ('account_bank_account_balances','account_reverse_journal','accoun
     assert marker in dashboard_js, f'Accounts dashboard missing financial control/report: {marker}'
 enterprise_js=(ROOT/'accounts-enterprise.js').read_text(encoding='utf-8')
 assert "canApprove('m70')" in enterprise_js, 'Single-operator payroll approval must use the assigned payroll module permission'
-assert "if(allowed('m69')||allowed('m76'))" in enterprise_js, 'Obligation and asset register access must match module permissions'
+assert "const canObligations=allowed('m69'),canAssets=allowed('m76');" in enterprise_js, 'Obligation and asset register visibility must be checked independently'
+assert "canObligations?supabase.from('account_obligations')" in enterprise_js and "canAssets?supabase.from('account_assets')" in enterprise_js, 'Enterprise Accounts must not query modules the worker cannot access'
+assert "has(key,write?'can_write':'can_view')" in enterprise_js and "has(key,'can_approve')" in enterprise_js, 'Enterprise Accounts must enforce separate view, write and approval grants'
+permission_hardening=(ROOT/'supabase/accounts-module-permission-hardening.sql').read_text(encoding='utf-8')
+assert 'not write_access or amp.can_write' in permission_hardening and 'not approve_access or mp.can_approve' in permission_hardening, 'Accounts RLS must enforce write and approval capabilities'
+assert "array['m70','m80']" in permission_hardening and 'security invoker' in permission_hardening.lower(), 'Payroll approval and module permission helper must use the hardened access model'
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
 assert 'account_submit_obligation_payment' in enterprise_js and 'account_obligation_payments' in enterprise_js, 'Obligation payments must enter the ledger approval flow'
 assert 'data-pending' in enterprise_js and 'অনুমোদনের অপেক্ষায়' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Pending obligation payments must be tracked separately'
