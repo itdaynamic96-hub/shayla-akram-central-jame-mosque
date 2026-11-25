@@ -70,10 +70,13 @@ async function loadAll(){
  if(allowed('m50'))await loadAudit();
 }
 async function loadBooks(){
- const {data,error}=await supabase.from('account_cash_bank_book').select('*').eq('institution',institution()).eq('payment_method',$('bookType').value).order('entry_date',{ascending:false}).limit(500);
- if(error)throw error;
+ let data=[],offset=0;
+ while(true){
+  const {data:batch,error}=await supabase.from('account_cash_bank_book').select('*').eq('institution',institution()).eq('payment_method',$('bookType').value).order('entry_date',{ascending:false}).range(offset,offset+499);
+  if(error)throw error;data=data.concat(batch||[]);if(!batch||batch.length<500)break;offset+=500;
+ }
  const todayText=today(),period=$('bookPeriod').value;
- const rows=(data||[]).filter(x=>period==='all'||(period==='today'&&x.entry_date===todayText)||(period==='month'&&x.entry_date.slice(0,7)===month())||(period==='year'&&x.entry_date.slice(0,4)===todayText.slice(0,4))),inc=rows.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount),0),exp=rows.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount),0);
+ const rows=data.filter(x=>period==='all'||(period==='today'&&x.entry_date===todayText)||(period==='month'&&x.entry_date.slice(0,7)===month())||(period==='year'&&x.entry_date.slice(0,4)===todayText.slice(0,4))),inc=rows.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount),0),exp=rows.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount),0);
  $('bookIncome').textContent=money(inc);$('bookExpense').textContent=money(exp);$('bookBalance').textContent=money(inc-exp);
  $('bookRows').innerHTML=rows.map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.category)+'</td><td>'+escapeHtml(x.payer_or_payee||x.note||'—')+'</td><td>'+(x.entry_type==='income'?money(x.amount):'—')+'</td><td>'+(x.entry_type==='expense'?money(x.amount):'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')||'<tr><td colspan="6">এই মাধ্যমে অনুমোদিত লেনদেন নেই।</td></tr>';
 }
