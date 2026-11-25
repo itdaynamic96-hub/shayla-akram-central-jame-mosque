@@ -87,8 +87,8 @@ async function renderDonations(){
  const p=el('adPage'),inst=currentInstitution();
  resetAdPage('<section class="panel"><div class="head"><h2>দাতা, অনুদান ও মাসিক চাঁদা</h2></div><div class="body"><div id="adDonorArea"><div class="empty">দাতার তথ্য লোড হচ্ছে…</div></div></div></section>');
  const [view,perm]=await Promise.all([
-  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m44',write_access:false}),
-  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m44',write_access:true})
+  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m65',write_access:false}),
+  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m65',write_access:true})
  ]);
  if(view.error)throw view.error;if(perm.error)throw perm.error;
  const result=view.data?await supabase.from('account_donors').select('id,donor_name,mobile,address,donor_type,notes,is_active,created_at').eq('institution',inst).order('created_at',{ascending:false}).limit(500):{data:[],error:null};
@@ -99,7 +99,7 @@ async function renderDonations(){
   draw();el('adDonorSearch').oninput=draw;
   el('adDonorCsv').onclick=()=>{const csv=['নাম,মোবাইল,ঠিকানা,ধরন,নোট',...donors.map(x=>[x.donor_name,x.mobile,x.address,x.donor_type,x.notes].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='SAKM-61-donors-'+inst+'.csv';a.click();URL.revokeObjectURL(a.href)};
   if(perm.data)el('adDonorForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);try{const {error}=await supabase.from('account_donors').insert({institution:inst,donor_name:String(f.get('name')).trim(),mobile:String(f.get('mobile')||'').trim(),address:String(f.get('address')||'').trim(),donor_type:String(f.get('kind')),notes:String(f.get('notes')||''),created_by:user.id});if(error)throw error;alert('দাতা সংরক্ষণ হয়েছে।');await renderDonations()}catch(err){alert(err.message||String(err))}};
-  const fund=el('fundRows');if(fund){const {data:fundAccess,error}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m44',write_access:false});if(error)throw error;if(fundAccess){const panel=fund.closest('.panel');panel.classList.add('ad-legacy-panel');p.appendChild(panel)}}
+  const fund=el('fundRows');if(fund){const {data:fundAccess,error}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m72',write_access:false});if(error)throw error;if(fundAccess){const panel=fund.closest('.panel');panel.classList.add('ad-legacy-panel');p.appendChild(panel)}}
  }else host.innerHTML='<div class="note">দাতা ও অনুদান তালিকার অনুমতি নেই। মাসিক চাঁদা ব্যবস্থাপনা থাকলে নিচের অংশে ব্যবহার করুন।</div>';
  if(inst==='mosque'&&chandaCanView){p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায়</h2></div><div class="body" id="adChandaContent"><div class="empty">চাঁদার তথ্য লোড হচ্ছে…</div></div></section>');await loadChanda()}
 }
@@ -108,7 +108,7 @@ async function renderMessageCenter(){const p=el('adPage');resetAdPage('<section 
 async function renderBankAccounts(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>ব্যাংক ও নগদ হিসাব</h2></div><div class="body"><div id="adBankAccounts"></div></div></section>');
  const host=el('adBankAccounts');
- const {data:canWrite,error:permError}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m46',write_access:true});if(permError)throw permError;
+ const {data:canWrite,error:permError}=await supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m66',write_access:true});if(permError)throw permError;
  const {data:accounts,error}=await supabase.from('account_bank_accounts').select('id,account_name,institution_name,account_number_masked,account_kind,account_code,opening_balance,is_active').eq('institution',inst).order('account_name');if(error)throw error;
  host.innerHTML=(canWrite?'<form class="form" id="adBankForm"><label>হিসাবের নাম<input name="name" required maxlength="140"></label><label>ব্যাংক / সেবা প্রতিষ্ঠানের নাম<input name="bank" maxlength="140"></label><label>অ্যাকাউন্ট নম্বর (শুধু শেষ ৪ সংখ্যা সংরক্ষিত হবে)<input name="number" maxlength="40"></label><label>ধরন<select name="kind"><option value="cash">নগদ</option><option value="bank">ব্যাংক</option><option value="mobile_banking">মোবাইল ব্যাংকিং</option></select></label><label>প্রারম্ভিক স্থিতি<input name="opening" type="number" min="0" step=".01" value="0" required></label><div class="wide"><button class="action green">হিসাব যোগ করুন</button></div></form>':'')+'<div class="tablewrap"><table><thead><tr><th>হিসাব</th><th>ব্যাংক/সেবা</th><th>মাস্কড নম্বর</th><th>ধরন</th><th>কোড</th><th>প্রারম্ভিক স্থিতি</th><th>অবস্থা</th></tr></thead><tbody>'+accounts.map(a=>'<tr><td>'+escapeHtml(a.account_name)+'</td><td>'+escapeHtml(a.institution_name||'—')+'</td><td>'+escapeHtml(a.account_number_masked||'—')+'</td><td>'+escapeHtml(a.account_kind)+'</td><td>'+escapeHtml(a.account_code)+'</td><td>'+money(a.opening_balance)+'</td><td>'+(a.is_active?'সক্রিয়':'নিষ্ক্রিয়')+'</td></tr>').join('')+'</tbody></table></div>';
  if(canWrite)el('adBankForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),digitsOnly=String(f.get('number')||'').replace(/\D/g,'');const masked=digitsOnly.length>4?'••••'+digitsOnly.slice(-4):digitsOnly;try{const {error}=await supabase.rpc('account_create_bank_account',{p_institution:inst,p_name:String(f.get('name')).trim(),p_bank:String(f.get('bank')||'').trim(),p_number:masked,p_kind:String(f.get('kind')),p_opening:Number(f.get('opening'))});if(error)throw error;alert('ব্যাংক/নগদ হিসাব সংরক্ষিত হয়েছে।');await renderBankAccounts()}catch(err){alert(err.message||String(err))}};
@@ -116,7 +116,7 @@ async function renderBankAccounts(){
 }
 async function renderTransfers(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="head"><h2>হিসাব স্থানান্তর</h2></div><div class="body"><div class="empty">ব্যাংক হিসাব লোড হচ্ছে…</div></div></section>');
- const [a,perm]=await Promise.all([supabase.from('account_bank_accounts').select('id,account_name,account_code').eq('institution',inst).eq('is_active',true).order('account_name'),supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m46',write_access:true})]);
+ const [a,perm]=await Promise.all([supabase.from('account_bank_accounts').select('id,account_name,account_code').eq('institution',inst).eq('is_active',true).order('account_name'),supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m67',write_access:true})]);
  if(a.error)throw a.error;if(perm.error)throw perm.error;
  const opts=(a.data||[]).map(x=>'<option value="'+x.id+'">'+escapeHtml(x.account_name)+' ('+escapeHtml(x.account_code)+')</option>').join('');
  p.innerHTML='<section class="panel"><div class="head"><h2>ব্যাংক/নগদ স্থানান্তরের অনুরোধ</h2></div><div class="body">'+(perm.data&&(a.data||[]).length>=2?'<form class="form" id="adTransferForm"><label>উৎস হিসাব<select name="from" required>'+opts+'</select></label><label>গন্তব্য হিসাব<select name="to" required>'+opts+'</select></label><label>পরিমাণ<input name="amount" type="number" min=".01" step=".01" required></label><label>তারিখ<input name="date" type="date" value="'+dhaka()+'" required></label><label class="wide">বিবরণ<input name="description" maxlength="300"></label><div class="wide"><button class="action green">অনুমোদনের জন্য জমা দিন</button></div></form>':'<div class="note">'+(perm.data?'স্থানান্তরের জন্য আগে অন্তত দুটি সক্রিয় ব্যাংক/নগদ হিসাব যোগ করুন।':'স্থানান্তরের অনুরোধ জমা দেওয়ার অনুমতি নেই।')+'</div>')+'<div class="note">স্থানান্তর সরাসরি পোস্ট হয় না; অনুমোদন মডিউলে অনুমোদনের পরই দুই হিসাবের জার্নাল এন্ট্রি তৈরি হবে।</div></div></section>';
@@ -127,7 +127,7 @@ async function renderCashbookJournal(){
  const [chart,entries,perm]=await Promise.all([
   supabase.from('account_chart_of_accounts').select('account_code,account_name,account_type').eq('institution',inst).eq('is_active',true).order('account_code'),
   supabase.from('account_journal_entries').select('id,journal_no,journal_date,description,source_type,status,created_at').eq('institution',inst).order('journal_date',{ascending:false}).order('journal_no',{ascending:false}).limit(100),
-  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m50',write_access:true})
+  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m68',write_access:true})
  ]);
  if(chart.error)throw chart.error;if(entries.error)throw entries.error;if(perm.error)throw perm.error;
  const opts=(chart.data||[]).map(a=>'<option value="'+escapeHtml(a.account_code)+'">'+escapeHtml(a.account_code)+' · '+escapeHtml(a.account_name)+' ('+escapeHtml(a.account_type)+')</option>').join('');
@@ -160,7 +160,7 @@ async function renderReconciliation(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage();
  const [accounts,perm,drafts]=await Promise.all([
   supabase.from('account_bank_accounts').select('id,account_name,account_code,opening_balance').eq('institution',inst).eq('is_active',true).order('account_name'),
-  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m46',write_access:true}),
+  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m78',write_access:true}),
   supabase.from('account_bank_reconciliations').select('id,bank_account_id,statement_date,statement_opening,statement_closing,book_balance,difference,status,notes,created_at,created_by').eq('institution',inst).order('created_at',{ascending:false}).limit(50)
  ]);
  if(accounts.error)throw accounts.error;if(perm.error)throw perm.error;if(drafts.error)throw drafts.error;
@@ -208,7 +208,7 @@ async function renderApprovals(){
  const p=el('adPage'),inst=currentInstitution();resetAdPage('<section class="panel"><div class="empty">অনুমোদনের অনুরোধ লোড হচ্ছে…</div></section>');
  const {data,error}=await supabase.from('account_approval_requests').select('id,institution,request_type,request_data,status,created_by,created_at,decision_note').eq('institution',inst).order('created_at',{ascending:false}).limit(200);if(error)throw error;
  let canApprove=['super_admin','accounts_manager','mosque_admin','foundation_admin'].includes(profile?.role);
- if(profile?.role==='custom_admin'){const {data:grant,error:grantError}=await supabase.from('admin_module_permissions').select('can_view,can_write,can_approve').eq('user_id',user.id).eq('module_key','m50').maybeSingle();if(grantError)throw grantError;canApprove=!!(grant?.can_view&&grant?.can_write&&grant?.can_approve)}
+ if(profile?.role==='custom_admin'){const {data:grant,error:grantError}=await supabase.from('admin_module_permissions').select('can_view,can_write,can_approve').eq('user_id',user.id).eq('module_key','m80').maybeSingle();if(grantError)throw grantError;canApprove=!!(grant?.can_view&&grant?.can_write&&grant?.can_approve)}
  p.innerHTML='<section class="panel"><div class="head"><h2>অনুমোদন ব্যবস্থাপনা</h2></div><div class="body"><div class="tablewrap"><table><thead><tr><th>সময়</th><th>ধরন</th><th>বিবরণ</th><th>অবস্থা</th><th>অনুরোধ ID</th><th>সিদ্ধান্ত</th></tr></thead><tbody>'+(data||[]).map(x=>{const d=x.request_data||{},summary=x.request_type==='bank_transfer'?'পরিমাণ '+money(d.amount)+' · তারিখ '+escapeHtml(d.transfer_date||''):(d.description||d.memo||x.request_type);return '<tr><td>'+escapeHtml(new Date(x.created_at).toLocaleString('bn-BD'))+'</td><td>'+escapeHtml(x.request_type)+'</td><td>'+escapeHtml(String(summary))+'</td><td>'+escapeHtml(x.status)+'</td><td>'+escapeHtml(x.id)+'</td><td>'+(canApprove&&x.status==='pending'&&x.created_by!==user.id?'<button class="action green" data-decision="approved" data-id="'+x.id+'">অনুমোদন</button> <button class="action light" data-decision="rejected" data-id="'+x.id+'">বাতিল</button>':'—')+'</td></tr>'}).join('')+'</tbody></table></div><div class="note">নিজের জমা দেওয়া অনুরোধ নিজে অনুমোদন করা যাবে না।</div></div></section>';
  p.querySelectorAll('[data-decision]').forEach(b=>b.onclick=async()=>{const note=prompt('সিদ্ধান্তের নোট (ঐচ্ছিক)','')??'';try{const {error}=await supabase.rpc('account_decide_request',{p_request:b.dataset.id,p_decision:b.dataset.decision,p_note:note});if(error)throw error;alert('সিদ্ধান্ত সংরক্ষিত হয়েছে।');await renderApprovals()}catch(err){alert(err.message||String(err))}});
 }
