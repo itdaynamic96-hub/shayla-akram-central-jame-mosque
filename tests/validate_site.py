@@ -109,6 +109,7 @@ assert 'dash-metrics' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin
 print('Admin Panel checks passed: 85 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
+assert '২৪টি পৃথক মডিউল ৬২–৮৫' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: staff manager must explain granular Accounts permissions'
 assert 'admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Module permission migration is missing'
 assert 'createUser' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure Auth user creation Edge Function is missing'
 assert 'custom_admin' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Custom module permissions are not wired into Admin modules'
@@ -245,6 +246,7 @@ assert "const panel=el('accountsMessaging')" in dashboard_js and 'await loadChan
 assert "Object.fromEntries(modules.map((_,i)=>[i,'m'+String(62+i).padStart(2,'0')]))" in dashboard_js, 'Every Accounts module must use a unique permission key'
 assert 'মোট ৮৫টি' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin must include all 24 detailed Accounts permissions'
 assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly chanda permission must be assignable from Admin'
+assert 'n >= 41 && n <= 50' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Legacy grouped Accounts grants must not be assigned to new staff'
 assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
 assert 'm(0[1-9]|[1-7][0-9]|8[0-5])' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure staff account endpoint must accept the expanded module key range'
 assert (ROOT/'supabase/accounts-granular-module-access.sql').exists(), 'Detailed Accounts RLS and module permission migration source is missing'
