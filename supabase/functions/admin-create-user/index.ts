@@ -80,19 +80,15 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (keys.length > 85 || keys.some((key) => !validModuleKey(key)) || new Set(keys).size !== keys.length) {
       return { error: "মডিউল নির্বাচন সঠিক নয় বা একই মডিউল একাধিকবার আছে।" as const };
     }
-    if (items.some((item) => item?.can_approve === true && item?.can_write !== true)) {
-      return { error: "অনুমোদনের অনুমতির জন্য আগে লিখতে/সম্পাদনার অনুমতি দিন।" as const };
-    }
+    // A selected module grants full control inside that module.
+    // The agreed staffing model has one assigned worker, not separate maker/approver roles.
     return {
-      rows: items.map((item, index) => {
-        const canWrite = item.can_write === true;
-        return {
-          module_key: keys[index],
-          can_view: true,
-          can_write: canWrite,
-          can_approve: canWrite && item.can_approve === true,
-        };
-      }),
+      rows: keys.map((module_key) => ({
+        module_key,
+        can_view: true,
+        can_write: true,
+        can_approve: true,
+      })),
     };
   };
 
