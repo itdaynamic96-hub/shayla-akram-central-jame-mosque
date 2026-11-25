@@ -106,7 +106,7 @@ assert all(x in admin_modules for x in ('dashIncome','dashExpense','dashPending'
 assert 'ledger_entries' in admin_modules and 'dashboardRefresh' in admin_modules, 'Admin: dashboard must load live account data and support refresh'
 assert 'dash-shortcuts' in admin_modules and 'dashUpcoming' in admin_modules and 'dashRecent' in admin_modules, 'Admin: dashboard quick links and activity panels are missing'
 assert 'dash-metrics' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: responsive dashboard styles are missing'
-print('Admin Panel checks passed: 61 module definitions, module JS syntax, and RLS migration markers.')
+print('Admin Panel checks passed: 85 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
 assert 'admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Module permission migration is missing'
@@ -149,7 +149,7 @@ for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
 
 assert 'data-payroll-slip' in enterprise_js, 'Accounts: printable salary slip action is missing'
 assert 'range(offset,offset+499)' in enterprise_js, 'Accounts: cash/bank report pagination is missing'
-assert "allowed('m43')" in enterprise_js and "allowed('m46')" in enterprise_js and "allowed('m50')" in enterprise_js, 'Accounts: enterprise modules must honor the existing expense, bank/cash and audit grants'
+assert "allowed('m70')" in enterprise_js and "allowed('m66')" in enterprise_js and "allowed('m79')" in enterprise_js, 'Accounts: enterprise modules must honor dedicated payroll, bank/cash and audit grants'
 # The 61st mosque-member register must be valid but remain private.
 assert "m61" in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Admin users: module 61 is missing from permission assignment'
 assert "6[01]" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Database permissions must accept module 61'
