@@ -68,3 +68,5 @@ TTS provider catalogue smoke check updated.
 [tts-smoke] Google Bengali TTS endpoint check after Admin layout update.
 
 Bengali Read Aloud uses Google Translate TTS without a provider API key; its endpoint is unofficial and may be rate-limited or changed.
+
+[tts-smoke] Verify the deployed Google Bengali TTS audio response.
