@@ -248,6 +248,8 @@ assert 'মোট ৮৫টি' in (ROOT/'admin-users.js').read_text(encoding='u
 assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly chanda permission must be assignable from Admin'
 assert 'n >= 41 && n <= 50' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Legacy grouped Accounts grants must not be assigned to new staff'
 assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
+assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]))" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Accounts sidebar must retain the canonical module order after applying permissions'
+assert "allowed.add(moduleKeys[22])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8') and "allowed.add(moduleKeys[23])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Messaging and monthly chanda must be inserted into the ordered module set'
 assert 'm(0[1-9]|[1-7][0-9]|8[0-5])' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure staff account endpoint must accept the expanded module key range'
 assert (ROOT/'supabase/accounts-granular-module-access.sql').exists(), 'Detailed Accounts RLS and module permission migration source is missing'
 assert 'jsonb_array_length(permission_rows) > 85' in (ROOT/'supabase/accounts-granular-module-access.sql').read_text(encoding='utf-8'), 'Permission replacement RPC must support all 85 modules'
