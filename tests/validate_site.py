@@ -58,6 +58,10 @@ assert 'source_url,media_credit,updated_at' in html
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
+expense_form_created=accounts.find('incomePanel.after(expensePanel);})();')
+income_method_listener=accounts.find("$('method')?.addEventListener('change'")
+expense_method_listener=accounts.find("$('expensemethod')?.addEventListener('change'")
+assert expense_form_created >= 0 and expense_form_created < income_method_listener < expense_method_listener, 'Accounts: payment-method listeners must be attached only after the cloned expense form exists'
 assert 'setHidden(\'login\',false);await boot()' in accounts and 'id="loginStatus"' in accounts, 'Accounts: login must remain visible while the saved session/profile is being checked'
 assert '<section id="login" class="panel">' in accounts, 'Accounts: login form must be visible even if external module scripts fail to load'
 assert 'id="accounts-login-visibility-fix"' in accounts and '#login #loginForm{display:grid!important' in accounts and '#login #loginForm input{display:block!important' in accounts, 'Accounts: login fields and submit button must be forced visible outside dashboard CSS'
