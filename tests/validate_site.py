@@ -202,6 +202,9 @@ for marker in ('payrollPanel','cashBankPanel','obligationsPanel','assetsPanel'):
 expense_dashboard=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
 for marker in ("renderExpensePayees","from('account_payees')","from('account_obligations')","account_record_payable_payment","received_by_name","work_start_date","টাকা গ্রহণকারীর নাম"):
     assert marker in expense_dashboard, f'Accounts expense payee workflow missing: {marker}'
+expense_sql=(ROOT/'supabase/expense-payee-workflow.sql').read_text(encoding='utf-8')
+for marker in ('create table if not exists public.account_payees','work_start_date','received_by_name','account_record_payable_payment','accounts_feature_access(p_institution,\'m64\',true)'):
+    assert marker in expense_sql, f'Accounts expense payee schema missing: {marker}'
 
 assert 'data-payroll-slip' in enterprise_js, 'Accounts: printable salary slip action is missing'
 assert 'range(offset,offset+499)' in enterprise_js, 'Accounts: cash/bank report pagination is missing'
