@@ -256,13 +256,24 @@ main.admin-shell{width:100%;max-width:none;margin:0;padding:18px 24px 24px 322px
 .rich-editor-surface:focus{border-color:#26734c;box-shadow:0 0 0 3px #26734c22}
 .rich-editor-source{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:700px){.top .brand,.site-top .brand{font-size:24px!important}.top .brand small,.site-top .brand small{font-size:12px!important}.rich-editor-toolbar{gap:4px;padding:5px}.rich-tool-button,.rich-tool-size,.rich-tool-color{min-height:32px;padding:4px 8px}}
+
+#staffModules .staff-module-group{grid-column:1/-1;min-width:0;padding:13px;border:1px solid #d9e4dc;border-radius:14px;background:#f8fbf9}
+#staffModules .staff-module-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px;padding:2px 3px}
+#staffModules .staff-module-group-head label{display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer}
+#staffModules .staff-module-group-head input{width:19px;height:19px;flex:0 0 19px;accent-color:#18865c}
+#staffModules .staff-module-group-head label span{display:flex;flex-direction:column;gap:3px;min-width:0}
+#staffModules .staff-module-group-head strong{font-size:15px;color:#1d4734}
+#staffModules .staff-module-group-head small{font-size:12px;color:#687b72}
+#staffModules .staff-module-group-count{flex:0 0 auto;padding:4px 9px;border-radius:20px;background:#e8f1eb;color:#315e43;font-size:12px;font-weight:800}
+#staffModules .staff-module-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:10px}
+@media(max-width:600px){#staffModules .staff-module-group{padding:10px}#staffModules .staff-module-group-grid{grid-template-columns:1fr}}
 </style></head><body data-rich-text-admin="true"><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Admin Panel</h1><p class="muted">ব্যবহারকারী, ভূমিকা, নোটিশ ও প্রশাসনিক কার্যক্রম</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<a href="./accounts.html">Accounts</a>　<a href="./video-bulk-import.html">১০০ ভিডিও যুক্ত করুন</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। README-তে সেটআপ নির্দেশিকা আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ Admin লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" required autocomplete="username"><label>পাসওয়ার্ড</label><input id="password" type="password" required autocomplete="current-password"><p><button>লগইন</button></p></form><p class="muted">Public sign-up বন্ধ। Super Admin কর্তৃক অনুমোদিত অ্যাকাউন্ট প্রয়োজন।</p><p id="loginError" class="error" hidden></p></section>
 <section id="app" hidden><p id="adminBootError" class="error panel" role="alert" hidden></p><div class="top"><h2>ওয়েবসাইট Admin Panel</h2><span class="tag" id="role"></span></div><p class="panel"><a href="./accounts.html">Accounts Admin Panel — হিসাব ও আর্থিক ব্যবস্থাপনা</a>　|　<a href="./index.html">মূল ওয়েবসাইট</a></p><div class="grid"><div class="stat">ব্যবহারকারী<strong id="usersCount">০</strong></div><div class="stat">খসড়া নোটিশ<strong id="draftCount">০</strong></div><div class="stat">প্রকাশিত নোটিশ<strong id="publishedCount">০</strong></div></div>
 <div id="staffManager" class="panel" hidden>
 <h3>সুপার অ্যাডমিন — কর্মী অ্যাকাউন্ট ও মডিউল অনুমতি</h3>
-<p class="muted">নাম, ইমেইল ও পাসওয়ার্ড দিয়ে অ্যাকাউন্ট তৈরি করুন। কর্মীকে যে মডিউল দেবেন, তিনি সেই মডিউলের দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ সব কাজ নিজেই করতে পারবেন। আলাদা Approver লাগবে না।</p><p class="muted">Accounts-এর ২৪টি পৃথক মডিউল ৬২–৮৫ নম্বরে রয়েছে। পুরোনো ৪১–৫০ grouped permission শুধু আগের অ্যাকাউন্টের সামঞ্জস্যের জন্য রাখা হয়েছে; নতুন কর্মীকে নির্দিষ্ট Accounts মডিউল থেকেই অনুমতি দিন।</p>
+<p class="muted">নাম, ইমেইল ও পাসওয়ার্ড দিয়ে অ্যাকাউন্ট তৈরি করুন। কর্মীকে যে মডিউল দেবেন, তিনি সেই মডিউলের দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ সব কাজ নিজেই করতে পারবেন। আলাদা Approver লাগবে না।</p><p class="muted">Accounts-এর ২৪টি বিস্তারিত কাজ ৮টি প্রধান বিভাগে সাজানো হয়েছে। পুরো বিভাগ একসাথে নির্বাচন করতে বিভাগের শিরোনামের চেকবক্স দিন, অথবা বিভাগের ভেতর থেকে নির্দিষ্ট কাজ নির্বাচন করুন। পুরোনো হিসাব ও মডিউল অনুমতি অক্ষত থাকবে।</p>
 <form id="staffForm">
 <div class="formgrid">
 <div><label>কর্মীর পূর্ণ নাম</label><input id="staffName" required minlength="2" maxlength="120"></div>
