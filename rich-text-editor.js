@@ -41,7 +41,7 @@ function init(root=document){
   const wrap=document.createElement('div');wrap.className='rich-editor-wrap';
   const toolbar=document.createElement('div');toolbar.className='rich-editor-toolbar';
   const editor=document.createElement('div');editor.className='rich-editor-surface';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline',field.tagName==='TEXTAREA'?'true':'false');if(field.dataset.richRequired==='true')editor.setAttribute('aria-required','true');
-  editor.innerHTML=html(field.value||'');
+  editor.id=field.id?field.id+'_rich_editor':'';editor.innerHTML=html(field.value||'');const linkedLabel=field.id?[...document.querySelectorAll('label[for]')].find(label=>label.htmlFor===field.id):null;if(linkedLabel)linkedLabel.htmlFor=editor.id;
   if(field.tagName==='TEXTAREA')editor.style.minHeight=(Number(field.rows)||3)*1.65+'em';
   const bold=makeButton('B','বোল্ড',()=>document.execCommand('bold'));
   bold.classList.add('rich-tool-bold');
