@@ -1,6 +1,18 @@
 import {configured,supabase,currentProfile,escapeHtml,money} from './supabase-client.js';
 const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','দাতা ও অনুদান','ব্যাংক ও ক্যাশ','ট্রান্সফার','ক্যাশবুক ও লেজার','বকেয়া ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','তহবিল ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','সার্চ','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস','বার্তা ও নোটিফিকেশন','মাসিক চাঁদা আদায়'];
-let user,profile,members=[],dues=[],visibleModules=[],activeModule=0,chandaCanView=false,chandaCanWrite=false;
+const moduleGroups=[
+ {title:'ড্যাশবোর্ড',modules:[0]},
+ {title:'আয় ব্যবস্থাপনা',modules:[1,3,23]},
+ {title:'ব্যয় ব্যবস্থাপনা',modules:[2,7,8]},
+ {title:'ব্যাংক ও ক্যাশ',modules:[4,5,6,16]},
+ {title:'বাজেট ও তহবিল',modules:[9,10]},
+ {title:'রিপোর্ট ও হিসাব বিবরণী',modules:[12,13,14]},
+ {title:'রসিদ ও অনুসন্ধান',modules:[11,15]},
+ {title:'প্রশাসন ও সেটিংস',modules:[17,18,19,20,21,22]}
+];
+const moduleGroupByIndex=new Map(moduleGroups.flatMap((group,groupIndex)=>group.modules.map(moduleIndex=>[moduleIndex,groupIndex])));
+
+let user,profile,members=[],dues=[],visibleModules=[],activeModule=0,activeGroup=0,chandaCanView=false,chandaCanWrite=false;
 const moduleKeys=Object.fromEntries(modules.map((_,i)=>[i,'m'+String(62+i).padStart(2,'0')]));
 const dhaka=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Dhaka',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const today=dhaka;
@@ -23,7 +35,18 @@ async function loadModuleVisibility(){
  visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]));
 }
 function refreshNav(){
- document.querySelectorAll('#adNav button').forEach(b=>{const i=Number(b.dataset.i);b.hidden=!visibleModules.includes(i);b.classList.toggle('active',i===activeModule)});
+ const nav=el('adNav');
+ if(nav)nav.innerHTML=moduleGroups.map((group,index)=>{
+  const available=group.modules.some(i=>visibleModules.includes(i));
+  return available?'<button type="button" data-group="'+index+'" class="'+(index===activeGroup?'active':'')+'"><span class="num">'+(index+1)+'</span>'+escapeHtml(group.title)+'</button>':'';
+ }).join('');
+ const sub=el('adSubNav');
+ if(sub){
+  const group=moduleGroups[activeGroup]||moduleGroups[0];
+  const available=group.modules.filter(i=>visibleModules.includes(i));
+  sub.innerHTML=available.map(i=>'<button type="button" data-module="'+i+'" class="'+(i===activeModule?'active':'')+'">'+escapeHtml(modules[i])+'</button>').join('');
+  sub.hidden=available.length<=1;
+ }
 }
 function resetAdPage(html=''){
  const page=el('adPage'),bin=el('adLegacyBin');
@@ -38,10 +61,11 @@ function movePanel(id){
 function mount(){
  if(el('accountsDashboard'))return;
  const root=document.createElement('section');root.id='accountsDashboard';
- root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div class="top-brand"><div class="top-brand-copy"><b>SAKM-61 Accounts</b><span>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</span><small>মসজিদ ও ফাউন্ডেশনের পৃথক হিসাব</small></div></div><div class="top-controls"><select id="adInstitution" aria-label="প্রতিষ্ঠান"></select><select id="adMonth" aria-label="মাস"></select><div id="adUser"></div></div></header><section class="hero"><div><h1 id="adTitle">ড্যাশবোর্ড</h1><p id="adSub">প্রতিষ্ঠানভিত্তিক আর্থিক সারসংক্ষেপ</p></div><div><button class="action green" id="adAdd" hidden>＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport" hidden>▥ রিপোর্ট</button></div></section><div id="adPage"></div><div id="adLegacyBin" hidden></div></main></div>';
+ root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div class="top-brand"><div class="top-brand-copy"><b>SAKM-61 Accounts</b><span>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</span><small>মসজিদ ও ফাউন্ডেশনের পৃথক হিসাব</small></div></div><div class="top-controls"><select id="adInstitution" aria-label="প্রতিষ্ঠান"></select><select id="adMonth" aria-label="মাস"></select><div id="adUser"></div></div></header><section class="hero"><div><h1 id="adTitle">ড্যাশবোর্ড</h1><p id="adSub">প্রতিষ্ঠানভিত্তিক আর্থিক সারসংক্ষেপ</p></div><div><button class="action green" id="adAdd" hidden>＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport" hidden>▥ রিপোর্ট</button></div></section><nav id="adSubNav" aria-label="মডিউলের উপবিভাগ"></nav><div id="adPage"></div><div id="adLegacyBin" hidden></div></main></div>';
  const app=el('app');app.prepend(root);[...app.children].filter(x=>x!==root).forEach(x=>{x.hidden=true});
- el('adNav').innerHTML=modules.map((m,i)=>'<button type="button" data-i="'+i+'"><span class="num">'+(i+1)+'</span>'+m+'</button>').join('');
- el('adNav').onclick=e=>{const b=e.target.closest('button[data-i]');if(b)openModule(+b.dataset.i)};
+ el('adNav').innerHTML='';
+ el('adNav').onclick=e=>{const b=e.target.closest('button[data-group]');if(!b)return;const group=moduleGroups[Number(b.dataset.group)];const first=group?.modules.find(i=>visibleModules.includes(i));if(first!==undefined)openModule(first)};
+ el('adSubNav').onclick=e=>{const b=e.target.closest('button[data-module]');if(b)openModule(Number(b.dataset.module))};
  const opts=profile?.institution==='both'?['mosque','foundation']:[profile?.institution==='foundation'?'foundation':'mosque'];
  el('adInstitution').innerHTML=opts.map(x=>'<option value="'+x+'">'+(x==='mosque'?'মসজিদ':'ফাউন্ডেশন')+'</option>').join('');
  el('adInstitution').value=opts[0];if(el('institution'))el('institution').value=opts[0];
@@ -56,7 +80,7 @@ function mount(){
 }
 function openModule(i){
  if(!visibleModules.includes(i))return;
- activeModule=i;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
+ activeModule=i;activeGroup=moduleGroupByIndex.get(i)??0;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
  el('adAdd').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==23||currentInstitution()!=='mosque';
  if(i===0){renderDashboard().catch(showError);return}
  if(i===3){renderDonations().catch(showError);return}
