@@ -153,3 +153,21 @@
  #accountsDashboard #adSubNav{flex-wrap:nowrap;overflow-x:auto;padding:7px}
  #accountsDashboard #adSubNav button{white-space:nowrap}
 }
+
+
+/* Full-width Accounts workspace and conditional bank-name fields for chanda */
+html,body{width:100%;max-width:none}
+#app{display:block;width:100%;max-width:none;margin:0;padding:0}
+#accountsDashboard{display:block;width:100%;max-width:none;margin:0}
+#accountsDashboard .layout{width:100%;max-width:none;grid-template-columns:230px minmax(0,1fr)}
+#accountsDashboard .main{width:100%;max-width:none;min-width:0;margin:0;padding:0 6px 26px}
+#accountsDashboard .top{margin-left:-6px;margin-right:-6px}
+#accountsDashboard .chanda-fields [hidden],#accountsDashboard #adMemberFormPanel [hidden]{display:none!important}
+#accountsDashboard .chanda-fields #chandaBankWrap{grid-column:1/-1}
+#accountsDashboard .chanda-fields #chandaBankWrap select,
+#accountsDashboard #adFirstBankWrap select{width:100%;min-width:0}
+@media(max-width:760px){
+ #accountsDashboard .layout{grid-template-columns:1fr}
+ #accountsDashboard .main{width:100%;padding:0 6px 20px}
+ #accountsDashboard .top{margin-left:-6px;margin-right:-6px}
+}
