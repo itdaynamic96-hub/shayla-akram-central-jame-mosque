@@ -284,7 +284,7 @@ assert "document.querySelectorAll('[data-home-text]')" in homepage_source and "w
 for home_key in ('header_title','history_body','naming_body','gallery_title','article_title','video_title','notice_title','activity_title','mutawalli_message','contact_address','contact_address_note','tour_description','library_crumb_prefix','footer_brand','footer_admin'):
     assert f'data-home-text="{home_key}"' in homepage_source, f'Homepage: missing Admin text binding for {home_key}'
 assert "homeData.prayer_fajr||'ফজর'" in homepage_source and "homeData.prayer_isha||'এশা'" in homepage_source, 'Homepage: prayer labels must be editable from Admin'
-assert "from('site_content').upsert(payload,{onConflict:'category,slot_number'})" in staff_admin and "window.MosqueRichText.html(item.body)" in homepage_source, 'Homepage: all 30 article/gallery/video slots must remain editable and render formatted text'
+assert "from('site_content').upsert(payload,{onConflict:'category,slot_number'})" in (ROOT/'admin.html').read_text(encoding='utf-8') and "window.MosqueRichText.html(item.body)" in homepage_source, 'Homepage: all 30 article/gallery/video slots must remain editable and render formatted text'
 print('Homepage text editor checks passed: 88+ fields, rich formatting, alignment and public bindings.')
 
 
