@@ -346,7 +346,9 @@ assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>i!==3&&allo
 assert 'const moduleGroups=[' in accounts_dashboard_source and 'data-group' in accounts_dashboard_source and 'data-module' in accounts_dashboard_source, 'Accounts navigation must expose the simplified parent groups and permitted submodules'
 group_source=accounts_dashboard_source.split('const moduleGroups=[',1)[1].split('];',1)[0]
 group_indexes=[int(n) for n in re.findall(r'\bmodules:\[([0-9,]+)\]',group_source) for n in n.split(',')]
-assert len(group_indexes)==24 and sorted(group_indexes)==list(range(24)), 'Accounts: all 24 original modules must appear exactly once under the 8 parent groups'
+assert len(group_indexes)==23 and sorted(group_indexes)==[i for i in range(24) if i!=3], 'Accounts: all visible original modules except the retired donor module must appear exactly once under the 8 parent groups'
+assert "'সংরক্ষিত অভ্যন্তরীণ মডিউল'" in accounts_dashboard_source and 'দাতা ও অনুদান' not in accounts_dashboard_source, 'Accounts: retired donor module must not be exposed by its former name'
+assert 'filter(i=>i!==3&&allowed.has(moduleKeys[i]))' in accounts_dashboard_source, 'Accounts: retired donor module must stay hidden for every permission set'
 assert 'const moduleGroupByIndex=new Map' in accounts_dashboard_source and 'visibleModules.includes(i)' in accounts_dashboard_source, 'Accounts: submodule navigation must preserve granular permissions'
 assert "allowed.add(moduleKeys[22])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8') and "allowed.add(moduleKeys[23])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Messaging and monthly chanda must be inserted into the ordered module set'
 assert 'm(0[1-9]|[1-7][0-9]|8[0-5])' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure staff account endpoint must accept the expanded module key range'
