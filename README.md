@@ -56,4 +56,4 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 
 
-Bengali male Read Aloud runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download). It does not require Google Cloud Text-to-Speech, a Supabase Edge Function, or the `GOOGLE_TTS_API_KEY` secret. The first use loads the small eSpeak WASM runtime and Bengali voice files from jsDelivr; no multi-gigabyte model or WebGPU is required. Internet access is needed on first load.
+Bengali male Read Aloud runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download), with Arabic and Bengali language switching. It does not require Google Cloud Text-to-Speech, a Supabase Edge Function, or the `GOOGLE_TTS_API_KEY` secret. The first use loads the small eSpeak WASM runtime and Bengali voice files from jsDelivr; no multi-gigabyte model or WebGPU is required. Internet access is needed on first load.
