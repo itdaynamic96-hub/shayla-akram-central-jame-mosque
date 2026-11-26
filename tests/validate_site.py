@@ -267,10 +267,10 @@ for page_name in ('index.html','admin.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
     assert 'rich-text-editor.js' in page_source, f'{page_name}: shared rich-text renderer is not loaded'
 assert 'data-rich-editor="true"' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: notice and content writing fields need rich-text controls'
-assert 'data-rich-editor="true"' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin: module writing fields need rich-text controls'
+assert 'data-rich-editor="true"' in (ROOT/'admin-modules.js').read_text(encoding='utf-8') and 'richField?' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin: module writing fields need rich-text controls'
 assert 'MosqueRichText.clean' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin: rich text must be sanitized before saving'
 assert 'MosqueRichText.html(d.page_body' in (ROOT/'index.html').read_text(encoding='utf-8'), 'Website: published page body must render safe rich text'
-assert 'Shared institution branding' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8'), 'Accounts: shared brand typography is missing'
+assert 'Match the shared mosque/foundation identity' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8') and 'শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ' in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Accounts: shared brand typography is missing'
 print('Rich text and shared branding checks passed: safe editor, persistence hooks and public rendering markers.')
 
 
