@@ -136,7 +136,7 @@ th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;paddin
 </section></main>
 <script src="./supabase-config.js"></script><script type="module">
 import{configured,supabase,currentProfile,escapeHtml,money,showError}from'./supabase-client.js';
-const $=id=>document.getElementById(id);let profile=null,modulePermissions=[];const accountCache={entries:[],bankAccounts:[],paymentMethods:[]};
+const $=id=>document.getElementById(id);let profile=null,modulePermissions=[];const accountCache={entries:[],bankAccounts:[]};accountCache.paymentMethods=[];
 const hasAccountModule=(key,cap='can_view')=>modulePermissions.some(x=>x.module_key===key&&x[cap]);
 function updateFundOptions(){if(profile?.role!=='custom_admin')return;const allowed=new Set();const income=$('type').value==='income';if(income){if(hasAccountModule('m63','can_write'))['general','orphan','poor_relief','medical','education','construction'].forEach(x=>allowed.add(x));if(hasAccountModule('m65','can_write'))allowed.add('general');if(hasAccountModule('m72','can_write'))['zakat','sadaqah'].forEach(x=>allowed.add(x));}else{if(hasAccountModule('m64','can_write'))['general','orphan','poor_relief','medical','education','construction'].forEach(x=>allowed.add(x));if(hasAccountModule('m72','can_write'))['zakat','sadaqah'].forEach(x=>allowed.add(x));}const options=[...$('fund').options];options.forEach(o=>{o.hidden=!allowed.has(o.value);o.disabled=!allowed.has(o.value)});if(!allowed.has($('fund').value)&&allowed.size)$('fund').value=options.find(o=>allowed.has(o.value)).value;}
 function syncPartyLabel(){const income=$('type').value==='income';$('partyLabel').textContent=income?'দাতার নাম':'গ্রহীতার নাম';$('party').placeholder=income?'দাতার নাম লিখুন':'গ্রহীতার নাম লিখুন'}
