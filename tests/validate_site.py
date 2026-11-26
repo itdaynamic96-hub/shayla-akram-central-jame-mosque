@@ -183,7 +183,8 @@ for page_name in ('index.html','admin.html','accounts.html'):
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
-assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Read Aloud: Arabic text must not be passed to Bengali TTS as if it were Bengali'
+assert "languages:['bn','ar']" in reader_js and "engine.loadVoice(chunk.language)" in reader_js and "engine.setVoice(chunk.language)" in reader_js, 'Read Aloud: Arabic and Bengali text must use their matching eSpeak voices'
+assert '.asbab-card' in reader_js and 'আরবি ও বাংলায় শুনুন' in reader_js, 'Read Aloud: Quran, hadith, tafsir and Asbab al-Nuzul content must be included'
 assert '@spelling-creator/spellophone@0.2.1/dist/browser.js' in reader_js and "engine.loadVoice('bn')" in reader_js and "engine.setVoice('bn')" in reader_js, 'Read Aloud: must use the supplied module’s lightweight Bengali eSpeak voice'
 assert 'createSvaraEngine' not in reader_js and '১.৯৫ জিবি' not in reader_js and 'WebGPU' not in reader_js, 'Read Aloud: obsolete multi-GB Svara/WebGPU model must no longer be required'
 assert 'encodeWav' in reader_js and 'new Audio(session.audioUrl)' in reader_js, 'Read Aloud: synthesized Bengali audio must be encoded and played in browser'
