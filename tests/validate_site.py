@@ -450,6 +450,8 @@ assert 'main.admin-shell{width:100%;max-width:none' in admin_layout_html and '#a
 assert "document.querySelector('main')?.classList.add('admin-shell')" in admin_modules_js, 'Admin: shell must activate full-width layout'
 assert 'const staffModuleRoot = $("staffModules");' in admin_users_js and 'if (!staffModuleRoot) return [];' in admin_users_js, 'Admin: missing staff form nodes must not cause null innerHTML errors'
 assert "!location.hash.includes('admin=m85')" in chanda_js and "p.module_key==='m85'" in chanda_js, 'Chanda: module route and permission key must match Accounts monthly chanda module'
+assert 'if(m.n===85)return;showModule(m,version)' in admin_modules_js, 'Admin: monthly chanda workspace must not be overwritten by the generic module renderer'
+assert "requiredIds.some(id=>!$(id))" in chanda_js, 'Chanda: skip stale asynchronous DOM updates after a route change'
 
 # Single assigned Accounts operator may post income/expense directly; the journal trigger is idempotent.
 direct_posting=(ROOT/'supabase/migrations/20261125195658_accounts_direct_posting_single_operator.sql').read_text(encoding='utf-8')
