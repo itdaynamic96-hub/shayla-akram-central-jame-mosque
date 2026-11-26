@@ -9,7 +9,6 @@
     if(!root)return '';
     const copy=root.cloneNode(true);
     copy.querySelectorAll(excluded).forEach(el=>el.remove());
-    copy.querySelectorAll('[dir="rtl"],.arabic,.arabic-pronunciation').forEach(el=>el.remove());
     const raw=copy.innerText||copy.textContent||'';
     return raw.replace(/\r/g,'').split(/\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
       .replace(/https?:\/\/[^\s]+/gi,' ')
