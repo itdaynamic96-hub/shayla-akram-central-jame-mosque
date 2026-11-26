@@ -70,7 +70,9 @@ assert "if(!configured){setHidden('login',false);setHidden('setup',false)" in ac
 assert 'const accountCache={entries:[],bankAccounts:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: entry and bank-account caches must initialize before async boot'
 admin_html_source=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert "$('login').hidden=true;$('loginError').hidden=true;$('app').hidden=false" in admin_html_source, 'Admin: authenticated sessions must hide login before optional data loads'
-assert "ব্যবহারকারী তালিকার HTML উপাদান পাওয়া যায়নি" in admin_html_source and "নোটিশ তালিকার HTML উপাদান পাওয়া যায়নি" in admin_html_source, 'Admin: missing UI targets must not break authenticated state'
+assert "ব্যবহারকারী তালিকার মূল HTML উপাদান পাওয়া যায়নি" in admin_html_source and "নোটিশ তালিকার HTML উপাদান পাওয়া যায়নি" in admin_html_source, 'Admin: missing UI targets must not break authenticated state'
+assert admin_html_source.index("const usersCountElement=$('usersCount'),usersBodyElement=$('users'),usersErrorElement=$('usersError')") < admin_html_source.index("if(!configured){$('setup').hidden=false}else{await boot()}"), 'Admin: user-list DOM references must initialize before asynchronous boot starts'
+assert 'const count=usersCountElement,body=usersBodyElement' in admin_html_source and 'if(usersBodyElement)usersBodyElement.addEventListener' in admin_html_source, 'Admin: user list must use stable DOM references'
 assert "showAdminBootError('লগইন সফল" in admin_html_source, 'Admin: authenticated boot failures must be shown inside the panel, not as login failure'
 admin_modules_source=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert "a.href='./accounts.html'" in admin_modules_source and 'if(m.g===4)return false' in admin_modules_source, 'Admin: Accounts must be a separate panel'
