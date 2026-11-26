@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const ALLOWED=new Set(['B','STRONG','U','EM','I','P','BR','DIV','UL','OL','LI','SPAN']);
+const ALLOWED=new Set(['B','STRONG','U','EM','I','P','BR','DIV','UL','OL','LI','SPAN','H1','H2','H3','H4','H5','H6','BLOCKQUOTE']);
 function clean(value){
  const source=String(value??'');
  const doc=new DOMParser().parseFromString('<body>'+source+'</body>','text/html');
@@ -10,14 +10,14 @@ function clean(value){
   const tag=node.tagName;
   if(!ALLOWED.has(tag)){if(!['SCRIPT','STYLE','IFRAME','OBJECT','SVG','MATH'].includes(tag))Array.from(node.childNodes).forEach(child=>copy(child,parent));return}
   const el=document.createElement(tag.toLowerCase());
-  if(tag==='SPAN'){
+  if(['SPAN','P','DIV','LI','H1','H2','H3','H4','H5','H6','BLOCKQUOTE'].includes(tag)){
    const style=node.getAttribute('style')||'';
    const size=style.match(/font-size\s*:\s*(\d{1,2})px/i);
    const color=style.match(/color\s*:\s*(#[0-9a-f]{6}|rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\))/i);
    const rules=[];
    if(size&&Number(size[1])>=10&&Number(size[1])<=72)rules.push('font-size:'+Number(size[1])+'px');
    if(color){let hex=color[1];if(!hex.startsWith('#')){const channels=color.slice(2,5).map(Number);if(channels.every(n=>n>=0&&n<=255))hex='#'+channels.map(n=>n.toString(16).padStart(2,'0')).join('')}if(/^#[0-9a-f]{6}$/i.test(hex))rules.push('color:'+hex.toLowerCase())}
-   if(rules.length)el.setAttribute('style',rules.join(';'));
+   const align=style.match(/text-align\\s*:\\s*(left|center|right|justify|start|end)\\b/i);if(align)rules.push('text-align:'+align[1].toLowerCase());if(rules.length)el.setAttribute('style',rules.join(';'));
   }
   Array.from(node.childNodes).forEach(child=>copy(child,el));parent.appendChild(el);
  }
@@ -52,7 +52,9 @@ function init(root=document){
   const colorLabel=document.createElement('label');colorLabel.className='rich-tool-color';colorLabel.title='লেখার রং';colorLabel.textContent='রং';
   const color=document.createElement('input');color.type='color';color.value='#174b35';color.setAttribute('aria-label','লেখার রং');color.addEventListener('input',()=>wrapSelection(editor,'color',color.value));colorLabel.appendChild(color);
   const clear=makeButton('↺','ফরম্যাট সরান',()=>{document.execCommand('removeFormat');});
-  toolbar.append(bold,underline,size,colorLabel,clear);
+  const alignGroup=document.createElement('span');alignGroup.className='rich-tool-align-group';alignGroup.setAttribute('role','group');alignGroup.setAttribute('aria-label','লেখার এলাইনমেন্ট');
+  [['justifyLeft','বাম','বাম দিকে সাজান'],['justifyCenter','মাঝ','মাঝখানে সাজান'],['justifyRight','ডান','ডান দিকে সাজান'],['justifyFull','Justify','দুই পাশ সমান (Justify)']].forEach(([command,label,title])=>{const b=makeButton(label,title,()=>document.execCommand(command));b.classList.add('rich-tool-align');if(command==='justifyFull')b.classList.add('rich-tool-justify');alignGroup.appendChild(b)});
+  toolbar.append(bold,underline,size,colorLabel,alignGroup,clear);
   field.parentNode.insertBefore(wrap,field);wrap.append(toolbar,editor);wrap.appendChild(field);field.classList.add('rich-editor-source');
   const sync=()=>{field.value=(editor.textContent||'').trim()?clean(editor.innerHTML):'';field.dispatchEvent(new Event('input',{bubbles:true}))};
   editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('input',sync);editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
