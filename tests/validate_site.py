@@ -563,7 +563,7 @@ assert 'rich-tool-size-apply' in (ROOT/'admin.html').read_text(encoding='utf-8')
 # Rich text controls must initialize dynamically-rendered module forms once, without observer recursion.
 assert "if(field.dataset.richReady==='1')return" in rich_text, 'Rich text editor must not recursively wrap an already initialized field'
 assert 'window.MosqueRichText.init(wrap)' in admin_modules_source, 'Dynamic module forms must initialize rich text controls immediately after rendering'
-assert 'rich-text-editor.js?v=20261126-home-text-toolbar-fix2' in admin_html_text, 'Admin rich text toolbar cache must be refreshed'
+assert 'rich-text-editor.js?v=20261126-home-text-toolbar-fix3' in admin_html_text, 'Admin rich text toolbar cache must be refreshed'
 
 # Homepage rich text: saved selection declarations must exist before toolbar listeners bind (avoids ReferenceError and missing toolbar).
 assert rich_text.index("const rememberSelection=") < rich_text.index("size.addEventListener('mousedown',rememberSelection)"), 'Rich text editor must define selection handlers before binding size/color controls'
