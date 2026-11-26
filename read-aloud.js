@@ -1,4 +1,5 @@
-/* Server-based Bengali male TTS using Google Cloud Text-to-Speech. */
+import { createSvaraEngine } from './assets/svara-build/engine.js';
+/* Browser-local Bengali male Read Aloud using Svara WebGPU TTS. */
 (() => {
   'use strict';
 
@@ -16,7 +17,10 @@
 
   let active = null;
   let currentButtons = null;
-  let observer = null;
+  let engine = null;
+  let engineReady = false;
+  let engineLoading = false;
+  let requestSequence = 0;
 
   const statusText = (message, target) => {
     const el = target || document.getElementById('readAloudStatus');
@@ -43,9 +47,9 @@
     const result = [];
     for (const sentence of sentences) {
       let rest = sentence.trim();
-      while (rest.length > 180) {
-        let cut = rest.lastIndexOf(' ', 180);
-        if (cut < 85) cut = 180;
+      while (rest.length > 150) {
+        let cut = rest.lastIndexOf(' ', 150);
+        if (cut < 70) cut = 150;
         result.push(rest.slice(0, cut).trim());
         rest = rest.slice(cut).trim();
       }
@@ -63,84 +67,119 @@
     if (stop) stop.disabled = state !== 'playing' && state !== 'paused' && state !== 'loading';
   };
 
+  const releaseAudio = session => {
+    if (!session) return;
+    if (session.audio) {
+      session.audio.onended = null;
+      session.audio.onerror = null;
+      session.audio.pause();
+      session.audio.removeAttribute('src');
+      session.audio.load();
+      session.audio = null;
+    }
+    if (session.audioUrl) {
+      URL.revokeObjectURL(session.audioUrl);
+      session.audioUrl = null;
+    }
+  };
+
   const finish = message => {
     const target = active?.statusTarget;
-    if (active?.audio) {
-      active.audio.onended = null;
-      active.audio.onerror = null;
-      active.audio.pause();
-      active.audio.removeAttribute('src');
-      active.audio.load();
-    }
-    if (active?.audioUrl) URL.revokeObjectURL(active.audioUrl);
+    releaseAudio(active);
     active = null;
     setControls('idle');
     statusText(message, target);
   };
 
-  const synthesizeCloudChunk = async text => {
-    const response = await fetch('https://lmwczibsipczfymhyqba.supabase.co/functions/v1/bengali-tts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': 'sb_publishable_rcOi9VHw4tP2umMhDqD1YA_rJWwugHi'
-      },
-      body: JSON.stringify({text})
-    });
-    if (!response.ok) {
-      let detail = 'সার্ভার থেকে বাংলা ভয়েস পাওয়া যায়নি।';
-      try {
-        const payload = await response.json();
-        detail = payload.detail || payload.error || detail;
-      } catch (_) {}
-      throw new Error(detail);
-    }
-    return URL.createObjectURL(await response.blob());
-  };
-
-  const playNext = async session => {
-    if (active !== session || session.state !== 'playing') return;
-    if (session.index >= session.chunks.length) {
-      finish('পড়া শেষ হয়েছে।');
+  const onEngineMessage = message => {
+    if (message.status === 'feature-error') {
+      engineLoading = false;
+      if (active) finish('এই ডিভাইসের GPU-তে প্রয়োজনীয় WebGPU সুবিধা নেই। WebGPU ও shader-f16 সমর্থিত হালনাগাদ Chrome/Edge এবং উপযুক্ত GPU ব্যবহার করুন।');
       return;
     }
-    session.generating = true;
-    try {
-      statusText('সার্ভার থেকে বাংলা পুরুষ কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
-      const audioUrl = await synthesizeCloudChunk(session.chunks[session.index]);
-      if (active !== session) {
-        URL.revokeObjectURL(audioUrl);
+    if (message.status === 'feature-success') return;
+    if (message.status === 'loading') {
+      if (active) statusText(engineReady ? 'বাংলা কণ্ঠ তৈরি হচ্ছে…' : 'প্রথমবার প্রায় ১.৯৫ জিবি বাংলা ভয়েস মডেল প্রস্তুত হচ্ছে। অপেক্ষা করুন…', active.statusTarget);
+      return;
+    }
+    if (message.status === 'ready') {
+      engineReady = true;
+      engineLoading = false;
+      if (active) playNext(active);
+      return;
+    }
+    if (message.status === 'complete') {
+      const session = active;
+      if (!session || message.requestId !== session.requestId) {
+        if (message.audio) URL.revokeObjectURL(message.audio);
         return;
       }
-      session.audioUrl = audioUrl;
-      const audio = new Audio(audioUrl);
+      session.generating = false;
+      session.audioUrl = message.audio;
+      const audio = new Audio(message.audio);
       session.audio = audio;
       audio.preload = 'auto';
       audio.onended = () => {
         if (active !== session || session.state !== 'playing') return;
-        if (session.audioUrl) URL.revokeObjectURL(session.audioUrl);
-        session.audioUrl = null;
-        session.audio = null;
+        releaseAudio(session);
         session.index += 1;
         playNext(session);
       };
       audio.onerror = () => {
-        if (active === session) finish('অডিও চালাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        if (active === session) finish('তৈরি হওয়া অডিও চালানো যায়নি। আবার চেষ্টা করুন।');
       };
       if (session.state === 'playing') {
         statusText('বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', session.statusTarget);
-        await audio.play();
+        audio.play().catch(() => finish('অডিও চালু করা যায়নি। ব্রাউজারের সাউন্ড অনুমতি পরীক্ষা করুন।'));
       } else {
         statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।', session.statusTarget);
       }
-    } catch (error) {
-      if (active === session) finish(error.message || 'বাংলা অডিও তৈরি করা যায়নি।');
-    } finally {
-      session.generating = false;
+      return;
+    }
+    if (message.status === 'error' || message.status === 'fatal-error') {
+      engineLoading = false;
+      if (active) finish(message.data || 'বাংলা ভয়েস তৈরি করা যায়নি।');
     }
   };
 
-  const start = async (text, buttons, statusTarget) => {
+  const ensureEngine = () => {
+    if (engine) return;
+    if (!('gpu' in navigator)) throw new Error('এই ব্রাউজারে WebGPU নেই। হালনাগাদ Chrome বা Edge ব্যবহার করুন।');
+    engine = createSvaraEngine(onEngineMessage);
+  };
+
+  const playNext = session => {
+    if (active !== session || session.state !== 'playing' || session.generating) return;
+    if (session.index >= session.chunks.length) {
+      finish('পড়া শেষ হয়েছে।');
+      return;
+    }
+    if (!engineReady) {
+      if (!engineLoading) {
+        try {
+          ensureEngine();
+          engineLoading = true;
+          statusText('প্রথমবার বাংলা ভয়েস মডেল ডাউনলোড ও প্রস্তুত হচ্ছে…', session.statusTarget);
+          engine.postMessage({type:'preload',dtype:'q4f16'});
+        } catch (error) {
+          finish(error.message || 'বাংলা ভয়েস ইঞ্জিন চালু করা যায়নি।');
+        }
+      }
+      return;
+    }
+    session.generating = true;
+    session.requestId = ++requestSequence;
+    statusText('বাংলা পুরুষ কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
+    engine.postMessage({
+      type:'synthesize',
+      text:session.chunks[session.index],
+      speaker_id:'Bengali (Male)',
+      dtype:'q4f16',
+      requestId:session.requestId
+    });
+  };
+
+  const start = (text, buttons, statusTarget) => {
     currentButtons = buttons || null;
     const clean = String(text || '').trim();
     if (!clean) {
@@ -151,11 +190,11 @@
     if (active) finish('আগের পড়া বন্ধ করা হয়েছে।');
     const session = {
       statusTarget, buttons, chunks:splitText(clean), index:0,
-      audio:null, audioUrl:null, state:'playing', generating:false
+      audio:null, audioUrl:null, state:'playing', generating:false, requestId:0
     };
     active = session;
     setControls('playing');
-    statusText('বাংলা পুরুষ কণ্ঠের সার্ভার সংযোগ হচ্ছে…', statusTarget);
+    statusText('ব্রাউজারে বাংলা পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
     playNext(session);
   };
 
@@ -180,7 +219,10 @@
     }
   };
 
-  const stop = (message = 'পড়া বন্ধ করা হয়েছে।') => finish(message);
+  const stop = (message = 'পড়া বন্ধ করা হয়েছে।') => {
+    if (active) active.requestId = -1;
+    finish(message);
+  };
 
   let shareSequence = 0;
 
@@ -325,8 +367,6 @@
   };
 
   const init = () => {
-    // Disable the page-wide reader; individual posts, Quran ayahs and Hadith cards keep their own controls.
-    document.getElementById('readAloud')?.remove();
     scanCards();
     observer = new MutationObserver(records => {
       for (const record of records) for (const node of record.addedNodes) {
@@ -340,4 +380,5 @@
 
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
+  window.addEventListener('pagehide',()=>{ stop('পৃষ্ঠা বন্ধ করা হয়েছে।'); engine?.terminate(); engine=null; engineReady=false; engineLoading=false; });
 })();
