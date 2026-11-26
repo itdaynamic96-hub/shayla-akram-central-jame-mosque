@@ -108,7 +108,7 @@ async function renderExpensePayees(){
  draw();el('adExpensePayeeSearch').oninput=draw;
  if(write.data)el('adNewPayee').onclick=()=>showExpensePayeeForm(inst);
  else el('adNewPayee').hidden=true;
- el('adGeneralExpense').onclick=()=>{movePanel('entryForm');if(el('type'))el('type').value='expense'};
+ el('adGeneralExpense').onclick=()=>{movePanel('entryForm');setLedgerEntryType('expense')};
  el('adExpensePayeeRows').onclick=e=>{const b=e.target.closest('[data-payee-detail]');if(b)renderExpensePayeeDetail(b.dataset.payeeDetail,inst,write.data).catch(showError)};
 }
 function showExpensePayeeForm(inst){
@@ -155,6 +155,11 @@ async function renderExpenseJobHistory(jobId,person,inst){
  const {data:rows,error}=await supabase.from('account_obligation_payments').select('*').eq('obligation_id',jobId).eq('institution',inst).order('payment_date',{ascending:false});if(error)throw error;
  const host=el('adExpenseJobHistory');host.innerHTML='<section class="panel"><h3>এই কাজের টাকা পরিশোধের ইতিহাস</h3><div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>পরিশোধ</th><th>মাধ্যম</th><th>ব্যাংক</th><th>টাকা গ্রহণকারী</th><th>মোবাইল</th><th>রেফারেন্স</th></tr></thead><tbody>'+(rows||[]).map(x=>'<tr><td>'+escapeHtml(x.payment_date)+'</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.payment_method)+'</td><td>'+escapeHtml(x.bank_name||'—')+'</td><td>'+escapeHtml(x.received_by_name||'—')+'</td><td>'+escapeHtml(x.received_by_phone||'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
+function setLedgerEntryType(type){
+ const field=el('type');if(field)field.value=type;
+ const heading=el('entryFormTitle');if(heading)heading.textContent=type==='expense'?'নতুন ব্যয় / টাকা পরিশোধের তথ্য':'নতুন আয় / টাকা জমার তথ্য';
+ const partyLabel=el('partyLabel');if(partyLabel)partyLabel.textContent=type==='expense'?'প্রাপক / দোকানদারের নাম':'দাতা / চাঁদাদাতার নাম';
+}
 function openModule(i){
  if(!visibleModules.includes(i))return;
  activeModule=i;activeGroup=moduleGroupByIndex.get(i)??0;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
@@ -200,7 +205,7 @@ async function renderIncomeManagement(){
  const p=el('adPage'),inst=currentInstitution();
  movePanel('entryForm');
  const formPanel=el('entryForm')?.closest('.panel');
- if(formPanel){const heading=formPanel.querySelector('h3');if(heading)heading.textContent='নতুন আয় / টাকা জমার তথ্য';}
+ setLedgerEntryType('income');
  if(inst==='mosque'&&chandaCanView){
   p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায়</h2></div><div class="body"><div id="adChandaContent"><div class="empty">চাঁদার তথ্য লোড হচ্ছে…</div></div></div></section>');
   await loadChanda();
