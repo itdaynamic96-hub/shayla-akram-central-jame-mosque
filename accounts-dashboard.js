@@ -84,7 +84,7 @@ function mount(){
 
 async function renderExpensePayees(){
  const p=el('adPage'),inst=currentInstitution();
- movePanel('expenseEntryForm');p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><div><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button></div></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
+ if(canWriteExpenseEntry)movePanel('expenseEntryForm');else resetAdPage();p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><div><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button></div></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
  const [view,write]=await Promise.all([
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:false}),
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:true})
