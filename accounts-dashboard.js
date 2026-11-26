@@ -2,7 +2,7 @@ import {configured,supabase,currentProfile,escapeHtml,money} from './supabase-cl
 const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','দাতা ও অনুদান','ব্যাংক ও ক্যাশ','ট্রান্সফার','ক্যাশবুক ও লেজার','বকেয়া ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','তহবিল ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','সার্চ','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস','বার্তা ও নোটিফিকেশন','মাসিক চাঁদা আদায়'];
 const moduleGroups=[
  {title:'ড্যাশবোর্ড',modules:[0]},
- {title:'আয় ব্যবস্থাপনা',modules:[1,3,23]},
+ {title:'আয় ব্যবস্থাপনা',modules:[1,23]},
  {title:'ব্যয় ব্যবস্থাপনা',modules:[2,7,8]},
  {title:'ব্যাংক ও ক্যাশ',modules:[4,5,6,16]},
  {title:'বাজেট ও তহবিল',modules:[9,10]},
@@ -30,11 +30,11 @@ async function loadModuleVisibility(){
   const [view,write]=await Promise.all([supabase.rpc('chanda_can_access',{write_access:false}),supabase.rpc('chanda_can_access',{write_access:true})]);
   if(view.error)throw view.error;if(write.error)throw write.error;
   chandaCanView=!!view.data;chandaCanWrite=!!write.data;
-  if(chandaCanView)allowed.add(moduleKeys[23]);
+  if(chandaCanView){allowed.add(moduleKeys[23]);allowed.add(moduleKeys[1]);}
  }
  const {data:messageAccess,error:messageError}=await supabase.rpc('accounts_message_access',{target_institution:inst,write_access:false});if(messageError)throw messageError;if(messageAccess)allowed.add(moduleKeys[22]);
  // Keep every visible item in the original 24-module order, independent of permission lookup order.
- visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]));
+ visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>i!==3&&allowed.has(moduleKeys[i]));
 }
 function refreshNav(){
  const nav=el('adNav');
@@ -76,8 +76,8 @@ function mount(){
  for(let i=-2;i<=3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);monthOptions.push('<option value="'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'">'+new Intl.DateTimeFormat('bn-BD',{month:'long',year:'numeric'}).format(d)+'</option>')}
  el('adMonth').innerHTML=monthOptions.join('');
  const target=new Date(now.getFullYear(),now.getMonth()+(now.getDate()>=20?1:0),1);el('adMonth').value=target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0');
- el('adMonth').onchange=()=>{if(activeModule===23)loadChanda().catch(showError)};
- el('adAdd').onclick=memberForm;el('adReport').onclick=exportExcel;el('adLogout').onclick=()=>el('logout')?.click();
+ el('adMonth').onchange=()=>{if(activeModule===1)loadChanda().catch(showError)};
+ el('adAdd').textContent='＋ নতুন চাঁদাদাতা';el('adAdd').onclick=memberForm;el('adReport').onclick=exportExcel;el('adLogout').onclick=()=>el('logout')?.click();
  refreshNav();
 }
 
@@ -157,10 +157,10 @@ async function renderExpenseJobHistory(jobId,person,inst){
 function openModule(i){
  if(!visibleModules.includes(i))return;
  activeModule=i;activeGroup=moduleGroupByIndex.get(i)??0;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
- el('adAdd').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==23||currentInstitution()!=='mosque';
+ el('adAdd').hidden=!(i===1&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===1&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==1||currentInstitution()!=='mosque';
  if(i===2){renderExpensePayees().catch(showError);return}
  if(i===0){renderDashboard().catch(showError);return}
- if(i===3){renderDonations().catch(showError);return}
+ if(i===1){renderIncomeManagement().catch(showError);return}
  if(i===4){renderBankAccounts().catch(showError);return}
  if(i===5){renderTransfers().catch(showError);return}
  if(i===6){renderCashbookJournal().catch(showError);return}
@@ -175,7 +175,7 @@ function openModule(i){
  if(i===20){renderUserPermissions().catch(showError);return}
  if(i===21){renderSettings().catch(showError);return}
  if(i===22){renderMessageCenter().catch(showError);return}
- if(i===23){renderMonthlyChanda().catch(showError);return}
+ if(i===23){renderIncomeManagement().catch(showError);return}
  const map={1:'entryForm',2:'entryForm',7:'obligationsPanel',8:'payrollPanel',9:'budgetForm',10:'fundRows',11:'entries'};
  const id=map[i];if(id){movePanel(id);if((i===1||i===2)&&el('type'))el('type').value=i===1?'income':'expense';return}
  el('adPage').innerHTML='<section class="module"><h2>'+escapeHtml(modules[i])+'</h2><p>এই মডিউলটি এই প্রতিষ্ঠানের জন্য এখনো সংযুক্ত নয়।</p></section>';
@@ -194,6 +194,16 @@ async function renderDashboard(){
  const approved=rows.filter(x=>x.status==='approved'),pending=rows.filter(x=>x.status==='pending');
  const income=approved.filter(x=>x.entry_type==='income').reduce((n,x)=>n+Number(x.amount||0),0),expense=approved.filter(x=>x.entry_type==='expense').reduce((n,x)=>n+Number(x.amount||0),0);
  p.innerHTML='<div class="stats"><button type="button" class="stat greenstat stat-link" data-open-module="1" aria-label="অনুমোদিত মোট আয়ের বিস্তারিত"><div><small>অনুমোদিত মোট আয়</small><strong>'+money(income)+'</strong></div><span class="stat-arrow">বিস্তারিত দেখুন →</span></button><button type="button" class="stat redstat stat-link" data-open-module="2" aria-label="অনুমোদিত মোট ব্যয়ের বিস্তারিত"><div><small>অনুমোদিত মোট ব্যয়</small><strong>'+money(expense)+'</strong></div><span class="stat-arrow">বিস্তারিত দেখুন →</span></button><button type="button" class="stat bluestat stat-link" data-open-module="6" aria-label="বর্তমান স্থিতির বিস্তারিত"><div><small>বর্তমান স্থিতি</small><strong>'+money(income-expense)+'</strong></div><span class="stat-arrow">বিস্তারিত দেখুন →</span></button><button type="button" class="stat yellowstat stat-link" data-open-module="18" aria-label="অনুমোদনের অপেক্ষায় থাকা লেনদেন"><div><small>অনুমোদনের অপেক্ষায়</small><strong>'+fmt(pending.length)+'টি</strong></div><span class="stat-arrow">বিস্তারিত দেখুন →</span></button></div><section class="panel"><div class="head section-heading"><h2>'+(inst==='mosque'?'মসজিদ':'ফাউন্ডেশন')+' — সাম্প্রতিক হিসাব</h2></div><div class="body tablewrap"><table><thead><tr><th>তারিখ</th><th>ধরন</th><th>খাত</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead><tbody>'+rows.slice(0,20).map(x=>'<tr><td>'+escapeHtml(x.entry_date)+'</td><td>'+escapeHtml(x.entry_type)+'</td><td>—</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.status)+'</td></tr>').join('')+'</tbody></table></div></section>';p.querySelectorAll('[data-open-module]').forEach(card=>{card.addEventListener('click',()=>openModule(Number(card.dataset.openModule)))});
+}
+async function renderIncomeManagement(){
+ const p=el('adPage'),inst=currentInstitution();
+ movePanel('entryForm');
+ const formPanel=el('entryForm')?.closest('.panel');
+ if(formPanel){const heading=formPanel.querySelector('h3');if(heading)heading.textContent='নতুন আয় / টাকা জমার তথ্য';}
+ if(inst==='mosque'&&chandaCanView){
+  p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>মাসিক চাঁদা আদায়</h2></div><div class="body"><div id="adChandaContent"><div class="empty">চাঁদার তথ্য লোড হচ্ছে…</div></div></div></section>');
+  await loadChanda();
+ }
 }
 async function renderDonations(){
  const p=el('adPage'),inst=currentInstitution();
