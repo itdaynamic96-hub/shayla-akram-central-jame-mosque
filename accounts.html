@@ -153,7 +153,7 @@ async function loadBankAccountOptions(){
   methods=data||[];
  }
  accountCache.paymentMethods=methods;
- const accountRows=accountCache.bankAccounts.filter(a=>a.account_kind===kind);
+ const accountRows=kind==='bank'?accountCache.bankAccounts.filter(a=>a.account_kind!=='cash'):kind==='cash'?accountCache.bankAccounts.filter(a=>a.account_kind==='cash'):[];
  const methodRows=methods.filter(m=>kind==='bank'?m.method_type==='bank':kind==='mobile_banking'?['bkash','nagad'].includes(m.method_type):kind==='other'?m.method_type==='other':false);
  const accountOptions=accountRows.map(a=>'<option value="bank:'+escapeHtml(a.id)+'">'+escapeHtml(a.account_name)+'</option>').join('');
  const methodOptions=methodRows.map(m=>'<option value="pm:'+escapeHtml(m.id)+'">'+escapeHtml(m.provider_name)+(m.holder_name?' — '+escapeHtml(m.holder_name):'')+(m.bank_branch?' · '+escapeHtml(m.bank_branch):'')+'</option>').join('');
