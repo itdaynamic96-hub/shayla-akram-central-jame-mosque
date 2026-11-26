@@ -210,6 +210,37 @@ main.admin-shell{width:100%;max-width:none;margin:0;padding:18px 24px 24px 322px
  #app.admin-layout{padding-left:0}
  #adminWorkspace{margin:12px 0;width:100%}
 }
+
+/* Color-coded staff permission module cards */
+#staffModules.staff-module-grid{grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:12px;align-items:stretch;margin:16px 0 20px}
+#staffModules .staff-module{position:relative;display:block!important;min-width:0;margin:0!important;padding:0;border:1px solid #dbe5e1;border-radius:13px;background:#fff;box-shadow:0 2px 8px rgba(20,50,40,.055);overflow:hidden;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+#staffModules .staff-module-item:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:#23865f}
+#staffModules .staff-module-item.staff-module-governance:before{background:#3978c8}
+#staffModules .staff-module-item.staff-module-accounts:before{background:#bd8427}
+#staffModules .staff-module-item:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(20,50,40,.11);border-color:#a9c8bb}
+#staffModules .staff-module-item:has(input:checked){border-color:#389b70;background:linear-gradient(105deg,#eaf7f0 0%,#fff 78%);box-shadow:0 0 0 1px rgba(56,155,112,.13)}
+#staffModules .staff-module-item.staff-module-governance:has(input:checked){border-color:#6598d7;background:linear-gradient(105deg,#edf4ff 0%,#fff 78%)}
+#staffModules .staff-module-item.staff-module-accounts:has(input:checked){border-color:#d2a34e;background:linear-gradient(105deg,#fff6e6 0%,#fff 78%)}
+#staffModules .staff-module-item>label{display:flex!important;align-items:center;gap:11px;margin:0!important;padding:13px 14px 13px 17px;min-height:72px;cursor:pointer}
+#staffModules .staff-module-item input[type=checkbox]{flex:0 0 19px;width:19px;height:19px;margin:0;accent-color:#18865c;cursor:pointer}
+#staffModules .staff-module-governance input[type=checkbox]{accent-color:#3978c8}
+#staffModules .staff-module-accounts input[type=checkbox]{accent-color:#b77a19}
+#staffModules .staff-module-number{display:flex;align-items:center;justify-content:center;flex:0 0 39px;height:37px;border-radius:10px;background:#e5f3eb;color:#176b4b;font-size:15px;font-weight:800;letter-spacing:.3px}
+#staffModules .staff-module-governance .staff-module-number{background:#e8f0fc;color:#285fa6}
+#staffModules .staff-module-accounts .staff-module-number{background:#fff0d4;color:#8b5b10}
+#staffModules .staff-module-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+#staffModules .staff-module-copy strong{font-size:15px;line-height:1.45;color:#20372e;font-weight:750}
+#staffModules .staff-module-copy small{font-size:12px;line-height:1.4;color:#687b72}
+#staffModules .staff-module-master{grid-column:1/-1;border:1px solid #c99a43!important;border-radius:15px!important;background:linear-gradient(115deg,#173f32 0%,#245b43 60%,#876022 145%)!important;color:#fff;padding:17px 20px!important;box-shadow:0 7px 20px rgba(28,70,51,.16)!important}
+#staffModules .staff-module-master>label{display:flex!important;align-items:center;gap:13px;margin:0!important;padding:0!important;cursor:pointer}
+#staffModules .staff-module-master input[type=checkbox]{width:23px;height:23px;flex:0 0 23px;margin:0;accent-color:#e8bd63}
+#staffModules .staff-master-copy{display:flex;flex-direction:column;gap:3px}
+#staffModules .staff-master-copy strong{font-size:19px;line-height:1.4;color:#fff}
+#staffModules .staff-master-copy small{font-size:13px;color:#f5dca6}
+#staffModules .staff-module-master p{margin:10px 0 0 36px;color:#e7f1e9;font-size:13px;line-height:1.7}
+#staffModules .staff-module-master:has(input:checked){background:linear-gradient(115deg,#0f6041 0%,#28764e 65%,#9b712b 150%)!important;border-color:#e0b85e!important}
+@media(max-width:600px){#staffModules.staff-module-grid{grid-template-columns:1fr;gap:9px}#staffModules .staff-module-item>label{min-height:66px;padding:11px 12px 11px 15px}#staffModules .staff-module-master{padding:14px!important}#staffModules .staff-module-master p{margin-left:0}}
+
 </style></head><body><main><div class="top"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Admin Panel</h1><p class="muted">ব্যবহারকারী, ভূমিকা, নোটিশ ও প্রশাসনিক কার্যক্রম</p></div><div><a href="./index.html">মূল ওয়েবসাইট</a>　<a href="./accounts.html">Accounts</a>　<a href="./video-bulk-import.html">১০০ ভিডিও যুক্ত করুন</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। README-তে সেটআপ নির্দেশিকা আছে।</p></section>
 <section id="login" class="panel" hidden><h2>নিরাপদ Admin লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" required autocomplete="username"><label>পাসওয়ার্ড</label><input id="password" type="password" required autocomplete="current-password"><p><button>লগইন</button></p></form><p class="muted">Public sign-up বন্ধ। Super Admin কর্তৃক অনুমোদিত অ্যাকাউন্ট প্রয়োজন।</p><p id="loginError" class="error" hidden></p></section>
@@ -297,4 +328,4 @@ $('loadAudit').onclick=async()=>{const{data,error}=await supabase.from('audit_lo
 
 <script src="./read-aloud.js?v=20261126-cloudmale2"></script>
 
-<script type="module" src="./mosque-media.js?v=20261126-account-image-target-fix1"></script><script type="module" src="./admin-modules.js?v=20261126-auth-bootfix1&build=5162eda"></script><script type="module" src="./admin-users.js?v=20261126-auth-bootfix1"></script><script type="module" src="./chanda-admin.js?v=20261126-auth-bootfix1"></script>\n</body></html>
+<script type="module" src="./mosque-media.js?v=20261126-account-image-target-fix1"></script><script type="module" src="./admin-modules.js?v=20261126-auth-bootfix1&build=5162eda"></script><script type="module" src="./admin-users.js?v=20261126-module-colors1"></script><script type="module" src="./chanda-admin.js?v=20261126-auth-bootfix1"></script>\n</body></html>
