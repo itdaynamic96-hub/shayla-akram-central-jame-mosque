@@ -569,5 +569,5 @@ assert 'rich-text-editor.js?v=20261126-home-text-toolbar-fix2' in admin_html_tex
 assert rich_text.index("const rememberSelection=") < rich_text.index("size.addEventListener('mousedown',rememberSelection)"), 'Rich text editor must define selection handlers before binding size/color controls'
 assert "rich-text-editor.js?v=20261126-home-text-toolbar-fix3" in admin_html_text and "rich-text-editor.js?v=20261126-home-text-toolbar-fix3" in homepage, 'Admin and public pages must load the fixed rich text editor version'
 # Dhaka prayer timetable: automatic Karachi/Hanafi daily calculation with published admin override.
-assert "timingsByCity/' + date" in homepage and "city=Dhaka&country=Bangladesh&method=1&school=1" in homepage and "timezonestring=Asia%2FDhaka" in homepage, 'Homepage must calculate daily Dhaka prayer times using Karachi method and Hanafi Asr'
+assert "timingsByCity/'+date" in homepage and "city=Dhaka&country=Bangladesh&method=1&school=1" in homepage and "timezonestring=Asia%2FDhaka" in homepage, 'Homepage must calculate daily Dhaka prayer times using Karachi method and Hanafi Asr'
 assert "loadPrayerTimes(publishedModuleRecords)" in homepage and "module_key==='m23'" in homepage and "fajr_jamaat" in homepage, 'Homepage must use published admin prayer and jamaat timetable records'
