@@ -100,25 +100,9 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 ## বাংলা পুরুষ কণ্ঠের Read Aloud
 
-ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি Supabase Edge Function `bengali-tts` ব্যবহার করে Google Cloud Text-to-Speech-এর `bn-IN-Standard-B` পুরুষ কণ্ঠ তৈরি করে। এই সংস্করণে Google Cloud Text-to-Speech API চালু থাকা Google Cloud project এবং API key প্রয়োজন; API key ছাড়া সার্ভিস অডিও তৈরি করতে পারবে না।
+ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি ব্রাউজারের ভেতরে Svara-TTS v1 (ONNX) মডেল দিয়ে বাংলা পুরুষ কণ্ঠ তৈরি করে। Google Cloud TTS API key বা Supabase Secret `GOOGLE_TTS_API_KEY` প্রয়োজন নেই। প্রথমবার ব্যবহারে প্রায় ১.৯৫ GB মডেল ডাউনলোড হয়; পরবর্তী ব্যবহারে ব্রাউজারের ক্যাশে থাকলে পুনরায় ডাউনলোডের প্রয়োজন হয় না।
 
-- Google Cloud Console-এ Cloud Text-to-Speech API চালু করে প্রয়োজনীয় API key তৈরি করুন এবং billing/API restrictions ঠিক করুন।
-- API key শুধু Supabase Dashboard → Edge Functions → Secrets-এ `GOOGLE_TTS_API_KEY` নামে সংরক্ষণ করুন। এটি কখনো GitHub, HTML, JavaScript বা chat-এ লিখবেন না।
-- Edge Function `bengali-tts`-এর health endpoint: `/functions/v1/bengali-tts?health=1`; `configured: true` হলে key পাওয়া যাচ্ছে। `configured: false` হলে key অনুপস্থিত এবং Read Aloud অনুপলব্ধ থাকবে।
-- বর্তমান লাইভ health check (26 November 2026) `configured: false` দেখিয়েছে। তাই API key নিরাপদে যোগ ও বাস্তব অডিও পরীক্ষা না করা পর্যন্ত বাংলা পুরুষ কণ্ঠের ফিচারকে সচল বলা যাবে না।
-- ওয়েবসাইটের প্রতিটি অংশ সর্বোচ্চ ১৮০ অক্ষরের ছোট অংশে ভাগ করে অডিও তৈরি করে; দীর্ঘ লেখা ধারাবাহিকভাবে চালানো হয়।
-
-## Single-operator Accounts workflow
-
-The assigned worker can create income and expense entries directly as approved only when both `can_write` and `can_approve` are granted for the relevant module (or the user has a built-in approver role). A worker with write-only permission can submit a Pending entry, but cannot approve it. The database verifies that the same authenticated user is both creator and approver for direct posting, and creates a balanced double-entry journal. Payroll, transfers, and manual journals remain in the approval module; the same assigned worker can approve them with the relevant `can_approve` permission. A second employee is not required.
-
-
-## Migration archive status
-
-The live Supabase project currently records 68 applied migration versions. The repository currently contains 16 timestamped migration SQL files; 52 older migration bodies are not present in the Git history available here. This does not affect the already-running live project, but the timestamped migration folder alone is not a complete clean-room replay of the historical database. Do not invent or blindly replay missing versions. Use the setup steps and current standalone SQL files for a new project until the historical migration archive is reconstructed.
-
-
-## Multi-month Chanda collection
-
-Run `supabase/chanda-multi-month-payment.sql` after `supabase/chanda-enterprise.sql`. The Admin Chanda page sends `p_paid_amount` to `record_chanda_payment_months`; the function locks selected monthly dues, restricts a collection to one member, allocates oldest month first, and rolls back the entire collection if any amount cannot be allocated. Each linked ledger row receives a unique payment-ID reference while the original receipt reference remains on the Chanda payment record.
-
+- হালনাগাদ Chrome বা Edge এবং WebGPU + `shader-f16` সমর্থিত GPU প্রয়োজন।
+- প্রথমবার মডেল প্রস্তুত হতে সময় লাগতে পারে; পর্যাপ্ত ডিস্ক/মেমোরি ও স্থিতিশীল ইন্টারনেট রাখুন।
+- অডিও তৈরি ব্রাউজারেই হয়; লেখা কোনো TTS API-তে পাঠানো হয় না।
+- মডেল/কোডেকের বিবরণ: https://huggingface.co/shreyask/svara-tts-v1-ONNX
