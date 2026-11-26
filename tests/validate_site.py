@@ -487,5 +487,5 @@ assert 'ইসলামিক জ্ঞানভান্ডার' in homepage 
 assert homepage.count('id="latest-notice-content"')==1 and homepage.count('id="latest-activity-content"')==1, 'Homepage: latest update containers must each be unique'
 staff_users=(ROOT/'admin-users.js').read_text(encoding='utf-8')
 staff_admin=(ROOT/'admin.html').read_text(encoding='utf-8')
-assert all(x in staff_users for x in ('staff-module-mosque','staff-module-governance','staff-module-accounts','staff-module-master')), 'Admin: staff permission cards must have distinct category classes'
+assert 'staff-module-${group}' in staff_users and all(x in staff_users for x in ('"accounts"','"governance"','"mosque"','staff-module-master')), 'Admin: staff permission cards must generate their distinct category classes'
 assert all(x in staff_admin for x in ('.staff-module-mosque','.staff-module-governance','.staff-module-accounts','.staff-module-master')), 'Admin: staff permission cards must have matching category styles'
