@@ -258,6 +258,21 @@ chanda_source=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 assert 'chanda-status' in chanda_source and 'd.due_date<=today' in chanda_source
 assert 'next_month_start' in (ROOT/'supabase/chanda-upcoming-month-due.sql').read_text(encoding='utf-8')
 print('Accounts messaging checks passed: queue UI, RLS, WhatsApp-first/SMS fallback, webhook and monthly chanda status window.')
+ 
+# Shared institution branding and safe rich-text editor.
+rich_text = (ROOT/'rich-text-editor.js').read_text(encoding='utf-8')
+rich_text_check = subprocess.run(['node','--check'], input=rich_text, text=True, capture_output=True)
+assert rich_text_check.returncode == 0, f'Rich text editor JavaScript syntax error: {rich_text_check.stderr}'
+for page_name in ('index.html','admin.html'):
+    page_source=(ROOT/page_name).read_text(encoding='utf-8')
+    assert 'rich-text-editor.js' in page_source, f'{page_name}: shared rich-text renderer is not loaded'
+assert 'data-rich-editor="true"' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: notice and content writing fields need rich-text controls'
+assert 'data-rich-editor="true"' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin: module writing fields need rich-text controls'
+assert 'MosqueRichText.clean' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin: rich text must be sanitized before saving'
+assert 'MosqueRichText.html(d.page_body' in (ROOT/'index.html').read_text(encoding='utf-8'), 'Website: published page body must render safe rich text'
+assert 'Shared institution branding' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8'), 'Accounts: shared brand typography is missing'
+print('Rich text and shared branding checks passed: safe editor, persistence hooks and public rendering markers.')
+
 
 assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')
 
