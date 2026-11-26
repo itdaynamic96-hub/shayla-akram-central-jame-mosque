@@ -44,6 +44,9 @@ function init(root=document){
   const editor=document.createElement('div');editor.className='rich-editor-surface';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline',field.tagName==='TEXTAREA'?'true':'false');if(field.dataset.richRequired==='true')editor.setAttribute('aria-required','true');
   editor.id=field.id?field.id+'_rich_editor':'';editor.innerHTML=html(field.value||'');const linkedLabel=field.id?[...document.querySelectorAll('label[for]')].find(label=>label.htmlFor===field.id):null;if(linkedLabel)linkedLabel.htmlFor=editor.id;
   if(field.tagName==='TEXTAREA')editor.style.minHeight=(Number(field.rows)||3)*1.65+'em';
+  let savedRange=null;
+  const rememberSelection=()=>{const selection=window.getSelection();if(selection?.rangeCount&&editor.contains(selection.anchorNode))savedRange=selection.getRangeAt(0).cloneRange()};
+  const restoreSelection=()=>{editor.focus();if(!savedRange||!editor.contains(savedRange.commonAncestorContainer))return;const selection=window.getSelection();selection.removeAllRanges();selection.addRange(savedRange.cloneRange())};
   const bold=makeButton('B','বোল্ড',()=>document.execCommand('bold'));
   bold.classList.add('rich-tool-bold');bold.setAttribute('aria-pressed','false');
   const underline=makeButton('U','আন্ডারলাইন',()=>document.execCommand('underline'));underline.classList.add('rich-tool-underline');
@@ -59,9 +62,6 @@ function init(root=document){
   [['justifyLeft','বাম','বাম দিকে সাজান'],['justifyCenter','মাঝ','মাঝখানে সাজান'],['justifyRight','ডান','ডান দিকে সাজান'],['justifyFull','Justify','দুই পাশ সমান (Justify)']].forEach(([command,label,title])=>{const b=makeButton(label,title,()=>document.execCommand(command));b.classList.add('rich-tool-align');if(command==='justifyFull')b.classList.add('rich-tool-justify');alignGroup.appendChild(b)});
   toolbar.append(bold,underline,size,sizeApply,colorLabel,alignGroup,clear);
   field.parentNode.insertBefore(wrap,field);wrap.append(toolbar,editor);wrap.appendChild(field);field.classList.add('rich-editor-source');
-  let savedRange=null;
-  const rememberSelection=()=>{const selection=window.getSelection();if(selection?.rangeCount&&editor.contains(selection.anchorNode))savedRange=selection.getRangeAt(0).cloneRange()};
-  const restoreSelection=()=>{editor.focus();if(!savedRange||!editor.contains(savedRange.commonAncestorContainer))return;const selection=window.getSelection();selection.removeAllRanges();selection.addRange(savedRange.cloneRange())};
   const sync=()=>{field.value=(editor.textContent||'').trim()?clean(editor.innerHTML):'';field.dispatchEvent(new Event('input',{bubbles:true}))};
   editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('keyup',()=>{rememberSelection();bold.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')});editor.addEventListener('mouseup',()=>{rememberSelection();bold.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')});editor.addEventListener('input',()=>{sync();rememberSelection();bold.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')});editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
   field.addEventListener('change',()=>{if(document.activeElement!==editor)editor.innerHTML=html(field.value)});
