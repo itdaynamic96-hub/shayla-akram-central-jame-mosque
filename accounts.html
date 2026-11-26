@@ -152,10 +152,13 @@ document.getElementById('loginForm')?.addEventListener('submit',async function(e
  if(button){button.disabled=true;button.textContent='যাচাই হচ্ছে…'}
  if(errorBox){errorBox.hidden=true;errorBox.textContent=''}
  if(status)status.textContent='Supabase-এর সঙ্গে নিরাপদ সংযোগ ও লগইন যাচাই করা হচ্ছে…';
+ const withTimeout=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' নির্ধারিত সময়ের মধ্যে উত্তর দেয়নি। নেটওয়ার্ক, CDN বা Supabase সংযোগ পরীক্ষা করুন।')),ms))]);
  try{
-  const auth=await import('./supabase-client.js');
+  if(status)status.textContent='Supabase লাইব্রেরি লোড হচ্ছে…';
+  const auth=await withTimeout(import('./supabase-client.js'),15000,'Supabase লাইব্রেরি');
   if(!auth.configured||!auth.supabase)throw new Error('Supabase সংযোগ কনফিগার করা নেই। Project URL ও public key যাচাই করুন।');
-  const {error}=await auth.supabase.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});
+  if(status)status.textContent='ইমেইল ও পাসওয়ার্ড যাচাই করা হচ্ছে…';
+  const {error}=await withTimeout(auth.supabase.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value}),20000,'Supabase লগইন');
   if(error)throw error;
   if(status)status.textContent='লগইন সফল হয়েছে। Accounts প্যানেল খোলা হচ্ছে…';
   window.location.reload();
