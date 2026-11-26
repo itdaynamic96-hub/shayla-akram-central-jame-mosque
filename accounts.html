@@ -231,7 +231,7 @@ async function boot(){
   $('loginError').textContent='সেশন যাচাইয়ের সমস্যা: '+(e?.message||String(e));$('loginError').hidden=false;
   return;
  }
- const{user,p:p}=current;profile=p;
+ const{user,profile:p}=current;profile=p;
  if(!user){
   setHidden('app',true);setHidden('login',false);
   $('loginStatus').textContent='লগইন করুন। অনুমোদিত অ্যাকাউন্ট ছাড়া Accounts মডিউল খোলা যাবে না।';
@@ -242,6 +242,7 @@ async function boot(){
  setHidden('login',true);setHidden('app',false);setHidden('logout',false);
  $('accountBootError').hidden=true;$('accountBootError').textContent='';
  try{
+  if(!p)throw new Error('এই লগইন অ্যাকাউন্টের profiles টেবিলে ব্যবহারকারী প্রোফাইল পাওয়া যায়নি।');
   if(p.role==='custom_admin'){
    const{data:perms,error:permError}=await supabase.from('admin_module_permissions').select('module_key,can_view,can_write,can_approve').eq('user_id',user.id);
    if(permError)throw permError;
