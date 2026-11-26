@@ -34,6 +34,7 @@ async function loadModuleVisibility(){
  }
  const {data:messageAccess,error:messageError}=await supabase.rpc('accounts_message_access',{target_institution:inst,write_access:false});if(messageError)throw messageError;if(messageAccess)allowed.add(moduleKeys[22]);
  // Keep every visible item in the original 24-module order, independent of permission lookup order.
+ if(allowed.has(moduleKeys[3]))allowed.add(moduleKeys[1]);
  visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>i!==3&&allowed.has(moduleKeys[i]));
 }
 function refreshNav(){
