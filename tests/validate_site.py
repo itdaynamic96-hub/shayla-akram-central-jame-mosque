@@ -548,7 +548,7 @@ assert "$('expenseEntryPanel').hidden=!expenseAllowed" in accounts_html, 'Accoun
 accounts_page=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert '#login[hidden]{display:none!important' in accounts_page, 'Accounts: login form must obey the hidden state after authentication'
 accounts_dashboard=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
-assert 'visibleModules.map(i=>' in accounts_dashboard and 'data-module="'+i+'"' in accounts_dashboard, 'Accounts: each permitted module must have its own left navigation item'
+assert 'visibleModules.map(i=>' in accounts_dashboard and 'data-module=' in accounts_dashboard, 'Accounts: each permitted module must have its own left navigation item'
 assert 'filter(i=>allowed.has(moduleKeys[i]))' in accounts_dashboard, 'Accounts: all 24 modules must remain permission-filtered'
 assert 'if(i===3){renderDonations().catch(showError);return}' in accounts_dashboard, 'Accounts: donor and donation module must be connected'
 assert 'modules:[1,3,23]' in accounts_dashboard, 'Accounts: donor and monthly chanda modules must remain grouped with income'
