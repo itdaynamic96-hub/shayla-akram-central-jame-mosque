@@ -152,7 +152,7 @@ async function showExpensePaymentForm(jobId,person,inst){
 }
 async function renderExpenseJobHistory(jobId,person,inst){
  const {data:rows,error}=await supabase.from('account_obligation_payments').select('*').eq('obligation_id',jobId).eq('institution',inst).order('payment_date',{ascending:false});if(error)throw error;
- const host=el('adExpenseJobHistory');host.innerHTML='<section class="panel"><h3>এই কাজের টাকা পরিশোধের ইতিহাস</h3><div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>পরিশোধ</th><th>মাধ্যম</th><th>ব্যাংক</th><th>টাকা গ্রহণকারী</th><th>মোবাইল</th><th>রেফারেন্স</th></tr></thead><tbody>'+(rows||[]).map(x=>'<tr><td>'+escapeHtml(x.payment_date)+'</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.payment_method)+'</td><td>'+escapeHtml(x.bank_name||'—')+'</td><td>'+escapeHtml(x.received_by_name||'—')+'</td><td>'+escapeHtml(x.received_by_phone||'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')+'</tbody></table></div></section>'};
+ const host=el('adExpenseJobHistory');host.innerHTML='<section class="panel"><h3>এই কাজের টাকা পরিশোধের ইতিহাস</h3><div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>পরিশোধ</th><th>মাধ্যম</th><th>ব্যাংক</th><th>টাকা গ্রহণকারী</th><th>মোবাইল</th><th>রেফারেন্স</th></tr></thead><tbody>'+(rows||[]).map(x=>'<tr><td>'+escapeHtml(x.payment_date)+'</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.payment_method)+'</td><td>'+escapeHtml(x.bank_name||'—')+'</td><td>'+escapeHtml(x.received_by_name||'—')+'</td><td>'+escapeHtml(x.received_by_phone||'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
 function openModule(i){
  if(!visibleModules.includes(i))return;
