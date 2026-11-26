@@ -1,7 +1,7 @@
 import{configured,supabase,showError}from'./supabase-client.js';
 const MAX_BATCH=15;
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const isDirectVideoUrl=value=>{try{const u=new URL(value);return /^https?:$/.test(u.protocol)&&/\\.(mp4|m4v|mov|webm|ogv|ogg)(?:$)/i.test(u.pathname)&&!/(youtube\\.com|youtu\\.be)$/i.test(u.hostname)}catch{return false}};
+const isDirectVideoUrl=value=>{try{const u=new URL(value);return /^https?:$/.test(u.protocol)&&/\.(mp4|m4v|mov|webm|ogv|ogg)(?:$)/i.test(u.pathname)&&!/(youtube\.com|youtu\.be)$/i.test(u.hostname)}catch{return false}};
 const statusLabel={ready:'আপলোডের জন্য প্রস্তুত',queued:'কিউতে আছে',uploading:'আপলোড চলছে',uploaded:'আপলোড সম্পন্ন',failed:'ব্যর্থ',skipped:'বাদ দেওয়া হয়েছে'};
 export async function renderYoutubeManagement({workspace,user,profile}){
  if(!configured||!supabase){workspace.innerHTML='<h2>YouTube Management</h2><p class="notice">Supabase সংযোগ পাওয়া যায়নি।</p>';return}
