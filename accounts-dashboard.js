@@ -319,14 +319,49 @@ async function loadChanda(){
    const available=(memberDues||[]).filter(d=>Number(d.amount)>Number(d.paid_amount));
    if(!available.length){alert('এই সদস্যের নির্বাচিত সময়ের কোনো বকেয়া মাস নেই।');return}
    const monthNames=new Intl.DateTimeFormat('bn-BD',{month:'long',year:'numeric',timeZone:'Asia/Dhaka'});
-   const opts=available.map(d=>'<label style="display:flex;gap:10px;align-items:center;padding:10px;border:1px solid #dbe5df;border-radius:10px;margin:6px 0"><input type="checkbox" name="dues" value="'+d.id+'" data-left="'+(Number(d.amount)-Number(d.paid_amount))+'" checked><span style="flex:1">'+monthNames.format(new Date(d.due_month+'T12:00:00'))+' <small>(বাকি '+money(Number(d.amount)-Number(d.paid_amount))+')</small></span></label>').join('');
-   const modal=document.createElement('div');modal.id='chandaPayModal';modal.style.cssText='position:fixed;inset:0;background:#071b13aa;z-index:99999;display:grid;place-items:center;padding:16px;overflow:auto';
-   modal.innerHTML='<section style="background:#fff;color:#17251e;border-radius:16px;padding:22px;width:min(560px,100%);max-height:92vh;overflow:auto;box-shadow:0 20px 60px #0005"><h2 style="margin:0 0 6px">চাঁদা জমা গ্রহণ</h2><p style="margin:0 0 14px;color:#53665b">'+escapeHtml(m.member_name)+' · মাসিক চাঁদা '+money(m.monthly_amount)+'</p><form id="chandaPayForm"><b>যে মাসগুলোর টাকা জমা দিয়েছে নির্বাচন করুন (সর্বোচ্চ ২৪ মাস)</b><div style="max-height:280px;overflow:auto;margin:10px 0">'+opts+'</div><label style="display:block;margin:12px 0">জমার পরিমাণ (টাকা)<input name="amount" type="number" min="0.01" step="0.01" required style="display:block;width:100%;padding:11px;border:1px solid #cbd5cf;border-radius:8px;margin-top:5px"></label><div id="chandaPayTotal" style="font-size:13px;color:#53665b;margin-bottom:10px"></div><label style="display:block;margin:10px 0">জমার তারিখ<input name="date" type="date" value="'+today()+'" required style="display:block;width:100%;padding:10px;border:1px solid #cbd5cf;border-radius:8px"></label><label style="display:block;margin:10px 0">জমার মাধ্যম<select name="method" style="display:block;width:100%;padding:10px;border:1px solid #cbd5cf;border-radius:8px"><option value="cash">নগদ</option><option value="bank">ব্যাংক</option><option value="bkash">বিকাশ</option><option value="nagad">নগদ (Nagad)</option><option value="other">অন্যান্য</option></select></label><label style="display:block;margin:10px 0">ট্রানজেকশন / রসিদ নম্বর (ঐচ্ছিক)<input name="reference" maxlength="120" style="display:block;width:100%;padding:10px;border:1px solid #cbd5cf;border-radius:8px"></label><label style="display:block;margin:10px 0">নোট (ঐচ্ছিক)<input name="memo" maxlength="300" style="display:block;width:100%;padding:10px;border:1px solid #cbd5cf;border-radius:8px"></label><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button type="button" id="chandaPayCancel" class="action light">বাতিল</button><button class="action green">জমা সংরক্ষণ ও রসিদ</button></div></form></section>';
+   const opts=available.map(d=>'<label class="chanda-month"><input type="checkbox" name="dues" value="'+d.id+'" data-left="'+(Number(d.amount)-Number(d.paid_amount))+'" checked><span class="chanda-month-copy"><strong>'+monthNames.format(new Date(d.due_month+'T12:00:00'))+'</strong><small>বকেয়া '+money(Number(d.amount)-Number(d.paid_amount))+'</small></span><span class="chanda-checkmark">✓</span></label>').join('');
+   const modal=document.createElement('div');modal.id='chandaPayModal';modal.className='chanda-modal-backdrop';
+   modal.innerHTML='<style>
+   .chanda-modal-backdrop{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:18px;background:rgba(8,28,20,.66);backdrop-filter:blur(5px);overflow:auto;font-family:inherit}
+   .chanda-modal-card{width:min(650px,100%);max-height:94vh;overflow:auto;background:#fff;border:1px solid #dce9df;border-radius:22px;box-shadow:0 28px 90px #071b1355;color:#18352a}
+   .chanda-modal-head{padding:22px 26px 18px;background:linear-gradient(135deg,#f0f8f2,#fff);border-bottom:1px solid #e5eee7;position:relative}
+   .chanda-modal-kicker{font-size:11px;font-weight:800;letter-spacing:.08em;color:#a27c32;text-transform:uppercase}
+   .chanda-modal-head h2{font-size:23px;line-height:1.4;margin:5px 0;color:#124b35}
+   .chanda-modal-head p{margin:0;color:#687c70;font-size:13px}
+   .chanda-modal-close{position:absolute;right:18px;top:18px;width:36px;height:36px;border:1px solid #dce8df;border-radius:50%;background:white;color:#496253;font-size:20px;cursor:pointer}
+   .chanda-modal-body{padding:22px 26px 26px}
+   .chanda-section-label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 11px;font-size:14px;font-weight:800;color:#214c37}
+   .chanda-section-label small{font-size:11px;font-weight:600;color:#809087}
+   .chanda-month-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:250px;overflow:auto;padding:2px 5px 8px 2px}
+   .chanda-month{min-width:0;display:flex!important;align-items:center;gap:10px;padding:12px 13px;border:1px solid #dce8df;border-radius:12px;background:#fff;cursor:pointer;transition:.18s}
+   .chanda-month:has(input:checked){border-color:#4b9a6b;background:#f0f8f2;box-shadow:inset 0 0 0 1px #4b9a6b}
+   .chanda-month input{width:18px;height:18px;flex:0 0 18px;margin:0;accent-color:#167044}
+   .chanda-month-copy{min-width:0;display:flex;flex:1;flex-direction:column;gap:3px}
+   .chanda-month-copy strong{font-size:13px;color:#244b37;line-height:1.5}
+   .chanda-month-copy small{font-size:11px;color:#728478}
+   .chanda-checkmark{display:none;color:#167044;font-weight:900}
+   .chanda-month:has(input:checked) .chanda-checkmark{display:inline}
+   .chanda-total-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin:8px 0 20px;border-radius:12px;background:#f2f7f3;border:1px solid #e0ebe2;color:#5d7164;font-size:12px}
+   .chanda-total-strip strong{color:#14583c;font-size:15px}
+   .chanda-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+   .chanda-field{display:flex;flex-direction:column;gap:6px;color:#405c4b;font-size:12px;font-weight:700}
+   .chanda-field input,.chanda-field select{width:100%;min-width:0;box-sizing:border-box;padding:12px 13px;border:1px solid #d4e0d7;border-radius:10px;background:#fff;color:#203b2d;font:inherit;font-size:14px;outline:none}
+   .chanda-field input:focus,.chanda-field select:focus{border-color:#34875a;box-shadow:0 0 0 3px #34875a18}
+   .chanda-field.wide{grid-column:1/-1}
+   .chanda-form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px;padding-top:17px;border-top:1px solid #edf1ed}
+   .chanda-form-actions button{min-height:43px;padding:10px 18px;border:0;border-radius:10px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+   .chanda-form-actions .cancel{background:#edf2ee;color:#45604f}
+   .chanda-form-actions .save{background:linear-gradient(135deg,#176443,#0e5035);color:#fff;box-shadow:0 5px 14px #14583c25}
+   .chanda-form-actions button:disabled{opacity:.6;cursor:wait}
+   @media(max-width:560px){.chanda-modal-backdrop{padding:8px;align-items:end}.chanda-modal-card{max-height:96vh;border-radius:20px 20px 12px 12px}.chanda-modal-head{padding:19px 18px 15px}.chanda-modal-head h2{font-size:20px}.chanda-modal-body{padding:18px}.chanda-month-grid{grid-template-columns:1fr;max-height:220px}.chanda-fields{grid-template-columns:1fr}.chanda-field.wide{grid-column:auto}.chanda-form-actions{position:sticky;bottom:-1px;background:#fff}}
+   </style><section class="chanda-modal-card"><header class="chanda-modal-head"><span class="chanda-modal-kicker">MONTHLY CONTRIBUTION</span><button type="button" class="chanda-modal-close" id="chandaPayCancel" aria-label="বন্ধ করুন">×</button><h2>চাঁদা জমা গ্রহণ</h2><p>'+escapeHtml(m.member_name)+' · মাসিক চাঁদা '+money(m.monthly_amount)+'</p></header><div class="chanda-modal-body"><form id="chandaPayForm"><div class="chanda-section-label"><span>যে মাসগুলোর টাকা জমা দিয়েছেন</span><small>সর্বোচ্চ ২৪ মাস</small></div><div class="chanda-month-grid">'+opts+'</div><div class="chanda-total-strip" id="chandaPayTotal">নির্বাচিত মাসের হিসাব</div><div class="chanda-fields"><label class="chanda-field wide">জমার পরিমাণ (টাকা)<input name="amount" type="number" min="0.01" step="0.01" required placeholder="জমার পরিমাণ লিখুন"></label><label class="chanda-field">জমার তারিখ<input name="date" type="date" value="'+today()+'" required></label><label class="chanda-field">জমার মাধ্যম<select name="method"><option value="cash">নগদ</option><option value="bank">ব্যাংক</option><option value="bkash">বিকাশ</option><option value="nagad">নগদ (Nagad)</option><option value="other">অন্যান্য</option></select></label><label class="chanda-field wide">ট্রানজেকশন / রসিদ নম্বর (ঐচ্ছিক)<input name="reference" maxlength="120" placeholder="লেনদেন নম্বর লিখুন"></label><label class="chanda-field wide">নোট (ঐচ্ছিক)<input name="memo" maxlength="300" placeholder="প্রয়োজনীয় মন্তব্য লিখুন"></label></div><div class="chanda-form-actions"><button type="button" id="chandaPayCancelBottom" class="cancel">বাতিল</button><button type="submit" class="save">✓ জমা সংরক্ষণ ও রসিদ</button></div></form></div></section>';
+   modal.querySelector('#chandaPayCancel').onclick=()=>modal.remove();
+   modal.querySelector('#chandaPayCancelBottom').onclick=()=>modal.remove();
    document.body.appendChild(modal);
    const form=modal.querySelector('#chandaPayForm'),amountInput=form.elements.amount,totalEl=modal.querySelector('#chandaPayTotal');
    const selected=()=>[...form.querySelectorAll('input[name="dues"]:checked')];
    const maxAmount=()=>selected().reduce((a,x)=>a+Number(x.dataset.left),0);
-   const recalc=()=>{const max=maxAmount();totalEl.textContent='নির্বাচিত মাসের মোট বকেয়া: '+money(max)+' · মাস: '+selected().length;amountInput.max=max.toFixed(2);amountInput.value=max?max.toFixed(2):''};
+   const recalc=()=>{const max=maxAmount();totalEl.innerHTML='<span>নির্বাচিত মাস: <b>'+selected().length+'</b></span><strong>মোট বকেয়া '+money(max)+'</strong>';amountInput.max=max.toFixed(2);amountInput.value=max?max.toFixed(2):''};
    form.querySelectorAll('input[name="dues"]').forEach(x=>x.onchange=recalc);recalc();
    modal.querySelector('#chandaPayCancel').onclick=()=>modal.remove();
    form.onsubmit=async ev=>{ev.preventDefault();const chosen=selected().map(x=>x.value),amount=Number(amountInput.value);if(!chosen.length){alert('কমপক্ষে একটি মাস নির্বাচন করুন।');return}if(!Number.isFinite(amount)||amount<=0||amount>maxAmount()){alert('জমার পরিমাণ নির্বাচিত মাসের মোট বকেয়ার মধ্যে হতে হবে।');return}
