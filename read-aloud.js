@@ -1,8 +1,8 @@
 /* Lightweight browser Bengali Read Aloud using Spellophone/eSpeak NG. */
 (() => {
   'use strict';
-  const selectors = ['.article-card','.published-content','.content-slot.article-card','.video-card','.content-slot.video-card','.quran-ayah','.hadith-card','.knowledge-card','.tafsir-card','.detailcard','.noticebox'].join(',');
-  const excluded = ['button','input','textarea','select','script','style','iframe','video','audio','.read-aloud','.nexora-read-aloud','.nexora-share','.temporary','[aria-hidden="true"]','[lang="ar"]','.arabic','.arabic-pronunciation'].join(',');
+  const selectors = ['.article-card','.published-content','.content-slot.article-card','.video-card','.content-slot.video-card','.quran-ayah','.hadith-card','.knowledge-card','.tafsir-card','.asbab-card','.detailcard','.noticebox'].join(',');
+  const excluded = ['button','input','textarea','select','script','style','iframe','video','audio','.read-aloud','.nexora-read-aloud','.nexora-share','.temporary','[aria-hidden="true"]'].join(',');
   let active=null,currentButtons=null,observer=null,enginePromise=null;
   const statusText=(message,target)=>{const el=target||document.getElementById('readAloudStatus');if(el)el.textContent=message;};
   const readableText=root=>{
@@ -13,13 +13,23 @@
     const raw=copy.innerText||copy.textContent||'';
     return raw.replace(/\r/g,'').split(/\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
       .replace(/https?:\/\/[^\s]+/gi,' ')
-      .replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g,' ')
       .replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)])
       .replace(/\s*([।!?])\s*/g,'$1 ').replace(/([।!?])(?:\s*[।!?])+/g,'$1').replace(/\s+/g,' ').trim();
   };
   const splitText=value=>{
-    const sentences=String(value||'').match(/[^।!?]+[।!?]?/g)||[String(value||'')],result=[];
-    for(const sentence of sentences){let rest=sentence.trim();while(rest.length>220){let cut=rest.lastIndexOf(' ',220);if(cut<100)cut=220;result.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim();}if(rest)result.push(rest);}
+    const source=String(value||'').trim(),runs=[];
+    let current='',language='';
+    for(const char of source){
+      const next=/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(char)?'ar':'bn';
+      if(language&&next!==language){if(current.trim())runs.push({text:current.trim(),language});current='';}
+      language=next;current+=char;
+    }
+    if(current.trim())runs.push({text:current.trim(),language});
+    const result=[];
+    for(const run of runs){
+      const sentences=run.text.match(/[^।.!?؟]+[।.!?؟]?/g)||[run.text];
+      for(const sentence of sentences){let rest=sentence.trim();while(rest.length>220){let cut=rest.lastIndexOf(' ',220);if(cut<100)cut=220;result.push({text:rest.slice(0,cut).trim(),language:run.language});rest=rest.slice(cut).trim();}if(rest)result.push({text:rest,language:run.language});}
+    }
     return result;
   };
   const setControls=state=>{
@@ -40,7 +50,7 @@
   const getEspeak=()=>{
     if(!enginePromise)enginePromise=(async()=>{
       const {createEspeak,toFloat32}=await import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/browser.js');
-      const engine=await createEspeak({cdn:'jsdelivr',languages:['bn'],fallback:()=>import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/wasm2js.js')});
+      const engine=await createEspeak({cdn:'jsdelivr',languages:['bn','ar'],fallback:()=>import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/wasm2js.js')});
       await engine.loadVoice('bn');engine.setVoice('bn');return {engine,toFloat32};
     })();
     return enginePromise;
@@ -57,17 +67,20 @@
   const playNext=async session=>{
     if(active!==session||session.state!=='playing'||session.generating)return;
     if(session.index>=session.chunks.length){finish('পড়া শেষ হয়েছে।');return;}
-    session.generating=true;statusText('হালকা বাংলা ভয়েস প্রস্তুত হচ্ছে…',session.statusTarget);
+    session.generating=true;statusText(session.chunks[session.index].language==='ar'?'আরবি কণ্ঠ প্রস্তুত হচ্ছে…':'বাংলা কণ্ঠ প্রস্তুত হচ্ছে…',session.statusTarget);
     try{
       const {engine,toFloat32}=await getEspeak();if(active!==session)return;
-      const result=engine.synthesize(session.chunks[session.index]),samples=toFloat32(result?.samples||result),sampleRate=Number(result?.sampleRate||engine.sampleRate||22050);
+      const chunk=session.chunks[session.index];
+      await engine.loadVoice(chunk.language);engine.setVoice(chunk.language);
+      if(active!==session)return;
+      const result=engine.synthesize(chunk.text),samples=toFloat32(result?.samples||result),sampleRate=Number(result?.sampleRate||engine.sampleRate||22050);
       if(!samples||!samples.length)throw new Error('এই লেখার অডিও তৈরি হয়নি।');
       session.audioUrl=URL.createObjectURL(encodeWav(samples,sampleRate));
       const audio=new Audio(session.audioUrl);session.audio=audio;audio.preload='auto';
       audio.onended=()=>{if(active!==session||session.state!=='playing')return;releaseAudio(session);session.index++;playNext(session);};
       audio.onerror=()=>{if(active===session)finish('তৈরি হওয়া অডিও চালানো যায়নি। আবার চেষ্টা করুন।');};
       session.generating=false;
-      if(session.state==='playing'){statusText('বাংলা কণ্ঠে পড়া হচ্ছে…',session.statusTarget);await audio.play();}
+      if(session.state==='playing'){statusText(session.chunks[session.index].language==='ar'?'আরবি কণ্ঠে পড়া হচ্ছে…':'বাংলা কণ্ঠে পড়া হচ্ছে…',session.statusTarget);await audio.play();}
       else statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
     }catch(error){if(active===session)finish(error?.message||'বাংলা ভয়েস তৈরি করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');console.error('Spellophone Bengali TTS failed',error);}
   };
@@ -202,7 +215,7 @@
     box.className='nexora-read-aloud';
     box.setAttribute('aria-label','এই লেখাটি পড়ে শোনানোর নিয়ন্ত্রণ');
     const play=document.createElement('button');
-    play.type='button'; play.textContent='🔊 বাংলায় শুনুন';
+    play.type='button'; play.textContent='🔊 আরবি ও বাংলায় শুনুন';
     const pauseButton=document.createElement('button');
     pauseButton.type='button'; pauseButton.textContent='বিরতি'; pauseButton.disabled=true;
     const resumeButton=document.createElement('button');
@@ -212,7 +225,7 @@
     const status=document.createElement('span');
     status.className='nexora-tts-status';
     status.setAttribute('aria-live','polite');
-    status.textContent='বাংলা পুরুষ কণ্ঠে শুনুন';
+    status.textContent='আরবি ও বাংলা—ভাষা অনুযায়ী কণ্ঠে শুনুন';
     box.append(play,pauseButton,resumeButton,stopButton,status);
     card.appendChild(box);
     const buttons={play,pause:pauseButton,resume:resumeButton,stop:stopButton};
