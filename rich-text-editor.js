@@ -37,10 +37,10 @@ function init(root=document){
   const hint=[field.id,field.name,field.placeholder,field.getAttribute('aria-label'),field.parentNode?.textContent].join(' ').toLowerCase();
   if(/phone|mobile|email|url|link|slug|code|number|date|time|amount|account|reference|receipt|password|search|filter|token|\bid\b|bank|routing|postal|zip|nid|passport|username/.test(hint))return;
   if(!field.parentNode)return;
-  field.dataset.richReady='1';
+  field.dataset.richReady='1';field.dataset.richRequired=field.required?'true':'false';field.required=false;
   const wrap=document.createElement('div');wrap.className='rich-editor-wrap';
   const toolbar=document.createElement('div');toolbar.className='rich-editor-toolbar';
-  const editor=document.createElement('div');editor.className='rich-editor-surface';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline',field.tagName==='TEXTAREA'?'true':'false');
+  const editor=document.createElement('div');editor.className='rich-editor-surface';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline',field.tagName==='TEXTAREA'?'true':'false');if(field.dataset.richRequired==='true')editor.setAttribute('aria-required','true');
   editor.innerHTML=html(field.value||'');
   if(field.tagName==='TEXTAREA')editor.style.minHeight=(Number(field.rows)||3)*1.65+'em';
   const bold=makeButton('B','বোল্ড',()=>document.execCommand('bold'));
@@ -67,7 +67,10 @@ function wrapSelection(editor,property,value){
  try{range.surroundContents(span)}catch(_){const fragment=range.extractContents();span.appendChild(fragment);range.insertNode(span)}
  selection.removeAllRanges();const next=document.createRange();next.selectNodeContents(span);selection.addRange(next);editor.dispatchEvent(new Event('input',{bubbles:true}));
 }
-function refresh(root=document){root.querySelectorAll('[data-rich-editor][data-rich-ready]').forEach(field=>{const editor=field.parentNode?.querySelector('.rich-editor-surface');if(editor)editor.innerHTML=html(field.value||'')})}\nwindow.MosqueRichText={clean,html,init,refresh};\ndocument.addEventListener('reset',event=>queueMicrotask(()=>refresh(event.target)),true);
+function refresh(root=document){root.querySelectorAll('[data-rich-editor][data-rich-ready]').forEach(field=>{const editor=field.parentNode?.querySelector('.rich-editor-surface');if(editor)editor.innerHTML=html(field.value||'')})}
+window.MosqueRichText={clean,html,init,refresh};
+document.addEventListener('reset',event=>queueMicrotask(()=>refresh(event.target)),true);
+document.addEventListener('submit',event=>{const invalid=[...event.target.querySelectorAll('[data-rich-ready][data-rich-required="true"]')].find(field=>!String(field.value||'').trim());if(invalid){event.preventDefault();invalid.parentNode?.querySelector('.rich-editor-surface')?.focus();alert('অনুগ্রহ করে প্রয়োজনীয় লেখার ঘরটি পূরণ করুন।')}},true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>init());else init();
 const observer=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1){if(node.matches?.('[data-rich-editor="true"]'))init(node.parentNode||document);init(node)}});
 observer.observe(document.documentElement,{childList:true,subtree:true});
