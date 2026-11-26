@@ -17,6 +17,7 @@ import { createSvaraEngine } from './assets/svara-build/engine.js';
 
   let active = null;
   let currentButtons = null;
+  let observer = null;
   let engine = null;
   let engineReady = false;
   let engineLoading = false;
