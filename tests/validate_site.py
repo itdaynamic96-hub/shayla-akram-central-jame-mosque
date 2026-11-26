@@ -58,6 +58,7 @@ assert 'source_url,media_credit,updated_at' in html
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
+assert 'setHidden(\'login\',false);await boot()' in accounts and 'id="loginStatus"' in accounts, 'Accounts: login must remain visible while the saved session/profile is being checked'
 assert 'const accountCache={entries:[],bankAccounts:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: entry and bank-account caches must initialize before async boot'
 admin_html_source=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert "$('login').hidden=true;$('loginError').hidden=true;$('app').hidden=false" in admin_html_source, 'Admin: authenticated sessions must hide login before optional data loads'
