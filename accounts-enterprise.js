@@ -124,6 +124,39 @@ async function savePayroll(e){
  try{const payload={institution:institution(),staff_id:val('payrollStaff'),payroll_month:val('payrollMonth'),base_salary:Number(val('payrollBase')),bonus:Number(val('payrollBonus')||0),deductions:Number(val('payrollDeduction')||0),created_by:user.id};
  const {error}=await supabase.from('payroll_records').insert(payload);if(error)throw error;e.target.reset();$('payrollMonth').value=month();await loadAll()}catch(ex){fail(ex)}
 }
+async function openPayrollPaymentDialog(payrollId){
+ const {data:current,error:currentError}=await supabase.from('payroll_records').select('id,staff_id,institution,payroll_month').eq('id',payrollId).single();
+ if(currentError)throw currentError;
+ const {data:rows,error}=await supabase.from('payroll_records').select('id,payroll_month,net_amount,status,ledger_entry_id').eq('institution',current.institution).eq('staff_id',current.staff_id).eq('status','approved').is('ledger_entry_id',null).order('payroll_month');
+ if(error)throw error;
+ if(!(rows||[]).length)throw new Error('এই কর্মচারীর পরিশোধযোগ্য অনুমোদিত বেতনের মাস পাওয়া যায়নি।');
+ let destinations=[];
+ if(allowed('m66')){
+  const {data,error:destError}=await supabase.from('account_payment_methods').select('id,method_type,provider_name,holder_name,bank_branch').eq('institution',current.institution).eq('is_active',true).order('provider_name');
+  if(destError)throw destError;destinations=data||[];
+ }
+ document.getElementById('payrollPayDialog')?.remove();
+ const overlay=document.createElement('div');overlay.id='payrollPayDialog';overlay.className='payroll-pay-overlay';
+ const monthRows=rows.map(r=>'<label class="payroll-pay-month"><input type="checkbox" name="payrollIds" value="'+escapeHtml(r.id)+'" data-amount="'+Number(r.net_amount||0)+'" '+(r.id===payrollId?'checked':'')+'><span>'+escapeHtml(r.payroll_month)+'</span><strong>'+money(r.net_amount)+'</strong></label>').join('');
+ const destinationsHtml=destinations.map(d=>'<option value="pm:'+escapeHtml(d.id)+'" data-method="'+(d.method_type==='bank'?'bank':d.method_type==='other'?'other':'mobile_banking')+'">'+escapeHtml(({bkash:'বিকাশ',nagad:'নগদ',bank:'ব্যাংক',other:'অন্যান্য'}[d.method_type]||d.method_type)+' · '+d.provider_name+' · '+(d.holder_name||'')+(d.bank_branch?' · '+d.bank_branch:''))+'</option>').join('');
+ overlay.innerHTML='<div class="payroll-pay-card" role="dialog" aria-modal="true" aria-labelledby="payrollPayTitle"><div class="payroll-pay-head"><h3 id="payrollPayTitle">বেতন পরিশোধ — কোন কোন মাস?</h3><button type="button" data-payroll-close aria-label="বন্ধ করুন">×</button></div><form id="payrollPayForm"><p class="muted">একই কর্মচারীর যেসব অনুমোদিত মাসের বেতন একসাথে দিচ্ছেন, সেগুলো নির্বাচন করুন।</p><div class="payroll-pay-months">'+monthRows+'</div><div class="payroll-pay-total">নির্বাচিত মোট: <strong id="payrollPayTotal">৳০</strong></div><div class="payroll-pay-fields"><label>পরিশোধের তারিখ<input type="date" name="paid_on" value="'+today()+'" required></label><label>পেমেন্ট মাধ্যম<select name="destination"><option value="cash" data-method="cash">নগদ</option>'+destinationsHtml+'</select></label><label class="payroll-pay-wide">রেফারেন্স / রসিদ নম্বর<input name="reference" maxlength="120" placeholder="ঐচ্ছিক"></label></div><div class="payroll-pay-actions"><button type="button" data-payroll-close class="secondary">বাতিল</button><button type="submit">নির্বাচিত মাসগুলোর বেতন পরিশোধ</button></div></form></div>';
+ document.body.appendChild(overlay);
+ const form=overlay.querySelector('#payrollPayForm');
+ const updateTotal=()=>{const total=[...form.querySelectorAll('input[name="payrollIds"]:checked')].reduce((sum,x)=>sum+Number(x.dataset.amount||0),0);overlay.querySelector('#payrollPayTotal').textContent=money(total)};
+ form.addEventListener('change',e=>{if(e.target.name==='payrollIds')updateTotal()});updateTotal();
+ overlay.querySelectorAll('[data-payroll-close]').forEach(btn=>btn.addEventListener('click',()=>overlay.remove()));
+ overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove()});
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const ids=[...form.querySelectorAll('input[name="payrollIds"]:checked')].map(x=>x.value);
+  if(!ids.length){fail(new Error('অন্তত একটি বেতনের মাস নির্বাচন করুন।'));return}
+  const choice=form.elements.destination.value,selected=choice.startsWith('pm:')?destinations.find(x=>x.id===choice.slice(3)):null;
+  const method=selected?(selected.method_type==='bank'?'bank':selected.method_type==='other'?'other':'mobile_banking'):'cash';
+  const {data,error}=await supabase.rpc('mark_payroll_paid_months_with_method',{target_payrolls:ids,paid_on:form.elements.paid_on.value,paid_via:method,payment_reference:form.elements.reference.value.trim(),selected_payment_method:selected?.id||null});
+  if(error){fail(error);return}
+  overlay.remove();alert((Number(data)||ids.length)+' মাসের বেতন পরিশোধের রেকর্ড তৈরি হয়েছে। সংশ্লিষ্ট ব্যয় অনুমোদনের অপেক্ষায় যুক্ত হয়েছে।');await loadAll();
+ });
+}
 async function payrollAction(e){
  const approve=e.target.dataset.payrollApprove,pay=e.target.dataset.payrollPay,slip=e.target.dataset.payrollSlip;if(!approve&&!pay&&!slip)return;
  if(slip){
@@ -131,18 +164,8 @@ async function payrollAction(e){
   try{const {data,error}=await supabase.from('payroll_records').select('*,account_staff(full_name,job_title,employee_no)').eq('id',slip).single();if(error)throw error;const p=data,s=p.account_staff||{};const esc=v=>escapeHtml(v??'—');w.document.write('<!doctype html><html lang="bn"><meta charset="utf-8"><title>বেতন স্লিপ</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#17251e}h2{text-align:center}table{width:100%;border-collapse:collapse;margin-top:24px}td{padding:10px;border:1px solid #bbb}.muted{color:#666}@media print{button{display:none}}</style><h2>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ / ফাউন্ডেশন</h2><h3 style="text-align:center">বেতন স্লিপ</h3><p>কর্মচারী: '+esc(s.full_name)+' ('+esc(s.employee_no)+')</p><p>পদবি: '+esc(s.job_title)+' · মাস: '+esc(p.payroll_month)+'</p><table><tr><td>মূল বেতন</td><td>'+money(p.base_salary)+'</td></tr><tr><td>বোনাস</td><td>'+money(p.bonus)+'</td></tr><tr><td>কর্তন</td><td>'+money(p.deductions)+'</td></tr><tr><td><b>নিট বেতন</b></td><td><b>'+money(p.net_amount)+'</b></td></tr><tr><td>পরিশোধের তারিখ</td><td>'+esc(p.payment_date)+'</td></tr><tr><td>মাধ্যম</td><td>'+esc(p.payment_method)+'</td></tr><tr><td>রেফারেন্স</td><td>'+esc(p.reference_no)+'</td></tr></table><p class="muted">এটি সিস্টেম-উৎপাদিত বেতন স্লিপ।</p><p>প্রস্তুতকারীর স্বাক্ষর: ____________________</p><p>গ্রহণকারীর স্বাক্ষর: ____________________</p></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)}catch(ex){w.close();fail(ex)}return;
  }
  try{
-  if(approve){const {error}=await supabase.from('payroll_records').update({status:'approved',approved_by:user.id,approved_at:new Date().toISOString()}).eq('id',approve).eq('status','pending');if(error)throw error}
-  else{
-   const {data:destinations,error:destError}=await supabase.from('account_payment_methods').select('id,method_type,provider_name,holder_name,holder_role,phone_number,account_number,bank_branch').eq('institution',institution()).eq('is_active',true).order('provider_name');
-   if(destError)throw destError;
-   const choices=['0. নগদ (Cash)',...(destinations||[]).map((x,i)=>(i+1)+'. '+({bkash:'বিকাশ',nagad:'নগদ',bank:'ব্যাংক',other:'অন্যান্য'}[x.method_type])+' · '+x.provider_name+' · '+x.holder_name+(x.holder_role?' ('+x.holder_role+')':'')+' · '+(x.phone_number||x.account_number||'')+(x.bank_branch?' · '+x.bank_branch:''))];
-   const picked=prompt('যে মাধ্যমে বেতন পরিশোধ করবেন তার নম্বর লিখুন:\\n'+choices.join('\\n'),'0');if(picked===null)return;
-   const choice=Number(picked);if(!Number.isInteger(choice)||choice<0||choice>destinations.length)throw new Error('তালিকা থেকে সঠিক নম্বর নির্বাচন করুন।');
-   const selected=choice===0?null:destinations[choice-1],method=selected?(selected.method_type==='bank'?'bank':selected.method_type==='other'?'other':'mobile_banking'):'cash';
-   const ref=prompt('ট্রানজেকশন/রেফারেন্স নম্বর (না থাকলে ফাঁকা রাখুন)','')||'';
-   const {error}=await supabase.rpc('mark_payroll_paid_with_method',{target_payroll:pay,paid_on:today(),paid_via:method,payment_reference:ref,selected_payment_method:selected?.id||null});if(error)throw error
-  }
-  await loadAll()
+  if(approve){const {error}=await supabase.from('payroll_records').update({status:'approved',approved_by:user.id,approved_at:new Date().toISOString()}).eq('id',approve).eq('status','pending');if(error)throw error;await loadAll();return}
+  await openPayrollPaymentDialog(pay);
  }catch(ex){fail(ex)}
 }
 async function saveObligation(e){
