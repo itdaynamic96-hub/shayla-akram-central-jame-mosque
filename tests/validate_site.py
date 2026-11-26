@@ -1,2 +1,3 @@
 assert 'p_paid_amount numeric' in chanda_multi and 'set search_path = public, pg_temp' in chanda_multi, 'Chanda: multi-month RPC parameter and safe search_path must match the client'
-assert 'for(let i=11;i>=0;i--)' in dashboard_js and 'for(let i=23;i>=0;i--)' not in dashboard_js, 'Chanda collection form must prepare only the selected month and previous 11 months'
+collection_form=dashboard_js.split("const nowMonth=el('adMonth').value",1)[1].split('const {data:memberDues',1)[0]
+assert 'for(let i=11;i>=0;i--)' in collection_form and 'for(let i=23;i>=0;i--)' not in collection_form, 'Chanda collection form must prepare only the selected month and previous 11 months'
