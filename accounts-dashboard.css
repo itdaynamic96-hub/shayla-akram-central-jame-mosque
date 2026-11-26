@@ -100,3 +100,31 @@
 #accountsDashboard .panel>.head:not(.section-heading) span{color:#123b60!important;text-shadow:none!important}
 #accountsDashboard .panel>.head:not(.section-heading) small{color:#38546f!important}
 #accountsDashboard .panel>.head h2{overflow-wrap:anywhere}
+
+/* Unified Accounts navigation palette and multi-month payroll payment dialog */
+#accountsDashboard .side{background:linear-gradient(120deg,#0d3526,#1d6043)!important;color:#fff}
+#accountsDashboard nav button.active{background:linear-gradient(120deg,#c39a4b,#e2bf70)!important;color:#173b2b!important;box-shadow:0 5px 14px rgba(0,0,0,.16)}
+#accountsDashboard nav button.active .num{background:#173b2b22;color:#173b2b}
+#accountsDashboard nav button:hover{background:#ffffff20}
+#accountsDashboard .brand{border-bottom-color:#ffffff40}
+#accountsDashboard .brand small{color:#e1eee5}
+.payroll-pay-overlay{position:fixed;inset:0;z-index:99999;background:rgba(7,24,18,.68);display:grid;place-items:center;padding:16px}
+.payroll-pay-card{width:min(620px,100%);max-height:90vh;overflow:auto;background:#fffefa;color:#20372b;border:1px solid #c6ad70;border-radius:16px;box-shadow:0 22px 70px rgba(0,0,0,.3);padding:18px}
+.payroll-pay-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.payroll-pay-head h3{margin:0;color:#123b2c;font-size:19px}
+.payroll-pay-head button{border:0;border-radius:8px;background:#e8eee8;color:#173b2b;font-size:24px;line-height:1;padding:5px 11px;cursor:pointer}
+.payroll-pay-months{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.payroll-pay-month{display:flex;align-items:center;gap:9px;border:1px solid #d8e1d8;border-radius:10px;padding:10px;background:#f7faf6;cursor:pointer}
+.payroll-pay-month input{width:18px;height:18px;accent-color:#176344}
+.payroll-pay-month span{flex:1;font-weight:700}
+.payroll-pay-month strong{font-size:13px;color:#176344}
+.payroll-pay-total{padding:10px 12px;border-radius:9px;background:#eaf3eb;color:#17432f;font-weight:700;text-align:right}
+.payroll-pay-total strong{font-size:18px}
+.payroll-pay-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.payroll-pay-fields label{display:grid;gap:5px;font-size:13px;font-weight:700;color:#344f3d}
+.payroll-pay-fields input,.payroll-pay-fields select{min-width:0;width:100%;padding:10px;border:1px solid #cbd9cb;border-radius:8px;background:white;color:#20372b;font:inherit}
+.payroll-pay-wide{grid-column:1/-1}
+.payroll-pay-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:16px}
+.payroll-pay-actions button{border:0;border-radius:9px;padding:10px 14px;background:linear-gradient(120deg,#123b2c,#1e6043);color:#fff;cursor:pointer;font-weight:700}
+.payroll-pay-actions button.secondary{background:#edf1ec;color:#304a38;border:1px solid #cbd7cb}
+@media(max-width:520px){.payroll-pay-months,.payroll-pay-fields{grid-template-columns:1fr}.payroll-pay-wide{grid-column:auto}.payroll-pay-card{padding:13px}}
