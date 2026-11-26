@@ -12,10 +12,10 @@ function clean(value){
   const el=document.createElement(tag.toLowerCase());
   if(['SPAN','P','DIV','LI','H1','H2','H3','H4','H5','H6','BLOCKQUOTE'].includes(tag)){
    const style=node.getAttribute('style')||'';
-   const size=style.match(/font-size\s*:\s*(\d{1,2})px/i);
+   const size=style.match(/font-size\s*:\s*(\d{1,3})(?:\.\d+)?px/i);
    const color=style.match(/color\s*:\s*(#[0-9a-f]{6}|rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\))/i);
    const rules=[];
-   if(size&&Number(size[1])>=10&&Number(size[1])<=72)rules.push('font-size:'+Number(size[1])+'px');
+   if(size&&Number(size[1])>=1&&Number(size[1])<=300)rules.push('font-size:'+Number(size[1])+'px');
    if(color){let hex=color[1];if(!hex.startsWith('#')){const channels=color.slice(2,5).map(Number);if(channels.every(n=>n>=0&&n<=255))hex='#'+channels.map(n=>n.toString(16).padStart(2,'0')).join('')}if(/^#[0-9a-f]{6}$/i.test(hex))rules.push('color:'+hex.toLowerCase())}
    const align=style.match(/text-align\s*:\s*(left|center|right|justify|start|end)\b/i);if(align)rules.push('text-align:'+align[1].toLowerCase());if(rules.length)el.setAttribute('style',rules.join(';'));
   }
@@ -44,23 +44,25 @@ function init(root=document){
   editor.id=field.id?field.id+'_rich_editor':'';editor.innerHTML=html(field.value||'');const linkedLabel=field.id?[...document.querySelectorAll('label[for]')].find(label=>label.htmlFor===field.id):null;if(linkedLabel)linkedLabel.htmlFor=editor.id;
   if(field.tagName==='TEXTAREA')editor.style.minHeight=(Number(field.rows)||3)*1.65+'em';
   const bold=makeButton('B','বোল্ড',()=>document.execCommand('bold'));
-  bold.classList.add('rich-tool-bold');
+  bold.classList.add('rich-tool-bold');bold.setAttribute('aria-pressed','false');
   const underline=makeButton('U','আন্ডারলাইন',()=>document.execCommand('underline'));underline.classList.add('rich-tool-underline');
-  const size=document.createElement('select');size.className='rich-tool-size';size.setAttribute('aria-label','লেখার আকার');size.title='লেখার আকার';
-  [['','আকার'],['12','12 px'],['14','14 px'],['16','16 px'],['18','18 px'],['20','20 px'],['24','24 px'],['28','28 px'],['32','32 px'],['36','36 px'],['42','42 px'],['48','48 px'],['56','56 px'],['64','64 px'],['72','72 px']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;size.appendChild(o)});
-  size.addEventListener('mousedown',rememberSelection);size.addEventListener('change',()=>{restoreSelection();if(size.value)wrapSelection(editor,'font-size',size.value+'px');size.value=''});
+  const size=document.createElement('input');size.type='number';size.className='rich-tool-size';size.min='1';size.max='300';size.step='1';size.value='16';size.placeholder='16';size.inputMode='numeric';size.setAttribute('aria-label','লেখার আকার (১–৩০০ px)');size.title='নিজের পছন্দমতো ১ থেকে ৩০০ px লিখুন';
+  size.addEventListener('mousedown',rememberSelection);
+  const applySize=()=>{const n=Number(size.value);if(!Number.isInteger(n)||n<1||n>300){size.setCustomValidity('১ থেকে ৩০০-এর মধ্যে পূর্ণ সংখ্যা লিখুন।');size.reportValidity();size.setCustomValidity('');return}restoreSelection();wrapSelection(editor,'font-size',n+'px');size.select()};
+  const sizeApply=makeButton('আকার দিন','নির্বাচিত লেখায় ফন্ট সাইজ প্রয়োগ করুন',applySize);sizeApply.classList.add('rich-tool-size-apply');
+  size.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();applySize()}});
   const colorLabel=document.createElement('label');colorLabel.className='rich-tool-color';colorLabel.title='লেখার রং';colorLabel.textContent='রং';
   const color=document.createElement('input');color.type='color';color.value='#174b35';color.setAttribute('aria-label','লেখার রং');color.addEventListener('mousedown',rememberSelection);color.addEventListener('input',()=>{restoreSelection();wrapSelection(editor,'color',color.value)});colorLabel.appendChild(color);
   const clear=makeButton('↺','ফরম্যাট সরান',()=>{document.execCommand('removeFormat');});
   const alignGroup=document.createElement('span');alignGroup.className='rich-tool-align-group';alignGroup.setAttribute('role','group');alignGroup.setAttribute('aria-label','লেখার এলাইনমেন্ট');
   [['justifyLeft','বাম','বাম দিকে সাজান'],['justifyCenter','মাঝ','মাঝখানে সাজান'],['justifyRight','ডান','ডান দিকে সাজান'],['justifyFull','Justify','দুই পাশ সমান (Justify)']].forEach(([command,label,title])=>{const b=makeButton(label,title,()=>document.execCommand(command));b.classList.add('rich-tool-align');if(command==='justifyFull')b.classList.add('rich-tool-justify');alignGroup.appendChild(b)});
-  toolbar.append(bold,underline,size,colorLabel,alignGroup,clear);
+  toolbar.append(bold,underline,size,sizeApply,colorLabel,alignGroup,clear);
   field.parentNode.insertBefore(wrap,field);wrap.append(toolbar,editor);wrap.appendChild(field);field.classList.add('rich-editor-source');
   let savedRange=null;
   const rememberSelection=()=>{const selection=window.getSelection();if(selection?.rangeCount&&editor.contains(selection.anchorNode))savedRange=selection.getRangeAt(0).cloneRange()};
   const restoreSelection=()=>{editor.focus();if(!savedRange||!editor.contains(savedRange.commonAncestorContainer))return;const selection=window.getSelection();selection.removeAllRanges();selection.addRange(savedRange.cloneRange())};
   const sync=()=>{field.value=(editor.textContent||'').trim()?clean(editor.innerHTML):'';field.dispatchEvent(new Event('input',{bubbles:true}))};
-  editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('keyup',rememberSelection);editor.addEventListener('mouseup',rememberSelection);editor.addEventListener('input',()=>{sync();rememberSelection()});editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
+  editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('keyup',()=>{rememberSelection();bold.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')});editor.addEventListener('mouseup',()=>{rememberSelection();bold.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')});editor.addEventListener('input',()=>{sync();rememberSelection();bold.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')});editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
   field.addEventListener('change',()=>{if(document.activeElement!==editor)editor.innerHTML=html(field.value)});
  });
 }
@@ -77,6 +79,7 @@ window.MosqueRichText={clean,html,init,refresh};
 document.addEventListener('reset',event=>queueMicrotask(()=>refresh(event.target)),true);
 document.addEventListener('submit',event=>{const invalid=[...event.target.querySelectorAll('[data-rich-ready][data-rich-required="true"]')].find(field=>!String(field.value||'').trim());if(invalid){event.preventDefault();invalid.parentNode?.querySelector('.rich-editor-surface')?.focus();alert('অনুগ্রহ করে প্রয়োজনীয় লেখার ঘরটি পূরণ করুন।')}},true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>init());else init();
+document.addEventListener('selectionchange',()=>{const active=document.activeElement;if(active?.classList?.contains('rich-editor-surface')){const toolbar=active.closest('.rich-editor-wrap')?.querySelector('.rich-tool-bold');if(toolbar)toolbar.setAttribute('aria-pressed',document.queryCommandState('bold')?'true':'false')}});
 const observer=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1){if(node.matches?.('[data-rich-editor="true"]'))init(node.parentNode||document);init(node)}});
 observer.observe(document.documentElement,{childList:true,subtree:true});
 })();
