@@ -89,6 +89,10 @@ th{background:#edf3e9;color:#174b34}th,td{border-bottom:1px solid #e8ece4;paddin
 #login #loginForm p{display:block!important;visibility:visible!important;margin:12px 0!important}
 #login #loginForm button{display:inline-block!important;visibility:visible!important;opacity:1!important;min-width:120px!important;min-height:44px!important}
 #login>h2,#login>.muted{visibility:visible!important;opacity:1!important}
+</style><style id="accounts-login-hidden-state-fix">
+/* The login section must obey its hidden attribute after a successful session check. */
+#login[hidden]{display:none!important;visibility:hidden!important;opacity:0!important;min-height:0!important;height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+#login:not([hidden]){display:block!important}
 </style></head><body><main><div class="top site-top"><div class="site-top-brand"><div><div class="brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ<br><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div><h1>Accounts Management</h1><p class="muted">শুধু অনুমোদিত হিসাব বিভাগের জন্য · Public Website থেকে পৃথক</p></div></div><div class="site-top-links"><a href="./index.html">মূল ওয়েবসাইট</a>　<button id="logout" hidden>লগআউট</button></div></div>
 <section id="setup" class="panel" hidden><h2>Backend সংযোগ বাকি</h2><p>Supabase project URL ও anon key <code>supabase-config.js</code>-এ বসাতে হবে। সেটআপ নির্দেশিকা README-তে দেওয়া আছে।</p></section>
 <section id="login" class="panel"><h2>নিরাপদ লগইন</h2><form id="loginForm"><label>ইমেইল</label><input id="email" type="email" autocomplete="username" required><label>পাসওয়ার্ড</label><input id="password" type="password" autocomplete="current-password" required><p><button>লগইন</button></p></form><p class="muted">অ্যাকাউন্ট তৈরি করবেন Supabase-এর অনুমোদিত Auth ব্যবস্থাপক। এখানে Public Sign-up নেই।</p><p id="loginStatus" class="muted" role="status">আপনার লগইন সেশন যাচাই করা হচ্ছে। যাচাই চলাকালে এই ফরম ব্যবহার করে লগইন করতে পারবেন।</p><p id="loginError" class="error" hidden></p></section>
