@@ -84,7 +84,7 @@ function bindDashboardSettings(settings){
 async function dashboard(version=renderVersion){
  const w=$('adminWorkspace');if(!w||version!==renderVersion)return;
  const today=dhakaDate(),dateLabel=new Intl.DateTimeFormat('bn-BD',{timeZone:'Asia/Dhaka',weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
- const canSeeAccounts=['super_admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'].includes(profile.role)||(profile.role==='custom_admin'&&modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view));
+ const canSeeAccounts=['super_admin','admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'].includes(profile.role)||(profile.role==='custom_admin'&&modulePermissions.some(p=>/^m(6[2-9]|7[0-9]|8[0-5])$/.test(p.module_key)&&p.can_view));
  const settings=await loadDashboardSettings();if(version!==renderVersion)return;
  const quick=settings.quick_modules.map(key=>mods.find(m=>m.key===key)).filter(m=>m&&readable(m));
  const metricCards=settings.metrics.map(key=>DASHBOARD_METRICS.find(x=>x.key===key)).filter(Boolean).map(x=>'<article class="dash-metric"><span class="dash-icon">'+x.icon+'</span><span class="dash-label">'+x.label+'</span><strong id="'+x.id+'">লোড হচ্ছে…</strong><small>'+(x.key==='income'||x.key==='expense'?'আজকের তারিখ: '+escapeHtml(today):x.hint)+'</small></article>').join('');
