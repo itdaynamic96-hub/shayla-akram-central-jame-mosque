@@ -63,7 +63,7 @@ function wrapSelection(editor,property,value){
  try{range.surroundContents(span)}catch(_){const fragment=range.extractContents();span.appendChild(fragment);range.insertNode(span)}
  selection.removeAllRanges();const next=document.createRange();next.selectNodeContents(span);selection.addRange(next);editor.dispatchEvent(new Event('input',{bubbles:true}));
 }
-window.MosqueRichText={clean,html,init};
+function refresh(root=document){root.querySelectorAll('[data-rich-editor][data-rich-ready]').forEach(field=>{const editor=field.parentNode?.querySelector('.rich-editor-surface');if(editor)editor.innerHTML=html(field.value||'')})}\nwindow.MosqueRichText={clean,html,init,refresh};\ndocument.addEventListener('reset',event=>queueMicrotask(()=>refresh(event.target)),true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>init());else init();
 const observer=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1){if(node.matches?.('[data-rich-editor="true"]'))init(node.parentNode||document);init(node)}});
 observer.observe(document.documentElement,{childList:true,subtree:true});
