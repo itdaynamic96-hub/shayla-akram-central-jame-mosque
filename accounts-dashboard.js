@@ -80,10 +80,84 @@ function mount(){
  el('adAdd').onclick=memberForm;el('adReport').onclick=exportExcel;el('adLogout').onclick=()=>el('logout')?.click();
  refreshNav();
 }
+
+async function renderExpensePayees(){
+ const p=el('adPage'),inst=currentInstitution();
+ resetAdPage('<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
+ const [view,write]=await Promise.all([
+  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:false}),
+  supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:true})
+ ]);
+ if(view.error)throw view.error;if(write.error)throw write.error;
+ if(!view.data){el('adExpensePayeeList').innerHTML='<div class="note">ব্যয় ব্যবস্থাপনা দেখার অনুমতি নেই।</div>';return}
+ const {data:payees,error}=await supabase.from('account_payees').select('*').eq('institution',inst).order('full_name').limit(1000);if(error)throw error;
+ const ids=(payees||[]).map(x=>x.id);
+ let jobs=[],payments=[];
+ if(ids.length){
+  const [jr,pr]=await Promise.all([
+   supabase.from('account_obligations').select('id,payee_id,party_name,description,amount,settled_amount,due_date,work_start_date,work_end_date,status,created_at').eq('institution',inst).eq('obligation_type','payable').in('payee_id',ids).order('created_at',{ascending:false}).limit(3000),
+   supabase.from('account_obligation_payments').select('id,obligation_id,amount,status,received_by_name,received_by_phone,bank_name,payment_date,payment_method,reference_no,note').eq('institution',inst).order('payment_date',{ascending:false}).limit(5000)
+  ]);
+  if(jr.error)throw jr.error;if(pr.error)throw pr.error;jobs=jr.data||[];payments=pr.data||[];
+ }
+ const paidByJob=new Map();payments.filter(x=>x.status==='approved').forEach(x=>paidByJob.set(x.obligation_id,(paidByJob.get(x.obligation_id)||0)+Number(x.amount||0)));
+ const jobByPayee=new Map();jobs.forEach(x=>{const a=jobByPayee.get(x.payee_id)||[];a.push(x);jobByPayee.set(x.payee_id,a)});
+ const draw=()=>{const q=(el('adExpensePayeeSearch')?.value||'').trim().toLowerCase();const filtered=(payees||[]).filter(x=>[x.full_name,x.job_title,x.phone,x.address].join(' ').toLowerCase().includes(q));el('adExpensePayeeRows').innerHTML=filtered.map(x=>{const own=jobByPayee.get(x.id)||[],total=own.reduce((n,j)=>n+Number(j.amount||0),0),paid=own.reduce((n,j)=>n+(paidByJob.get(j.id)||0),0);return '<tr><td><button type="button" class="link-button" data-payee-detail="'+x.id+'">'+escapeHtml(x.full_name)+'</button><div class="muted">'+escapeHtml(x.job_title||'পদবী নেই')+'</div></td><td>'+escapeHtml(x.phone||'—')+'</td><td>'+own.length+'টি কাজ</td><td>'+money(total)+'</td><td>'+money(paid)+'</td><td><b>'+money(Math.max(0,total-paid))+'</b></td></tr>'}).join('')||'<tr><td colspan="6" class="empty">কোনো প্রাপক পাওয়া যায়নি।</td></tr>'};
+ el('adExpensePayeeList').innerHTML='<div class="toolbar"><input id="adExpensePayeeSearch" placeholder="নাম, পদবী বা মোবাইল দিয়ে খুঁজুন"></div><div class="tablewrap"><table><thead><tr><th>প্রাপকের নাম ও পদবী</th><th>মোবাইল</th><th>কাজ</th><th>মোট পাওনা</th><th>পরিশোধ</th><th>বাকি</th></tr></thead><tbody id="adExpensePayeeRows"></tbody></table></div>';
+ draw();el('adExpensePayeeSearch').oninput=draw;
+ if(write.data)el('adNewPayee').onclick=()=>showExpensePayeeForm(inst);
+ else el('adNewPayee').hidden=true;
+ el('adExpensePayeeRows').onclick=e=>{const b=e.target.closest('[data-payee-detail]');if(b)renderExpensePayeeDetail(b.dataset.payeeDetail,inst,write.data).catch(showError)};
+}
+function showExpensePayeeForm(inst){
+ document.getElementById('adExpensePayeeModal')?.remove();
+ const box=document.createElement('div');box.id='adExpensePayeeModal';box.className='chanda-modal-overlay';
+ box.innerHTML='<section class="chanda-modal-card"><div class="head"><h2>নতুন টাকা প্রাপক নিবন্ধন</h2><button type="button" class="action light" id="adPayeeClose">বন্ধ</button></div><div class="body"><form class="form" id="adPayeeForm"><label>প্রাপকের পূর্ণ নাম *<input name="name" required maxlength="160"></label><label>পদবী *<input name="title" required maxlength="120" placeholder="ইমাম / মুয়াজ্জিন / খতিব / খাদেম / শ্রমিক"></label><label>পিতার নাম<input name="father" maxlength="160"></label><label>মোবাইল নম্বর<input name="phone" maxlength="30"></label><label class="wide">সম্পূর্ণ ঠিকানা<textarea name="address" rows="2" maxlength="500"></textarea></label><label>প্রাপকের ধরন<select name="type"><option value="staff">মসজিদের দায়িত্বশীল</option><option value="worker">শ্রমিক</option><option value="mason">মিস্ত্রি</option><option value="contractor">ঠিকাদার</option><option value="supplier">দোকানদার / সরবরাহকারী</option><option value="other">অন্যান্য</option></select></label><label class="wide">মন্তব্য<textarea name="notes" rows="2" maxlength="500"></textarea></label><div class="wide"><button class="action green" type="submit">প্রাপক সংরক্ষণ</button></div></form></div></section>';
+ document.body.appendChild(box);el('adPayeeClose').onclick=()=>box.remove();
+ el('adPayeeForm').onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector('[type=submit]');b.disabled=true;const f=new FormData(e.target);try{const {error}=await supabase.from('account_payees').insert({institution:inst,full_name:String(f.get('name')).trim(),job_title:String(f.get('title')).trim(),father_name:String(f.get('father')||'').trim(),phone:String(f.get('phone')||'').trim(),address:String(f.get('address')||'').trim(),payee_type:String(f.get('type')),notes:String(f.get('notes')||''),created_by:user.id});if(error)throw error;box.remove();await renderExpensePayees();alert('প্রাপক নিবন্ধন সম্পন্ন হয়েছে। এখন তাঁর নামে নতুন কাজ যোগ করতে পারবেন।')}catch(err){b.disabled=false;showError(err)}};
+}
+async function renderExpensePayeeDetail(payeeId,inst,canWrite){
+ const p=el('adPage');const [{data:person,error:pe},{data:jobs,error:je},{data:payments,error:pa}]=await Promise.all([
+  supabase.from('account_payees').select('*').eq('id',payeeId).eq('institution',inst).single(),
+  supabase.from('account_obligations').select('*').eq('payee_id',payeeId).eq('institution',inst).eq('obligation_type','payable').order('created_at',{ascending:false}),
+  supabase.from('account_obligation_payments').select('*').eq('institution',inst).order('payment_date',{ascending:false}).limit(3000)
+ ]);
+ if(pe)throw pe;if(je)throw je;if(pa)throw pa;
+ const relevant=(payments||[]).filter(x=>(jobs||[]).some(j=>j.id===x.obligation_id));
+ const paidByJob=new Map();relevant.filter(x=>x.status==='approved').forEach(x=>paidByJob.set(x.obligation_id,(paidByJob.get(x.obligation_id)||0)+Number(x.amount||0)));
+ const total=(jobs||[]).reduce((n,j)=>n+Number(j.amount||0),0),paid=relevant.filter(x=>x.status==='approved').reduce((n,x)=>n+Number(x.amount||0),0),balance=Math.max(0,total-paid);
+ p.innerHTML='<section class="panel"><div class="head"><div><h2>'+escapeHtml(person.full_name)+'</h2><p>'+escapeHtml(person.job_title||'')+' · '+escapeHtml(person.phone||'')+'</p></div><button class="action light" id="adExpenseBack">← প্রাপকের তালিকা</button></div><div class="body"><div class="stats"><div class="stat">মোট কাজের পাওনা<strong>'+money(total)+'</strong></div><div class="stat">মোট পরিশোধ<strong>'+money(paid)+'</strong></div><div class="stat">বর্তমানে বাকি<strong>'+money(balance)+'</strong></div></div><p><b>ঠিকানা:</b> '+escapeHtml(person.address||'—')+'　<b>পিতার নাম:</b> '+escapeHtml(person.father_name||'—')+'</p>'+(canWrite?'<button class="action green" id="adExpenseAddJob">＋ নতুন কাজ / পাওনা যোগ করুন</button>':'')+'<h3>কাজের আলাদা বিবরণ</h3><div class="tablewrap"><table><thead><tr><th>কাজ</th><th>কাজের বিবরণ</th><th>শুরুর তারিখ</th><th>শেষের তারিখ</th><th>মোট পাওনা</th><th>পরিশোধ</th><th>বাকি</th><th>কাজ</th></tr></thead><tbody id="adExpenseJobRows"></tbody></table></div><div id="adExpenseJobHistory"></div></div></section>';
+ el('adExpenseBack').onclick=()=>renderExpensePayees().catch(showError);
+ if(canWrite)el('adExpenseAddJob').onclick=()=>showExpenseJobForm(person,inst);
+ el('adExpenseJobRows').innerHTML=(jobs||[]).map((j,i)=>{const jp=paidByJob.get(j.id)||0,left=Math.max(0,Number(j.amount)-jp);return '<tr><td>'+fmt((jobs||[]).length-i)+'</td><td>'+escapeHtml(j.description||'কাজের বিবরণ নেই')+'</td><td>'+escapeHtml(j.work_start_date||'—')+'</td><td>'+escapeHtml(j.work_end_date||'—')+'</td><td>'+money(j.amount)+'</td><td>'+money(jp)+'</td><td>'+money(left)+'</td><td>'+(canWrite&&left>0?'<button type="button" data-pay-job="'+j.id+'">টাকা পরিশোধ</button> ':'')+'<button type="button" data-job-history="'+j.id+'">পেমেন্ট ইতিহাস</button></td></tr>'}).join('')||'<tr><td colspan="8">এখনো কোনো কাজ যোগ করা হয়নি।</td></tr>';
+ el('adExpenseJobRows').onclick=e=>{const pay=e.target.closest('[data-pay-job]'),hist=e.target.closest('[data-job-history]');if(pay)showExpensePaymentForm(pay.dataset.payJob,person,inst).catch(showError);if(hist)renderExpenseJobHistory(hist.dataset.jobHistory,person,inst).catch(showError)};
+}
+function showExpenseJobForm(person,inst){
+ document.getElementById('adExpenseJobModal')?.remove();const box=document.createElement('div');box.id='adExpenseJobModal';box.className='chanda-modal-overlay';
+ box.innerHTML='<section class="chanda-modal-card"><div class="head"><h2>নতুন কাজ / পাওনা যোগ করুন</h2><button type="button" class="action light" id="adJobClose">বন্ধ</button></div><div class="body"><p><b>প্রাপক:</b> '+escapeHtml(person.full_name)+' · '+escapeHtml(person.job_title||'')+'</p><form class="form" id="adJobForm"><label class="wide">কাজের নাম ও বিবরণ *<textarea name="description" required rows="3" maxlength="1000"></textarea></label><label>কাজ শুরুর তারিখ<input name="start" type="date"></label><label>কাজ শেষের তারিখ<input name="end" type="date"></label><label>মোট নির্ধারিত পাওনা (টাকা) *<input name="amount" type="number" min="0.01" step="0.01" required></label><label>পাওনার শেষ তারিখ<input name="due" type="date"></label><label>রেফারেন্স নম্বর<input name="reference" maxlength="100"></label><div class="wide"><button type="submit" class="action green">কাজ সংরক্ষণ</button></div></form></div></section>';
+ document.body.appendChild(box);el('adJobClose').onclick=()=>box.remove();
+ el('adJobForm').onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector('[type=submit]');b.disabled=true;const f=new FormData(e.target);try{const start=String(f.get('start')||'')||null,end=String(f.get('end')||'')||null;if(start&&end&&end<start)throw new Error('কাজ শেষের তারিখ শুরুর তারিখের আগে হতে পারে না।');const {error}=await supabase.from('account_obligations').insert({institution:inst,obligation_type:'payable',party_name:person.full_name,payee_id:person.id,description:String(f.get('description')).trim(),amount:Number(f.get('amount')),due_date:String(f.get('due')||'')||null,work_start_date:start,work_end_date:end,reference_no:String(f.get('reference')||''),created_by:user.id});if(error)throw error;box.remove();await renderExpensePayeeDetail(person.id,inst,true)}catch(err){b.disabled=false;showError(err)}};
+}
+async function showExpensePaymentForm(jobId,person,inst){
+ const {data:job,error}=await supabase.from('account_obligations').select('*').eq('id',jobId).eq('institution',inst).single();if(error)throw error;
+ const paid=(Number(job.settled_amount)||0),left=Number(job.amount)-paid;if(left<=0)throw new Error('এই কাজের টাকা সম্পূর্ণ পরিশোধ হয়েছে।');
+ const {data:accounts,error:ae}=await supabase.from('account_bank_accounts').select('id,account_name,account_kind').eq('institution',inst).eq('is_active',true).order('account_name');if(ae)throw ae;
+ document.getElementById('adExpensePaymentModal')?.remove();const box=document.createElement('div');box.id='adExpensePaymentModal';box.className='chanda-modal-overlay';
+ box.innerHTML='<section class="chanda-modal-card"><div class="head"><h2>কাজের টাকা পরিশোধ</h2><button type="button" class="action light" id="adPaymentClose">বন্ধ</button></div><div class="body"><p><b>প্রাপক:</b> '+escapeHtml(person.full_name)+' · <b>কাজ:</b> '+escapeHtml(job.description||'')+'</p><p><b>এই কাজের বাকি:</b> '+money(left)+'</p><form class="form" id="adExpensePaymentForm"><label>পরিশোধের তারিখ *<input name="date" type="date" value="'+today()+'" required></label><label>এবার কত টাকা দিচ্ছেন *<input name="amount" type="number" min="0.01" max="'+left+'" step="0.01" required></label><label>পেমেন্ট মাধ্যম<select name="method"><option value="cash">নগদ</option><option value="bank">ব্যাংক</option><option value="mobile_banking">মোবাইল ব্যাংকিং</option></select></label><label class="wide" id="adExpenseBankWrap" hidden>ব্যাংকের নাম'+chandaBankSelect('bank_name')+'</label><label>ব্যাংক/ক্যাশ হিসাব<select name="bank_account"><option value="">নির্বাচন করুন (ঐচ্ছিক)</option>'+accounts.map(a=>'<option value="'+a.id+'" data-kind="'+a.account_kind+'">'+escapeHtml(a.account_name)+'</option>').join('')+'</select></label><label>রেফারেন্স নম্বর<input name="reference" maxlength="120"></label><label>টাকা গ্রহণকারীর নাম *<input name="receiver" required maxlength="160" placeholder="যিনি বাস্তবে টাকা গ্রহণ করেছেন"></label><label>টাকা গ্রহণকারীর মোবাইল<input name="receiver_phone" maxlength="30"></label><label class="wide">পরিশোধের বিবরণ<textarea name="note" rows="2" maxlength="500"></textarea></label><div class="wide"><button type="submit" class="action green">সরাসরি ব্যয় হিসেবে পরিশোধ সংরক্ষণ</button></div></form></div></section>';
+ document.body.appendChild(box);el('adPaymentClose').onclick=()=>box.remove();
+ const form=el('adExpensePaymentForm'),method=form.elements.method,bankWrap=el('adExpenseBankWrap'),bankSelect=form.elements.bank_name,account=form.elements.bank_account;
+ const sync=()=>{const isBank=method.value==='bank';bankWrap.hidden=!isBank;bankSelect.required=isBank;if(!isBank)bankSelect.value='';[...account.options].forEach(o=>{if(o.value)o.hidden=o.dataset.kind!==method.value})};method.onchange=sync;sync();
+ form.onsubmit=async e=>{e.preventDefault();const b=e.target.querySelector('[type=submit]');b.disabled=true;const f=new FormData(form);try{const amount=Number(f.get('amount'));if(amount<=0||amount>left)throw new Error('পরিশোধের পরিমাণ বাকি টাকার মধ্যে দিন।');const {data,error}=await supabase.rpc('account_record_payable_payment',{p_institution:inst,p_obligation:jobId,p_amount:amount,p_payment_date:String(f.get('date')),p_payment_method:String(f.get('method')),p_bank_account_id:String(f.get('bank_account')||'')||null,p_bank_name:String(f.get('bank_name')||''),p_reference_no:String(f.get('reference')||''),p_note:String(f.get('note')||''),p_received_by_name:String(f.get('receiver')||'').trim(),p_received_by_phone:String(f.get('receiver_phone')||'').trim()});if(error)throw error;box.remove();alert('টাকা পরিশোধ সরাসরি ব্যয় হিসেবে সংরক্ষিত হয়েছে। লেনদেন ID: '+data);await renderExpensePayeeDetail(person.id,inst,true)}catch(err){b.disabled=false;showError(err)}};
+}
+async function renderExpenseJobHistory(jobId,person,inst){
+ const {data:rows,error}=await supabase.from('account_obligation_payments').select('*').eq('obligation_id',jobId).eq('institution',inst).order('payment_date',{ascending:false});if(error)throw error;
+ const host=el('adExpenseJobHistory');host.innerHTML='<section class="panel"><h3>এই কাজের টাকা পরিশোধের ইতিহাস</h3><div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>পরিশোধ</th><th>মাধ্যম</th><th>ব্যাংক</th><th>টাকা গ্রহণকারী</th><th>মোবাইল</th><th>রেফারেন্স</th></tr></thead><tbody>'+(rows||[]).map(x=>'<tr><td>'+escapeHtml(x.payment_date)+'</td><td>'+money(x.amount)+'</td><td>'+escapeHtml(x.payment_method)+'</td><td>'+escapeHtml(x.bank_name||'—')+'</td><td>'+escapeHtml(x.received_by_name||'—')+'</td><td>'+escapeHtml(x.received_by_phone||'—')+'</td><td>'+escapeHtml(x.reference_no||'—')+'</td></tr>').join('')+'</tbody></table></div></section>'};
+}
 function openModule(i){
  if(!visibleModules.includes(i))return;
  activeModule=i;activeGroup=moduleGroupByIndex.get(i)??0;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
  el('adAdd').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===23&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==23||currentInstitution()!=='mosque';
+ if(i===2){renderExpensePayees().catch(showError);return}
  if(i===0){renderDashboard().catch(showError);return}
  if(i===3){renderDonations().catch(showError);return}
  if(i===4){renderBankAccounts().catch(showError);return}
