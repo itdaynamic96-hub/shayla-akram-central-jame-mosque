@@ -305,6 +305,8 @@ dashboard_check=subprocess.run(['node','--check','--input-type=module'],input=da
 assert (ROOT/'accounts-dashboard.css').exists(), 'Accounts dashboard stylesheet is missing'
 assert 'accounts-dashboard.css' in (ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'accounts-dashboard.js' in (ROOT/'accounts.html').read_text(encoding='utf-8')
+assert "'super_admin','admin','accounts_manager','accountant','auditor','mosque_admin','foundation_admin'" in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Accounts dashboard must allow the existing admin role to enter the Accounts app'
+assert "const canSeeAccounts=['super_admin','admin','accounts_manager'" in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Admin dashboard must show the Accounts shortcut to the admin role'
 accounts_html=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'document_no' in accounts_html and 'data-print-doc' in accounts_html and 'রসিদ / ভাউচার নম্বর' in accounts_html, 'Approved automatic receipts and vouchers must be visible and printable'
 assert "^m(6[2-9]|7[0-9]|8[0-5])$" in accounts_html and "^m(4[1-9]|50)$" not in accounts_html, 'Custom admins must be gated by the new 24 Accounts module keys'
