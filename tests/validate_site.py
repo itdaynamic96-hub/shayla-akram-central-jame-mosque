@@ -147,13 +147,13 @@ assert 'hasAccountModule' in (ROOT/'accounts.html').read_text(encoding='utf-8'),
 assert "account_module_permission(institution,array['m48'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Budget writes must require the budget module grant'
 assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Receipt uploads must require the receipt module grant'
 
-# Enterprise Premium additions: free Bengali read-aloud and monthly chanda workflow.
+# Enterprise Premium additions: server-based Bengali male read-aloud and monthly chanda workflow.
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
 reader_check=subprocess.run(['node','--check'],input=reader_js,text=True,capture_output=True)
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-svara1' in page_source, f'Read Aloud: Google no-key Bengali client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-cloudmale2' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
@@ -161,17 +161,8 @@ for page_name in ('index.html','admin.html','accounts.html'):
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
 assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Read Aloud: Arabic text must not be passed to Bengali TTS as if it were Bengali'
-assert 'svara-build' in reader_js and 'ensureSvaraModel' in reader_js and '১.৯৫ GB' in reader_js, 'Read Aloud: first-use local model download warning is required'
-assert 'createSvaraEngine' in reader_js and "speaker_id:'Bengali (Male)'" in reader_js, 'Read Aloud: only the Bengali male voice must be requested'
-assert 'Bengali (Female)' not in reader_js and 'speaker_id' in reader_js, 'Read Aloud: female voice must not be selectable or requested'
-assert 'functions/v1/bengali-tts' not in reader_js and 'window.SUPABASE_CONFIG' not in reader_js, 'Read Aloud: browser must not call the failed Edge TTS service or depend on Supabase credentials'
-worker_js=(ROOT/'svara-worker.js').read_text(encoding='utf-8')
-assert 'https://esm.sh/@huggingface/transformers@4.0.0' in worker_js and 'https://esm.sh/onnxruntime-web@1.20.0/webgpu' in worker_js, 'Read Aloud: browser worker dependencies must be pinned'
-assert 'shader-f16' in worker_js and 'device: "webgpu"' in worker_js, 'Read Aloud: WebGPU feature requirements are missing'
-assert (ROOT/'svara-engine.js').exists() and (ROOT/'vite.tts.config.js').exists() and (ROOT/'package.json').exists(), 'Read Aloud: Svara build sources are incomplete'
-assert (ROOT/'assets/svara-build/engine.js').exists(), 'Read Aloud: generated Svara engine bundle is missing'
-assert any(p.is_file() and p.suffix=='.js' and p.name!='engine.js' for p in (ROOT/'assets/svara-build').rglob('*.js')), 'Read Aloud: generated WebGPU worker bundle is missing'
-assert 'new Audio(audioUrl)' in reader_js, 'Read Aloud: audio playback is not wired'
+assert 'functions/v1/bengali-tts' in reader_js and 'new Audio(audioUrl)' in reader_js, 'Read Aloud: browser must use the server-generated audio response'
+assert 'svara-build' not in reader_js and 'ensureSvaraModel' not in reader_js and '১.৯৫ GB' not in reader_js, 'Read Aloud: browser must not download the 1.95 GB local model'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
@@ -181,7 +172,9 @@ for platform in ('facebook.com/sharer','wa.me/?text=','t.me/share/url','twitter.
 assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran ayah and Hadith cards must be covered'
 assert "'.video-card'" in reader_js and "'.content-slot.video-card'" in reader_js, 'Share: every video gallery card must receive a share control'
 assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
-
+tts_edge=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
+assert 'GOOGLE_TTS_API_KEY' in tts_edge and 'bn-IN-Standard-B' in tts_edge and 'ssmlGender: "MALE"' in tts_edge, 'Read Aloud: Edge Function must request the configured Bengali male voice'
+assert 'texttospeech.googleapis.com/v1/text:synthesize' in tts_edge, 'Read Aloud: Google Cloud TTS endpoint is missing'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
@@ -336,7 +329,13 @@ assert 'মোট ৮৫টি' in (ROOT/'admin-users.js').read_text(encoding='u
 assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly chanda permission must be assignable from Admin'
 assert 'n >= 41 && n <= 50' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Legacy grouped Accounts grants must not be assigned to new staff'
 assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
-assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]))" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Accounts sidebar must retain the canonical module order after applying permissions'
+accounts_dashboard_source=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
+assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]))" in accounts_dashboard_source, 'Accounts permissions must retain the original module access keys'
+assert 'const moduleGroups=[' in accounts_dashboard_source and 'data-group' in accounts_dashboard_source and 'data-module' in accounts_dashboard_source, 'Accounts navigation must expose the simplified parent groups and permitted submodules'
+group_source=accounts_dashboard_source.split('const moduleGroups=[',1)[1].split('];',1)[0]
+group_indexes=[int(n) for n in re.findall(r'\bmodules:\[([0-9,]+)\]',group_source) for n in n.split(',')]
+assert len(group_indexes)==24 and sorted(group_indexes)==list(range(24)), 'Accounts: all 24 original modules must appear exactly once under the 8 parent groups'
+assert 'const moduleGroupByIndex=new Map' in accounts_dashboard_source and 'visibleModules.includes(i)' in accounts_dashboard_source, 'Accounts: submodule navigation must preserve granular permissions'
 assert "allowed.add(moduleKeys[22])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8') and "allowed.add(moduleKeys[23])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Messaging and monthly chanda must be inserted into the ordered module set'
 assert 'm(0[1-9]|[1-7][0-9]|8[0-5])' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure staff account endpoint must accept the expanded module key range'
 assert (ROOT/'supabase/accounts-granular-module-access.sql').exists(), 'Detailed Accounts RLS and module permission migration source is missing'
