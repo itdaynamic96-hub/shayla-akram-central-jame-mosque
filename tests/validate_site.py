@@ -58,7 +58,7 @@ assert 'source_url,media_credit,updated_at' in html
 assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8')
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
-expense_form_created=accounts.find('incomePanel.after(expensePanel);})();')
+expense_form_created=accounts.find('incomePanel.after(expensePanel);')
 income_method_listener=accounts.find("$('method')?.addEventListener('change'")
 expense_method_listener=accounts.find("$('expensemethod')?.addEventListener('change'")
 assert expense_form_created >= 0 and expense_form_created < income_method_listener < expense_method_listener, 'Accounts: payment-method listeners must be attached only after the cloned expense form exists'
