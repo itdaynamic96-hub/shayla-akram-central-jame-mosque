@@ -274,17 +274,18 @@ assert 'Match the shared mosque/foundation identity' in (ROOT/'accounts-dashboar
 print('Rich text and shared branding checks passed: safe editor, persistence hooks and public rendering markers.')
 
 # Homepage-wide Admin text editing, rich alignment and Justify regression checks.
-assert all(token in rich_text for token in ('justifyLeft','justifyCenter','justifyRight','justifyFull','text-align')), 'Rich text editor must support left, center, right and Justify alignment'
+assert all(token in rich_text for token in ('justifyLeft','justifyCenter','justifyRight','justifyFull','text-align','rememberSelection','restoreSelection')), 'Rich text editor must support left, center, right, Justify and preserve selection when formatting'
 assert 'admin-field-group-heading' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: homepage editor sections must be clearly grouped'
 admin_modules_source=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert 'হোমপেজ ও সব লেখা' in admin_modules_source and 'history_body' in admin_modules_source and 'naming_body' in admin_modules_source and 'mutawalli_message' in admin_modules_source, 'Admin: homepage module must expose the complete homepage text set'
 assert "old[f[0]]??f[4]??''" in admin_modules_source and "if(type==='section')continue" in admin_modules_source, 'Admin: homepage editor must preserve existing text and skip visual section labels on save'
 homepage_source=(ROOT/'index.html').read_text(encoding='utf-8')
 assert "document.querySelectorAll('[data-home-text]')" in homepage_source and "window.MosqueRichText.html(homeData[key])" in homepage_source, 'Homepage: published Admin text must render safely'
-for home_key in ('header_title','history_body','naming_body','gallery_title','article_title','video_title','notice_title','activity_title','mutawalli_message','contact_address','footer_brand'):
+for home_key in ('header_title','history_body','naming_body','gallery_title','article_title','video_title','notice_title','activity_title','mutawalli_message','contact_address','contact_address_note','tour_description','library_crumb_prefix','footer_brand','footer_admin'):
     assert f'data-home-text="{home_key}"' in homepage_source, f'Homepage: missing Admin text binding for {home_key}'
 assert "homeData.prayer_fajr||'ফজর'" in homepage_source and "homeData.prayer_isha||'এশা'" in homepage_source, 'Homepage: prayer labels must be editable from Admin'
-print('Homepage text editor checks passed: 80+ fields, rich formatting, alignment and public bindings.')
+assert "from('site_content').upsert(payload,{onConflict:'category,slot_number'})" in staff_admin and "window.MosqueRichText.html(item.body)" in homepage_source, 'Homepage: all 30 article/gallery/video slots must remain editable and render formatted text'
+print('Homepage text editor checks passed: 88+ fields, rich formatting, alignment and public bindings.')
 
 
 
