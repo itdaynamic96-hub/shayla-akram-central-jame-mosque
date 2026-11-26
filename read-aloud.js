@@ -14,28 +14,8 @@
     '[lang="ar"]','.arabic','.arabic-pronunciation'
   ].join(',');
 
-  let svaraEngine = null;
-  let runtimePromise = null;
-  let modelPromise = null;
-  let modelReady = false;
-  let modelResolve = null;
-  let modelReject = null;
-  let pendingGeneration = null;
-  let generationQueue = Promise.resolve();
-  let requestSequence = 0;
-  let modelConsent = false;
-  const resetSvaraRuntime = () => {
-    try { svaraEngine?.terminate(); } catch (_) {}
-    svaraEngine = null;
-    runtimePromise = null;
-    modelPromise = null;
-    modelReady = false;
-    modelResolve = null;
-    modelReject = null;
-  };
   let active = null;
   let currentButtons = null;
-  let speed = 1;
   let observer = null;
 
   const statusText = (message, target) => {
@@ -49,13 +29,13 @@
     copy.querySelectorAll(excluded).forEach(el => el.remove());
     copy.querySelectorAll('[dir="rtl"],.arabic,.arabic-pronunciation').forEach(el => el.remove());
     const raw = copy.innerText || copy.textContent || '';
-    return raw.replace(/\r/g,'').split(/\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
-      .replace(/https?:\/\/[^\s]+/gi,' ')
-      .replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g,' ')
+    return raw.replace(/\\r/g,'').split(/\\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
+      .replace(/https?:\\/\\/[^\\s]+/gi,' ')
+      .replace(/[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF]/g,' ')
       .replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)])
-      .replace(/\s*([।!?])\s*/g,'$1 ')
-      .replace(/([।!?])(?:\s*[।!?])+/g,'$1')
-      .replace(/\s+/g,' ').trim();
+      .replace(/\\s*([।!?])\\s*/g,'$1 ')
+      .replace(/([।!?])(?:\\s*[।!?])+/g,'$1')
+      .replace(/\\s+/g,' ').trim();
   };
 
   const splitText = value => {
@@ -98,82 +78,24 @@
     statusText(message, target);
   };
 
-  const ensureSvaraModel = async statusTarget => {
-    if (!modelConsent) {
-      const accepted = window.confirm(
-        'বাংলা পুরুষ কণ্ঠটি এই ব্রাউজারেই তৈরি হবে। প্রথমবার প্রায় ১.৯৫ GB মডেল ও অতিরিক্ত অডিও মডেল ডাউনলোড করতে হবে। পরেরবার একই ব্রাউজারে ক্যাশ থাকলে আবার পুরোটা ডাউনলোড নাও লাগতে পারে। চালিয়ে যাবেন?'
-      );
-      if (!accepted) throw new Error('মডেল ডাউনলোড বাতিল করা হয়েছে।');
-      modelConsent = true;
+  const synthesizeCloudChunk = async text => {
+    const response = await fetch('https://lmwczibsipczfymhyqba.supabase.co/functions/v1/bengali-tts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'sb_publishable_rcOi9VHw4tP2umMhDqD1YA_rJWwugHi'
+      },
+      body: JSON.stringify({text})
+    });
+    if (!response.ok) {
+      let detail = 'সার্ভার থেকে বাংলা ভয়েস পাওয়া যায়নি।';
+      try {
+        const payload = await response.json();
+        detail = payload.detail || payload.error || detail;
+      } catch (_) {}
+      throw new Error(detail);
     }
-    if (!svaraEngine) {
-      const { createSvaraEngine } = await import('./assets/svara-build/engine.js');
-      runtimePromise = new Promise((resolve, reject) => {
-        svaraEngine = createSvaraEngine(message => {
-          if (message.status === 'feature-success') resolve();
-          else if (message.status === 'feature-error' || message.status === 'fatal-error') {
-            const error = new Error(message.data || 'এই ব্রাউজারে WebGPU চালু করা যায়নি।');
-            const rejectLoad = modelReject;
-            const pending = pendingGeneration;
-            pendingGeneration = null;
-            resetSvaraRuntime();
-            pending?.reject(error);
-            rejectLoad?.(error);
-            reject(error);
-          } else if (message.status === 'loading') {
-            statusText('বাংলা পুরুষ কণ্ঠের মডেল প্রস্তুত হচ্ছে…', active?.statusTarget);
-          } else if (message.status === 'ready') {
-            modelReady = true;
-            if (modelResolve) modelResolve();
-            modelResolve = null;
-            modelReject = null;
-          } else if (message.status === 'complete' && pendingGeneration?.requestId === message.requestId) {
-            const pending = pendingGeneration;
-            pendingGeneration = null;
-            pending.resolve(message.audio);
-          } else if (message.status === 'error') {
-            if (message.requestId != null && pendingGeneration?.requestId === message.requestId) {
-              const pending = pendingGeneration;
-              pendingGeneration = null;
-              pending.reject(new Error(message.data || 'বাংলা অডিও তৈরি করা যায়নি।'));
-            } else if (modelReject) {
-              const error = new Error(message.data || 'ভয়েস মডেল লোড করা যায়নি।');
-              const rejectLoad = modelReject;
-              resetSvaraRuntime();
-              rejectLoad(error);
-            }
-          }
-        });
-      });
-    }
-    await runtimePromise;
-    if (!modelReady) {
-      if (!modelPromise) {
-        modelPromise = new Promise((resolve, reject) => {
-          modelResolve = resolve;
-          modelReject = reject;
-        });
-        statusText('প্রথমবার প্রায় ১.৯৫ GB বাংলা ভয়েস মডেল ডাউনলোড হচ্ছে…', statusTarget);
-        svaraEngine.postMessage({type:'preload', dtype:'q4f16'});
-      }
-      await modelPromise;
-    }
-  };
-
-  const synthesizeSvaraChunk = text => {
-    const task = generationQueue.then(() => new Promise((resolve, reject) => {
-      if (!svaraEngine) {
-        reject(new Error('বাংলা ভয়েস ইঞ্জিন প্রস্তুত নয়। আবার চেষ্টা করুন।'));
-        return;
-      }
-      const requestId = ++requestSequence;
-      pendingGeneration = {requestId, resolve, reject};
-      svaraEngine.postMessage({
-        type:'generate', text, speaker_id:'Bengali (Male)', dtype:'q4f16', requestId
-      });
-    }));
-    generationQueue = task.catch(() => {});
-    return task;
+    return URL.createObjectURL(await response.blob());
   };
 
   const playNext = async session => {
@@ -184,10 +106,8 @@
     }
     session.generating = true;
     try {
-      await ensureSvaraModel(session.statusTarget);
-      if (active !== session || session.state !== 'playing') return;
-      statusText('বাংলা পুরুষ কণ্ঠে অডিও তৈরি হচ্ছে…', session.statusTarget);
-      const audioUrl = await synthesizeSvaraChunk(session.chunks[session.index]);
+      statusText('সার্ভার থেকে বাংলা পুরুষ কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
+      const audioUrl = await synthesizeCloudChunk(session.chunks[session.index]);
       if (active !== session) {
         URL.revokeObjectURL(audioUrl);
         return;
@@ -208,7 +128,7 @@
         if (active === session) finish('অডিও চালাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
       };
       if (session.state === 'playing') {
-        statusText('বাংলাদেশি বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', session.statusTarget);
+        statusText('বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', session.statusTarget);
         await audio.play();
       } else {
         statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।', session.statusTarget);
@@ -235,7 +155,7 @@
     };
     active = session;
     setControls('playing');
-    statusText('API Key ছাড়াই বাংলা পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
+    statusText('বাংলা পুরুষ কণ্ঠের সার্ভার সংযোগ হচ্ছে…', statusTarget);
     playNext(session);
   };
 
