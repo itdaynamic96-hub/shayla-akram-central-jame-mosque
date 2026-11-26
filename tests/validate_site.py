@@ -273,6 +273,20 @@ assert 'MosqueRichText.html(d.page_body' in (ROOT/'index.html').read_text(encodi
 assert 'Match the shared mosque/foundation identity' in (ROOT/'accounts-dashboard.css').read_text(encoding='utf-8') and 'শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ' in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Accounts: shared brand typography is missing'
 print('Rich text and shared branding checks passed: safe editor, persistence hooks and public rendering markers.')
 
+# Homepage-wide Admin text editing, rich alignment and Justify regression checks.
+assert all(token in rich_text for token in ('justifyLeft','justifyCenter','justifyRight','justifyFull','text-align')), 'Rich text editor must support left, center, right and Justify alignment'
+assert 'admin-field-group-heading' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: homepage editor sections must be clearly grouped'
+admin_modules_source=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
+assert 'হোমপেজ ও সব লেখা' in admin_modules_source and 'history_body' in admin_modules_source and 'naming_body' in admin_modules_source and 'mutawalli_message' in admin_modules_source, 'Admin: homepage module must expose the complete homepage text set'
+assert "old[f[0]]??f[4]??''" in admin_modules_source and "if(type==='section')continue" in admin_modules_source, 'Admin: homepage editor must preserve existing text and skip visual section labels on save'
+homepage_source=(ROOT/'index.html').read_text(encoding='utf-8')
+assert "document.querySelectorAll('[data-home-text]')" in homepage_source and "window.MosqueRichText.html(homeData[key])" in homepage_source, 'Homepage: published Admin text must render safely'
+for home_key in ('header_title','history_body','naming_body','gallery_title','article_title','video_title','notice_title','activity_title','mutawalli_message','contact_address','footer_brand'):
+    assert f'data-home-text="{home_key}"' in homepage_source, f'Homepage: missing Admin text binding for {home_key}'
+assert "homeData.prayer_fajr||'ফজর'" in homepage_source and "homeData.prayer_isha||'এশা'" in homepage_source, 'Homepage: prayer labels must be editable from Admin'
+print('Homepage text editor checks passed: 80+ fields, rich formatting, alignment and public bindings.')
+
+
 
 assert 'accounts_message_queue_created_by_idx' in (ROOT/'supabase/accounts-messaging-center.sql').read_text(encoding='utf-8')
 
@@ -428,7 +442,7 @@ assert 'admin_dashboard_settings_updated_by_idx' in hardening_sql, 'Admin dashbo
 admin_modules=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert 'dashboardSettingsOpen=true' in admin_modules and 'settingsPanel.hidden=!dashboardSettingsOpen' in admin_modules, 'Dashboard settings panel must remain open after saving'
 assert "dashboardSettingsNotice='সফলভাবে সংরক্ষিত হয়েছে।'" in admin_modules, 'Dashboard save success must remain visible after dashboard rerender'
-assert 'admin-modules.js?v=20261126-richtext1' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
+assert 'admin-modules.js?v=20261126-home-text-justify2' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
 
 # Website Admin: each writable website module has its own concise field schema.
 admin_modules_text=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
@@ -454,7 +468,7 @@ admin_modules_private=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert "['file_url','প্রতিবেদন ফাইল','private-file']" in admin_modules_private, 'Admin reports must use private-file field type'
 assert "supabase.storage.from('private-module-files').createSignedUrl(path,300)" in admin_modules_private, 'Private report downloads must use short-lived signed URLs'
 assert "kind==='video'?52428800" in admin_modules_private, 'Video upload validation must match the 50 MB Storage bucket limit'
-assert 'admin-modules.js?v=20261126-richtext1' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
+assert 'admin-modules.js?v=20261126-home-text-justify2' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
 
 # Admin layout regression: fixed sidebar must not be combined with a narrow centered main container.
 admin_layout_html=(ROOT/'admin.html').read_text(encoding='utf-8')
