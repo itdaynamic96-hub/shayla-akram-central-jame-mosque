@@ -197,7 +197,7 @@ assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran
 assert "'.video-card'" in reader_js and "'.content-slot.video-card'" in reader_js, 'Share: every video gallery card must receive a share control'
 assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
 assert 'GOOGLE_TTS_API_KEY' not in reader_js and 'functions/v1/bengali-tts' not in reader_js, 'Read Aloud: browser must not depend on Google TTS or Supabase secrets'
-assert 'runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download)' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document local Svara playback'
+assert 'runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download)' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document the lightweight Spellophone/eSpeak voice'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
