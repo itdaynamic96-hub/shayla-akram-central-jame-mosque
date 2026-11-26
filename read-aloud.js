@@ -1,230 +1,90 @@
-import { createSvaraEngine } from './assets/svara-build/engine.js';
-/* Browser-local Bengali male Read Aloud using Svara WebGPU TTS. */
+/* Lightweight browser Bengali Read Aloud using Spellophone/eSpeak NG. */
 (() => {
   'use strict';
-
-  const selectors = [
-    '.article-card', '.published-content', '.content-slot.article-card',
-    '.video-card', '.content-slot.video-card',
-    '.quran-ayah', '.hadith-card', '.knowledge-card', '.tafsir-card',
-    '.detailcard', '.noticebox'
-  ].join(',');
-  const excluded = [
-    'button','input','textarea','select','script','style','iframe','video','audio',
-    '.read-aloud','.nexora-read-aloud','.nexora-share','.temporary','[aria-hidden="true"]',
-    '[lang="ar"]','.arabic','.arabic-pronunciation'
-  ].join(',');
-
-  let active = null;
-  let currentButtons = null;
-  let observer = null;
-  let engine = null;
-  let engineReady = false;
-  let engineLoading = false;
-  let requestSequence = 0;
-
-  const statusText = (message, target) => {
-    const el = target || document.getElementById('readAloudStatus');
-    if (el) el.textContent = message;
-  };
-
-  const readableText = root => {
-    if (!root) return '';
-    const copy = root.cloneNode(true);
-    copy.querySelectorAll(excluded).forEach(el => el.remove());
-    copy.querySelectorAll('[dir="rtl"],.arabic,.arabic-pronunciation').forEach(el => el.remove());
-    const raw = copy.innerText || copy.textContent || '';
+  const selectors = ['.article-card','.published-content','.content-slot.article-card','.video-card','.content-slot.video-card','.quran-ayah','.hadith-card','.knowledge-card','.tafsir-card','.detailcard','.noticebox'].join(',');
+  const excluded = ['button','input','textarea','select','script','style','iframe','video','audio','.read-aloud','.nexora-read-aloud','.nexora-share','.temporary','[aria-hidden="true"]','[lang="ar"]','.arabic','.arabic-pronunciation'].join(',');
+  let active=null,currentButtons=null,observer=null,enginePromise=null;
+  const statusText=(message,target)=>{const el=target||document.getElementById('readAloudStatus');if(el)el.textContent=message;};
+  const readableText=root=>{
+    if(!root)return '';
+    const copy=root.cloneNode(true);
+    copy.querySelectorAll(excluded).forEach(el=>el.remove());
+    copy.querySelectorAll('[dir="rtl"],.arabic,.arabic-pronunciation').forEach(el=>el.remove());
+    const raw=copy.innerText||copy.textContent||'';
     return raw.replace(/\r/g,'').split(/\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
       .replace(/https?:\/\/[^\s]+/gi,' ')
       .replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g,' ')
       .replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)])
-      .replace(/\s*([।!?])\s*/g,'$1 ')
-      .replace(/([।!?])(?:\s*[।!?])+/g,'$1')
-      .replace(/\s+/g,' ').trim();
+      .replace(/\s*([।!?])\s*/g,'$1 ').replace(/([।!?])(?:\s*[।!?])+/g,'$1').replace(/\s+/g,' ').trim();
   };
-
-  const splitText = value => {
-    const sentences = String(value || '').match(/[^।!?]+[।!?]?/g) || [String(value || '')];
-    const result = [];
-    for (const sentence of sentences) {
-      let rest = sentence.trim();
-      while (rest.length > 150) {
-        let cut = rest.lastIndexOf(' ', 150);
-        if (cut < 70) cut = 150;
-        result.push(rest.slice(0, cut).trim());
-        rest = rest.slice(cut).trim();
-      }
-      if (rest) result.push(rest);
-    }
+  const splitText=value=>{
+    const sentences=String(value||'').match(/[^।!?]+[।!?]?/g)||[String(value||'')],result=[];
+    for(const sentence of sentences){let rest=sentence.trim();while(rest.length>220){let cut=rest.lastIndexOf(' ',220);if(cut<100)cut=220;result.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim();}if(rest)result.push(rest);}
     return result;
   };
-
-  const setControls = state => {
-    if (!currentButtons) return;
-    const {play,pause,resume,stop} = currentButtons;
-    if (play) play.disabled = state === 'playing' || state === 'paused' || state === 'loading';
-    if (pause) pause.disabled = state !== 'playing';
-    if (resume) resume.disabled = state !== 'paused';
-    if (stop) stop.disabled = state !== 'playing' && state !== 'paused' && state !== 'loading';
+  const setControls=state=>{
+    if(!currentButtons)return;
+    const {play,pause,resume,stop}=currentButtons;
+    if(play)play.disabled=state==='playing'||state==='paused'||state==='loading';
+    if(pause)pause.disabled=state!=='playing';
+    if(resume)resume.disabled=state!=='paused';
+    if(stop)stop.disabled=state!=='playing'&&state!=='paused'&&state!=='loading';
   };
-
-  const releaseAudio = session => {
-    if (!session) return;
-    if (session.audio) {
-      session.audio.onended = null;
-      session.audio.onerror = null;
-      session.audio.pause();
-      session.audio.removeAttribute('src');
-      session.audio.load();
-      session.audio = null;
-    }
-    if (session.audioUrl) {
-      URL.revokeObjectURL(session.audioUrl);
-      session.audioUrl = null;
-    }
+  const releaseAudio=session=>{
+    if(!session)return;
+    if(session.audio){session.audio.onended=null;session.audio.onerror=null;session.audio.pause();session.audio.removeAttribute('src');session.audio.load();session.audio=null;}
+    if(session.audioUrl){URL.revokeObjectURL(session.audioUrl);session.audioUrl=null;}
   };
-
-  const finish = message => {
-    const target = active?.statusTarget;
-    releaseAudio(active);
-    active = null;
-    setControls('idle');
-    statusText(message, target);
+  const finish=message=>{const target=active?.statusTarget;releaseAudio(active);active=null;setControls('idle');statusText(message,target);};
+  // Matches the lightweight Bengali voice used by the supplied module 14.
+  const getEspeak=()=>{
+    if(!enginePromise)enginePromise=(async()=>{
+      const {createEspeak,toFloat32}=await import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/browser.js');
+      const engine=await createEspeak({cdn:'jsdelivr',languages:['bn'],fallback:()=>import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/wasm2js.js')});
+      await engine.loadVoice('bn');engine.setVoice('bn');return {engine,toFloat32};
+    })();
+    return enginePromise;
   };
-
-  const onEngineMessage = message => {
-    if (message.status === 'feature-error') {
-      engineLoading = false;
-      if (active) finish('এই ডিভাইসের GPU-তে প্রয়োজনীয় WebGPU সুবিধা নেই। WebGPU ও shader-f16 সমর্থিত হালনাগাদ Chrome/Edge এবং উপযুক্ত GPU ব্যবহার করুন।');
-      return;
-    }
-    if (message.status === 'feature-success') return;
-    if (message.status === 'loading') {
-      if (active) statusText(engineReady ? 'বাংলা কণ্ঠ তৈরি হচ্ছে…' : 'প্রথমবার প্রায় ১.৯৫ জিবি বাংলা ভয়েস মডেল প্রস্তুত হচ্ছে। অপেক্ষা করুন…', active.statusTarget);
-      return;
-    }
-    if (message.status === 'ready') {
-      engineReady = true;
-      engineLoading = false;
-      if (active) playNext(active);
-      return;
-    }
-    if (message.status === 'complete') {
-      const session = active;
-      if (!session || message.requestId !== session.requestId) {
-        if (message.audio) URL.revokeObjectURL(message.audio);
-        return;
-      }
-      session.generating = false;
-      session.audioUrl = message.audio;
-      const audio = new Audio(message.audio);
-      session.audio = audio;
-      audio.preload = 'auto';
-      audio.onended = () => {
-        if (active !== session || session.state !== 'playing') return;
-        releaseAudio(session);
-        session.index += 1;
-        playNext(session);
-      };
-      audio.onerror = () => {
-        if (active === session) finish('তৈরি হওয়া অডিও চালানো যায়নি। আবার চেষ্টা করুন।');
-      };
-      if (session.state === 'playing') {
-        statusText('বাংলা পুরুষ কণ্ঠে পড়া হচ্ছে…', session.statusTarget);
-        audio.play().catch(() => finish('অডিও চালু করা যায়নি। ব্রাউজারের সাউন্ড অনুমতি পরীক্ষা করুন।'));
-      } else {
-        statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।', session.statusTarget);
-      }
-      return;
-    }
-    if (message.status === 'error' || message.status === 'fatal-error') {
-      engineLoading = false;
-      if (active) finish(message.data || 'বাংলা ভয়েস তৈরি করা যায়নি।');
-    }
+  const encodeWav=(samples,sampleRate)=>{
+    const buffer=new ArrayBuffer(44+samples.length*2),view=new DataView(buffer);
+    const write=(offset,value)=>{for(let i=0;i<value.length;i++)view.setUint8(offset+i,value.charCodeAt(i));};
+    write(0,'RIFF');view.setUint32(4,36+samples.length*2,true);write(8,'WAVE');write(12,'fmt ');
+    view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,sampleRate,true);
+    view.setUint32(28,sampleRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');view.setUint32(40,samples.length*2,true);
+    for(let i=0;i<samples.length;i++){const v=Math.max(-1,Math.min(1,samples[i]));view.setInt16(44+i*2,v<0?v*32768:v*32767,true);}
+    return new Blob([buffer],{type:'audio/wav'});
   };
-
-  const ensureEngine = () => {
-    if (engine) return;
-    if (!('gpu' in navigator)) throw new Error('এই ব্রাউজারে WebGPU নেই। হালনাগাদ Chrome বা Edge ব্যবহার করুন।');
-    engine = createSvaraEngine(onEngineMessage);
+  const playNext=async session=>{
+    if(active!==session||session.state!=='playing'||session.generating)return;
+    if(session.index>=session.chunks.length){finish('পড়া শেষ হয়েছে।');return;}
+    session.generating=true;statusText('হালকা বাংলা ভয়েস প্রস্তুত হচ্ছে…',session.statusTarget);
+    try{
+      const {engine,toFloat32}=await getEspeak();if(active!==session)return;
+      const result=engine.synthesize(session.chunks[session.index]),samples=toFloat32(result?.samples||result),sampleRate=Number(result?.sampleRate||engine.sampleRate||22050);
+      if(!samples||!samples.length)throw new Error('এই লেখার অডিও তৈরি হয়নি।');
+      session.audioUrl=URL.createObjectURL(encodeWav(samples,sampleRate));
+      const audio=new Audio(session.audioUrl);session.audio=audio;audio.preload='auto';
+      audio.onended=()=>{if(active!==session||session.state!=='playing')return;releaseAudio(session);session.index++;playNext(session);};
+      audio.onerror=()=>{if(active===session)finish('তৈরি হওয়া অডিও চালানো যায়নি। আবার চেষ্টা করুন।');};
+      session.generating=false;
+      if(session.state==='playing'){statusText('বাংলা কণ্ঠে পড়া হচ্ছে…',session.statusTarget);await audio.play();}
+      else statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
+    }catch(error){if(active===session)finish(error?.message||'বাংলা ভয়েস তৈরি করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');console.error('Spellophone Bengali TTS failed',error);}
   };
-
-  const playNext = session => {
-    if (active !== session || session.state !== 'playing' || session.generating) return;
-    if (session.index >= session.chunks.length) {
-      finish('পড়া শেষ হয়েছে।');
-      return;
-    }
-    if (!engineReady) {
-      if (!engineLoading) {
-        try {
-          ensureEngine();
-          engineLoading = true;
-          statusText('প্রথমবার বাংলা ভয়েস মডেল ডাউনলোড ও প্রস্তুত হচ্ছে…', session.statusTarget);
-          engine.postMessage({type:'preload',dtype:'q4f16'});
-        } catch (error) {
-          finish(error.message || 'বাংলা ভয়েস ইঞ্জিন চালু করা যায়নি।');
-        }
-      }
-      return;
-    }
-    session.generating = true;
-    session.requestId = ++requestSequence;
-    statusText('বাংলা পুরুষ কণ্ঠ তৈরি হচ্ছে…', session.statusTarget);
-    engine.postMessage({
-      type:'synthesize',
-      text:session.chunks[session.index],
-      speaker_id:'Bengali (Male)',
-      dtype:'q4f16',
-      requestId:session.requestId
-    });
+  const start=(text,buttons,statusTarget)=>{
+    currentButtons=buttons||null;const clean=String(text||'').trim();
+    if(!clean){setControls('idle');statusText('পড়ে শোনানোর মতো বাংলা লেখা পাওয়া যায়নি।',statusTarget);return;}
+    if(active)finish('আগের পড়া বন্ধ করা হয়েছে।');
+    const session={statusTarget,buttons,chunks:splitText(clean),index:0,audio:null,audioUrl:null,state:'playing',generating:false};
+    active=session;setControls('playing');statusText('বাংলা কণ্ঠ প্রস্তুত করা হচ্ছে…',statusTarget);playNext(session);
   };
-
-  const start = (text, buttons, statusTarget) => {
-    currentButtons = buttons || null;
-    const clean = String(text || '').trim();
-    if (!clean) {
-      setControls('idle');
-      statusText('পড়ে শোনানোর মতো বাংলা লেখা পাওয়া যায়নি।', statusTarget);
-      return;
-    }
-    if (active) finish('আগের পড়া বন্ধ করা হয়েছে।');
-    const session = {
-      statusTarget, buttons, chunks:splitText(clean), index:0,
-      audio:null, audioUrl:null, state:'playing', generating:false, requestId:0
-    };
-    active = session;
-    setControls('playing');
-    statusText('ব্রাউজারে বাংলা পুরুষ কণ্ঠ প্রস্তুত করা হচ্ছে…', statusTarget);
-    playNext(session);
+  const pause=buttons=>{if(!active||active.buttons!==buttons||active.state!=='playing')return;active.audio?.pause();active.state='paused';setControls('paused');statusText('পড়া বিরতিতে আছে।',active.statusTarget);};
+  const resume=buttons=>{
+    if(!active||active.buttons!==buttons||active.state!=='paused')return;
+    const session=active;session.state='playing';setControls('playing');statusText('আবার পড়া হচ্ছে।',session.statusTarget);
+    if(session.audio)session.audio.play().catch(()=>finish('অডিও আবার চালু করা যায়নি।'));else if(!session.generating)playNext(session);
   };
-
-  const pause = buttons => {
-    if (!active || active.buttons !== buttons || active.state !== 'playing') return;
-    active.audio?.pause();
-    active.state = 'paused';
-    setControls('paused');
-    statusText('পড়া বিরতিতে আছে।', active.statusTarget);
-  };
-
-  const resume = buttons => {
-    if (!active || active.buttons !== buttons || active.state !== 'paused') return;
-    const session = active;
-    session.state = 'playing';
-    setControls('playing');
-    statusText('আবার পড়া হচ্ছে।', session.statusTarget);
-    if (session.audio) {
-      session.audio.play().catch(() => finish('অডিও আবার চালু করা যায়নি।'));
-    } else if (!session.generating) {
-      playNext(session);
-    }
-  };
-
-  const stop = (message = 'পড়া বন্ধ করা হয়েছে।') => {
-    if (active) active.requestId = -1;
-    finish(message);
-  };
-
+  const stop=(message='পড়া বন্ধ করা হয়েছে।')=>finish(message);
   let shareSequence = 0;
 
   const shareTextFor = card => {
@@ -381,5 +241,5 @@ import { createSvaraEngine } from './assets/svara-build/engine.js';
 
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
-  window.addEventListener('pagehide',()=>{ stop('পৃষ্ঠা বন্ধ করা হয়েছে।'); engine?.terminate(); engine=null; engineReady=false; engineLoading=false; });
+  window.addEventListener('pagehide',()=>{ stop('পৃষ্ঠা বন্ধ করা হয়েছে।'); });
 })();
