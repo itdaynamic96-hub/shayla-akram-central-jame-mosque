@@ -489,3 +489,7 @@ staff_users=(ROOT/'admin-users.js').read_text(encoding='utf-8')
 staff_admin=(ROOT/'admin.html').read_text(encoding='utf-8')
 assert 'staff-module-${group}' in staff_users and all(x in staff_users for x in ('"accounts"','"governance"','"mosque"','staff-module-master')), 'Admin: staff permission cards must generate their distinct category classes'
 assert all(x in staff_admin for x in ('.staff-module-mosque','.staff-module-governance','.staff-module-accounts','.staff-module-master')), 'Admin: staff permission cards must have matching category styles'
+
+# Income and expense entry must be separate choices, never a mixed type selector.
+assert 'id="type" type="hidden" value="income"' in accounts_html and '<select id="type">' not in accounts_html, 'Accounts: income form must not offer expense as a type option'
+assert "setLedgerEntryType('expense')" in dashboard_js and "setLedgerEntryType('income')" in dashboard_js, 'Accounts: separate income and expense entry routes must set a fixed transaction type'
