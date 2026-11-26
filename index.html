@@ -178,6 +178,27 @@ input,select,textarea,.search{border:1px solid #dcd5c5;border-radius:11px;paddin
 </style>
 <style id="islamic-library-style">
 .islamic-library-panel{min-height:60vh}.islamic-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.islamic-toolbar select,.islamic-toolbar input{border:1px solid var(--line);border-radius:9px;background:#fff;padding:9px 12px;min-width:180px;color:var(--ink)}.islamic-toolbar button,.islamic-control{border:1px solid var(--gold);border-radius:9px;background:var(--green);color:#fff0c6;padding:9px 14px;font-weight:700}.islamic-content{display:grid;gap:12px}.quran-ayah{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}.quran-ayah .arabic{font-family:"Noto Naskh Arabic","Amiri",serif;font-size:clamp(23px,3vw,30px);line-height:2.1;text-align:right;direction:rtl;color:#183f2d;margin-bottom:10px}.quran-ayah .translation{font-size:15px;line-height:1.9;color:#34483c}.quran-ayah .ayah-ref{font-size:11px;color:#92743d;margin-bottom:7px}.islamic-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.islamic-list button,.islamic-list a{display:block;text-align:left;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px;color:var(--green);font-weight:650}.islamic-list button:hover,.islamic-list a:hover{border-color:var(--gold);background:#f8f3e6}.islamic-note{background:#f4efdf;border:1px solid #d8c795;border-radius:10px;padding:12px 14px;color:#5c604e;font-size:13px;line-height:1.8}.hadith-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}.hadith-card .arabic{font-family:"Noto Naskh Arabic","Amiri",serif;direction:rtl;text-align:right;font-size:23px;line-height:2;margin:5px 0 12px}.hadith-card .bn{line-height:1.9;color:#34483c}.hadith-card .meta{font-size:11px;color:#92743d;margin-bottom:8px}.knowledge-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}.knowledge-card h3{color:var(--green);margin:0 0 8px}.knowledge-card p{margin:0 0 8px;color:#4e6155;line-height:1.9}.knowledge-card a{color:#80652e}.islamic-status{padding:12px;color:#6a6048;font-size:13px}.islamic-navitem .dropdown{min-width:260px}.islamic-navitem .dropitem{white-space:normal}
+/* Homepage dropdown items use the same premium pill design as top-level menu buttons */
+.dropdown{padding:9px;gap:6px}
+.dropitem{
+ display:block;width:100%;box-sizing:border-box;margin:0 0 6px;
+ border:1px solid #e1d6b9;border-radius:999px;
+ background:#fff;color:var(--green);
+ text-align:left;padding:9px 14px;
+ font-size:13px;font-weight:700;line-height:1.5;
+ box-shadow:0 2px 7px rgba(18,59,44,.06);
+ transition:transform .18s,background .18s,color .18s,border-color .18s,box-shadow .18s;
+}
+.dropitem:last-child{margin-bottom:0}
+.dropitem:hover,.dropitem:focus-visible{
+ background:var(--green);color:#f1d78e;border-color:#b8944e;
+ transform:translateY(-1px);box-shadow:0 5px 14px #123b2c18;
+}
+.dropitem:focus-visible{outline:3px solid #c7a85d;outline-offset:2px}
+@media(max-width:600px){
+ .dropdown{padding:10px;gap:7px}
+ .dropitem{font-size:12px;padding:9px 13px;border-radius:999px;margin-bottom:7px}
+}
 @media(max-width:600px){.islamic-toolbar select,.islamic-toolbar input{width:100%;min-width:0}.islamic-list{grid-template-columns:1fr}}
 </style>
 <style>#admin-home-banner .card{grid-template-columns:minmax(0,1fr) minmax(180px,36%)}@media(max-width:700px){#admin-home-banner .card{grid-template-columns:1fr!important}}
