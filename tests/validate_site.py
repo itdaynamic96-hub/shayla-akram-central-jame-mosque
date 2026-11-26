@@ -389,15 +389,12 @@ assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly ch
 assert 'n >= 41 && n <= 50' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Legacy grouped Accounts grants must not be assigned to new staff'
 assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
 accounts_dashboard_source=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
-assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>i!==3&&allowed.has(moduleKeys[i]))" in accounts_dashboard_source, 'Accounts permissions must retain the original module access keys'
-assert 'const moduleGroups=[' in accounts_dashboard_source and 'data-group' in accounts_dashboard_source and 'data-module' in accounts_dashboard_source, 'Accounts navigation must expose the simplified parent groups and permitted submodules'
-group_source=accounts_dashboard_source.split('const moduleGroups=[',1)[1].split('];',1)[0]
-group_indexes=[int(n) for n in re.findall(r'\bmodules:\[([0-9,]+)\]',group_source) for n in n.split(',')]
-assert len(group_indexes)==23 and sorted(group_indexes)==[i for i in range(24) if i!=3], 'Accounts: all visible original modules except the retired donor module must appear exactly once under the 8 parent groups'
+assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]))" in accounts_dashboard_source, 'Accounts permissions must retain granular access while allowing all 24 modules'
+assert 'visibleModules.map(i=>' in accounts_dashboard_source and 'data-module="'+i+'"' in accounts_dashboard_source and "el('adNav').onclick=e=>{const b=e.target.closest('button[data-module]');if(b)openModule(Number(b.dataset.module))};" in accounts_dashboard_source, 'Accounts navigation must render each permitted module as a direct left-sidebar item'
 module_definitions=accounts_dashboard_source.split('const modules=[',1)[1].split('];',1)[0]
-assert "'সংরক্ষিত অভ্যন্তরীণ মডিউল'" in module_definitions and 'দাতা ও অনুদান' not in module_definitions, 'Accounts: retired donor module must not be exposed in the visible module definitions'
-assert 'filter(i=>i!==3&&allowed.has(moduleKeys[i]))' in accounts_dashboard_source, 'Accounts: retired donor module must stay hidden for every permission set'
-assert 'const moduleGroupByIndex=new Map' in accounts_dashboard_source and 'visibleModules.includes(i)' in accounts_dashboard_source, 'Accounts: submodule navigation must preserve granular permissions'
+assert len(re.findall(r"'[^']*'",module_definitions))==24 and "'দাতা ও অনুদান'" in module_definitions and "'মাসিক চাঁদা আদায়'" in module_definitions and "'বার্তা ও নোটিফিকেশন'" in module_definitions, 'Accounts left navigation must include all 24 named modules, including donor, monthly chanda and messaging'
+assert "if(i===3){renderDonations().catch(showError);return}" in accounts_dashboard_source, 'Donor and donation module must open its dedicated page'
+assert 'filter(i=>allowed.has(moduleKeys[i]))' in accounts_dashboard_source, 'Accounts sidebar must continue enforcing each user\'s granular view permissions'
 assert "allowed.add(moduleKeys[22])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8') and "allowed.add(moduleKeys[23])" in (ROOT/'accounts-dashboard.js').read_text(encoding='utf-8'), 'Messaging and monthly chanda must be inserted into the ordered module set'
 assert 'm(0[1-9]|[1-7][0-9]|8[0-5])' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure staff account endpoint must accept the expanded module key range'
 assert (ROOT/'supabase/accounts-granular-module-access.sql').exists(), 'Detailed Accounts RLS and module permission migration source is missing'
