@@ -580,7 +580,7 @@ youtube_migration=(ROOT/'supabase/migrations/20261126165000_youtube_management_q
 assert "['YouTube Management','প্রকাশিত ভিডিও নির্বাচন" in admin_modules_youtube and "m.n===87" in admin_modules_youtube, 'Admin: YouTube Management must be registered as module 87'
 assert "await import('./youtube-management.js?v=20261126-youtube-management1')" in admin_modules_youtube, 'Admin: YouTube Management route must load its dedicated module'
 assert 'MAX_BATCH=15' in youtube_js and 'youtube_upload_queue' in youtube_js, 'YouTube: batch queue must support up to 15 videos with persisted queue records'
-assert r'/\\.(mp4|m4v|mov|webm|ogv|ogg)(?:$)/i' in youtube_js, 'YouTube: direct video file URL detection must use a literal file-extension separator'
+assert r'/\.(mp4|m4v|mov|webm|ogv|ogg)(?:$)/i' in youtube_js, 'YouTube: direct video file URL detection must use a literal file-extension separator'
 assert 'চ্যানেল এখনো সংযুক্ত হয়নি' in youtube_js and 'OAuth' not in youtube_js, 'YouTube: no-channel state must be clear and no OAuth connection is created yet'
 assert "permission==='অনুমোদিত'" in youtube_js and "status==='published'" in youtube_js, 'YouTube: only approved and published website video posts can be queued'
 assert 'enable row level security' in youtube_migration and "public.has_access(array['super_admin','admin','website_admin'],null)" in youtube_migration, 'YouTube queue must be protected by RLS and admin-role policies'
