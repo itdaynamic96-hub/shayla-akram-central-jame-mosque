@@ -59,6 +59,10 @@ assert 'create table if not exists public.budgets' in (ROOT/'supabase/schema.sql
 accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
 assert 'const accountCache={entries:[],bankAccounts:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: entry and bank-account caches must initialize before async boot'
+admin_html_source=(ROOT/'admin.html').read_text(encoding='utf-8')
+assert "$('login').hidden=true;$('loginError').hidden=true;$('app').hidden=false" in admin_html_source, 'Admin: authenticated sessions must hide login before optional data loads'
+assert "ব্যবহারকারী তালিকার HTML উপাদান পাওয়া যায়নি" in admin_html_source and "নোটিশ তালিকার HTML উপাদান পাওয়া যায়নি" in admin_html_source, 'Admin: missing UI targets must not break authenticated state'
+assert "showAdminBootError('লগইন সফল" in admin_html_source, 'Admin: authenticated boot failures must be shown inside the panel, not as login failure'
 admin_modules_source=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert "a.href='./accounts.html'" in admin_modules_source and 'if(m.g===4)return false' in admin_modules_source, 'Admin: Accounts must be a separate panel'
 assert 'option value="both"' not in admin_modules_source, 'Admin: website forms must not offer institution=both as a selectable option'
