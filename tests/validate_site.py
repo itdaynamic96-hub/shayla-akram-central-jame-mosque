@@ -60,6 +60,7 @@ accounts=(ROOT/'accounts.html').read_text(encoding='utf-8')
 assert 'range(offset,offset+499)' in accounts, 'Accounts: ledger pagination is missing'
 assert 'setHidden(\'login\',false);await boot()' in accounts and 'id="loginStatus"' in accounts, 'Accounts: login must remain visible while the saved session/profile is being checked'
 assert '<section id="login" class="panel">' in accounts, 'Accounts: login form must be visible even if external module scripts fail to load'
+assert 'id="accounts-login-visibility-fix"' in accounts and '#login #loginForm{display:grid!important' in accounts and '#login #loginForm input{display:block!important' in accounts, 'Accounts: login fields and submit button must be forced visible outside dashboard CSS'
 assert "if(!configured){setHidden('login',false);setHidden('setup',false)" in accounts, 'Accounts: login must remain visible when Supabase configuration is unavailable'
 assert 'const accountCache={entries:[],bankAccounts:[]}' in accounts and 'cachedEntries' not in accounts, 'Accounts: entry and bank-account caches must initialize before async boot'
 admin_html_source=(ROOT/'admin.html').read_text(encoding='utf-8')
