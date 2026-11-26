@@ -2,7 +2,7 @@ import {configured,supabase,currentProfile,escapeHtml,money} from './supabase-cl
 const modules=['ড্যাশবোর্ড','আয় ব্যবস্থাপনা','ব্যয় ব্যবস্থাপনা','সংরক্ষিত অভ্যন্তরীণ মডিউল','ব্যাংক ও ক্যাশ','ট্রান্সফার','ক্যাশবুক ও লেজার','বকেয়া ও বিল','কর্মচারী ও বেতন','বাজেট ব্যবস্থাপনা','তহবিল ব্যবস্থাপনা','রসিদ ও ভাউচার','আর্থিক রিপোর্ট','PDF ও Excel','ট্রায়াল ব্যালান্স ও ব্যালান্স শিট','সার্চ','ব্যাংক রিকনসিলিয়েশন','অডিট ও যাচাই','অনুমোদন ব্যবস্থাপনা','অডিট ট্রেইল','ব্যবহারকারী ও অনুমতি','সেটিংস','বার্তা ও নোটিফিকেশন','মাসিক চাঁদা আদায়'];
 const moduleGroups=[
  {title:'ড্যাশবোর্ড',modules:[0]},
- {title:'আয় ব্যবস্থাপনা',modules:[1,23]},
+ {title:'আয় ব্যবস্থাপনা',modules:[1,3,23]},
  {title:'ব্যয় ব্যবস্থাপনা',modules:[2,7,8]},
  {title:'ব্যাংক ও ক্যাশ',modules:[4,5,6,16]},
  {title:'বাজেট ও তহবিল',modules:[9,10]},
@@ -35,21 +35,13 @@ async function loadModuleVisibility(){
  const {data:messageAccess,error:messageError}=await supabase.rpc('accounts_message_access',{target_institution:inst,write_access:false});if(messageError)throw messageError;if(messageAccess)allowed.add(moduleKeys[22]);
  // Keep every visible item in the original 24-module order, independent of permission lookup order.
  if(allowed.has(moduleKeys[3]))allowed.add(moduleKeys[1]);
- visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>i!==3&&allowed.has(moduleKeys[i]));
+ visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]));
 }
 function refreshNav(){
  const nav=el('adNav');
- if(nav)nav.innerHTML=moduleGroups.map((group,index)=>{
-  const available=group.modules.some(i=>visibleModules.includes(i));
-  return available?'<button type="button" data-group="'+index+'" class="'+(index===activeGroup?'active':'')+'"><span class="num">'+(index+1)+'</span>'+escapeHtml(group.title)+'</button>':'';
- }).join('');
+ if(nav)nav.innerHTML=visibleModules.map(i=>'<button type="button" data-module="'+i+'" class="'+(i===activeModule?'active':'')+'" aria-current="'+(i===activeModule?'page':'false')+'"><span class="num">'+String(i+1).padStart(2,'0')+'</span>'+escapeHtml(modules[i])+'</button>').join('');
  const sub=el('adSubNav');
- if(sub){
-  const group=moduleGroups[activeGroup]||moduleGroups[0];
-  const available=group.modules.filter(i=>visibleModules.includes(i));
-  sub.innerHTML=available.map(i=>'<button type="button" data-module="'+i+'" class="'+(i===activeModule?'active':'')+'">'+escapeHtml(modules[i])+'</button>').join('');
-  sub.hidden=available.length<=1;
- }
+ if(sub){sub.innerHTML='';sub.hidden=true}
 }
 function resetAdPage(html=''){
  const page=el('adPage'),bin=el('adLegacyBin');
@@ -67,7 +59,7 @@ function mount(){
  root.innerHTML='<div class="layout"><aside class="side"><div class="brand"><b>SAKM-61</b><strong>Accounts Panel</strong><small>Transparency · Accountability · Trust</small></div><nav id="adNav"></nav><button class="action" id="adLogout" style="margin-top:16px;background:#b42c35">↪ লগআউট</button></aside><main class="main"><header class="top"><div class="top-brand"><div class="top-brand-copy"><b>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</b><span>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</span><small>SAKM-61 · Accounts Panel</small></div></div><div class="top-controls"><select id="adInstitution" aria-label="প্রতিষ্ঠান"></select><select id="adMonth" aria-label="মাস"></select><div id="adUser"></div></div></header><section class="hero"><div><h1 id="adTitle">ড্যাশবোর্ড</h1><p id="adSub">প্রতিষ্ঠানভিত্তিক আর্থিক সারসংক্ষেপ</p></div><div><button class="action green" id="adAdd" hidden>＋ নতুন চাঁদাদাতা</button> <button class="action" id="adReport" hidden>▥ রিপোর্ট</button></div></section><nav id="adSubNav" aria-label="মডিউলের উপবিভাগ"></nav><div id="adPage"></div><div id="adLegacyBin" hidden></div></main></div>';
  const app=el('app');app.prepend(root);[...app.children].filter(x=>x!==root).forEach(x=>{x.hidden=true});
  el('adNav').innerHTML='';
- el('adNav').onclick=e=>{const b=e.target.closest('button[data-group]');if(!b)return;const group=moduleGroups[Number(b.dataset.group)];const first=group?.modules.find(i=>visibleModules.includes(i));if(first!==undefined)openModule(first)};
+ el('adNav').onclick=e=>{const b=e.target.closest('button[data-module]');if(b)openModule(Number(b.dataset.module))};
  el('adSubNav').onclick=e=>{const b=e.target.closest('button[data-module]');if(b)openModule(Number(b.dataset.module))};
  const opts=profile?.institution==='both'?['mosque','foundation']:[profile?.institution==='foundation'?'foundation':'mosque'];
  el('adInstitution').innerHTML=opts.map(x=>'<option value="'+x+'">'+(x==='mosque'?'মসজিদ':'ফাউন্ডেশন')+'</option>').join('');
@@ -164,6 +156,7 @@ function openModule(i){
  activeModule=i;activeGroup=moduleGroupByIndex.get(i)??0;refreshNav();el('adTitle').textContent=modules[i];el('adSub').textContent='হিসাব বিভাগের '+modules[i]+' · '+(currentInstitution()==='mosque'?'মসজিদ':'ফাউন্ডেশন');
  el('adAdd').hidden=!(i===1&&currentInstitution()==='mosque'&&chandaCanWrite);el('adReport').hidden=!(i===1&&currentInstitution()==='mosque'&&chandaCanView);el('adMonth').hidden=i!==1||currentInstitution()!=='mosque';
  if(i===2){renderExpensePayees().catch(showError);return}
+ if(i===3){renderDonations().catch(showError);return}
  if(i===0){renderDashboard().catch(showError);return}
  if(i===1){renderIncomeManagement().catch(showError);return}
  if(i===4){renderBankAccounts().catch(showError);return}
