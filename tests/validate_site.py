@@ -289,7 +289,7 @@ sequence_grants=(ROOT/'supabase/accounts-ledger-sequence-permissions.sql').read_
 assert 'account_receipt_seq to authenticated' in sequence_grants and 'account_voucher_seq to authenticated' in sequence_grants, 'Accounts receipt and voucher sequences must be usable by authenticated RLS-protected writers'
 obligation_read_grant=(ROOT/'supabase/accounts-obligation-payments-read-grant.sql').read_text(encoding='utf-8')
 assert 'account_obligation_payments to authenticated' in obligation_read_grant, 'Accounts UI must be able to read RLS-filtered obligation payment history'
-assert 'accounts-enterprise.js?v=20261125-3' in accounts, 'Accounts enterprise permission fixes must use a refreshed browser cache key'
+assert 'accounts-enterprise.js?v=20261126-payee-audit1' in accounts, 'Accounts enterprise permission fixes must use a refreshed browser cache key'
 assert 'account_journal_lines' in enterprise_js, 'Cash and bank books must use posted double-entry journal lines'
 assert 'account_submit_obligation_payment' in enterprise_js and 'account_obligation_payments' in enterprise_js, 'Obligation payments must enter the ledger approval flow'
 assert 'data-pending' in enterprise_js and 'অনুমোদনের অপেক্ষায়' in (ROOT/'accounts.html').read_text(encoding='utf-8'), 'Pending obligation payments must be tracked separately'
