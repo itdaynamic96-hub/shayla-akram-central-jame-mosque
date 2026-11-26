@@ -493,3 +493,9 @@ assert all(x in staff_admin for x in ('.staff-module-mosque','.staff-module-gove
 # Income and expense entry must be separate choices, never a mixed type selector.
 assert 'id="type" type="hidden" value="income"' in accounts_html and '<select id="type">' not in accounts_html, 'Accounts: income form must not offer expense as a type option'
 assert "setLedgerEntryType('expense')" in dashboard_js and "setLedgerEntryType('income')" in dashboard_js, 'Accounts: separate income and expense entry routes must set a fixed transaction type'
+
+# Separate standalone income and expense forms: distinct IDs and fixed transaction types.
+assert 'id="expenseEntryForm"' not in accounts_html and 'createSeparateExpenseForm' in accounts_html, 'Accounts: expense form must be created as a distinct cloned form with unique field IDs'
+assert "submitLedgerEntry(e,'income','')" in accounts_html and "submitLedgerEntry(e,'expense','expense')" in accounts_html, 'Accounts: income and expense forms must submit fixed transaction types independently'
+assert "$('type').options" not in accounts_html, 'Accounts: hidden transaction type must not be accessed as a select element'
+assert "$('expenseEntryPanel').hidden=!expenseAllowed" in accounts_html, 'Accounts: expense form visibility must follow expense permission'
