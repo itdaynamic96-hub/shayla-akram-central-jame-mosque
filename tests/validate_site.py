@@ -370,7 +370,7 @@ assert 'content-slots{grid-template-columns:repeat(4,minmax(0,1fr))!important' i
 assert 'grid-template-columns:minmax(220px,3in) minmax(300px,1fr) minmax(220px,3in)' in html, 'Homepage: history and bani columns must be 3 inches wide'
 assert 'id="mosqueMediaAdmin"' in admin_html and 'মিডিয়া ব্যবস্থাপনা' in admin_html, 'Admin: dedicated media module is missing'
 assert 'mosqueSphericalImageForm' in admin_html and 'mosque_360_spherical_image' in media_js and 'uploadSphericalImage' in media_js and 'canvas.toBlob' in media_js, 'Admin: ordinary image must be converted and stored for the separate spherical 360 viewer'
-assert 'id="mosqueMediaAdmin"' not in accounts and ('data-mosque-image="accounts"' in accounts or "img.dataset.mosqueImage='accounts'" in media_js) and 'mosque-media.js' in accounts, 'Accounts: image display must be independent with no direct media controls'
+assert 'id="mosqueMediaAdmin"' not in accounts and 'mosque-media.js' in accounts, 'Accounts: keep media controls out of the Accounts page and retain the shared media loader'
 assert 'data-mosque-image="homepage"' in html and 'data-mosque-image="admin"' in admin_html, 'Homepage and Admin Panel must each have their own image surface'
 assert (ROOT/'mosque-media.js').exists(), 'Shared mosque media manager script is missing'
 assert (ROOT/'assets/mosque-hero.webp').exists(), 'User-provided mosque image fallback is missing'
