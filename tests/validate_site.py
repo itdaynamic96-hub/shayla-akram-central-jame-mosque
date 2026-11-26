@@ -559,3 +559,8 @@ assert "wrapSelection(editor,'font-size',n+'px')" in rich_text and "Number(size[
 assert "document.execCommand('bold')" in rich_text and "aria-pressed" in rich_text, 'Rich text editor must toggle bold on and off with visible state'
 assert "color.type='color'" in rich_text and "wrapSelection(editor,'color',color.value)" in rich_text, 'Rich text editor must apply custom text colors to selected text'
 assert 'rich-tool-size-apply' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: custom font size apply control must be styled'
+
+# Rich text controls must initialize dynamically-rendered module forms once, without observer recursion.
+assert "if(field.dataset.richReady==='1')return" in rich_text, 'Rich text editor must not recursively wrap an already initialized field'
+assert 'window.MosqueRichText.init(wrap)' in admin_modules_source, 'Dynamic module forms must initialize rich text controls immediately after rendering'
+assert 'rich-text-editor.js?v=20261126-home-text-toolbar-fix2' in admin_html_text, 'Admin rich text toolbar cache must be refreshed'
