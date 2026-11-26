@@ -190,7 +190,7 @@ function fieldInput(field,value='',old={},required=false){
  const accept=type==='video'?'video/mp4,video/webm,video/ogg':type==='file'?'.pdf,application/pdf,image/jpeg,image/png,image/webp':type==='image'?'image/jpeg,image/png,image/webp,image/gif':'';
  const fileLabel=type==='video'?'ভিডিও ফাইল':type==='file'?'ফাইল আপলোড':'ছবি আপলোড';
  const upload=kind?'<label class="admin-upload-label" for="recordUpload_'+key+'">'+fileLabel+'</label><input class="admin-file-input" id="recordUpload_'+key+'" type="file" accept="'+accept+'"><small class="muted">ফাইল নির্বাচন করলে লিংক স্বয়ংক্রিয়ভাবে যুক্ত হবে।</small>':'';
- return '<div class="admin-field"><label for="'+id+'">'+escapeHtml(label)+(required?' *':'')+'</label><input id="'+id+'" type="'+inputType+'" value="'+safe+'" '+(type==='number'?'min="0" step="any"':'')+' maxlength="2000"'+req+'>'+upload+'</div>';
+ return '<div class="admin-field"><label for="'+id+'">'+escapeHtml(label)+(required?' *':'')+'</label><input id="'+id+'" '+(richField?'data-rich-editor="true" ':'')+'type="'+inputType+'" value="'+safe+'" '+(type==='number'?'min="0" step="any"':'')+' maxlength="2000"'+req+'>'+upload+'</div>';
 }
 function form(m,r=null){
  const wrap=$('moduleFormWrap');if(!wrap)return;
