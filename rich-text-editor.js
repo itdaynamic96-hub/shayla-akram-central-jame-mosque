@@ -17,7 +17,7 @@ function clean(value){
    const rules=[];
    if(size&&Number(size[1])>=10&&Number(size[1])<=72)rules.push('font-size:'+Number(size[1])+'px');
    if(color){let hex=color[1];if(!hex.startsWith('#')){const channels=color.slice(2,5).map(Number);if(channels.every(n=>n>=0&&n<=255))hex='#'+channels.map(n=>n.toString(16).padStart(2,'0')).join('')}if(/^#[0-9a-f]{6}$/i.test(hex))rules.push('color:'+hex.toLowerCase())}
-   const align=style.match(/text-align\\s*:\\s*(left|center|right|justify|start|end)\\b/i);if(align)rules.push('text-align:'+align[1].toLowerCase());if(rules.length)el.setAttribute('style',rules.join(';'));
+   const align=style.match(/text-align\s*:\s*(left|center|right|justify|start|end)\b/i);if(align)rules.push('text-align:'+align[1].toLowerCase());if(rules.length)el.setAttribute('style',rules.join(';'));
   }
   Array.from(node.childNodes).forEach(child=>copy(child,el));parent.appendChild(el);
  }
