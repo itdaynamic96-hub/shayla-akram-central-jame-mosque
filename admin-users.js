@@ -126,7 +126,8 @@ function renderChecks(selected = []) {
   const card = m => {
     const old = selectedMap.get(m.key) || {};
     const number = String(Number(m.key.slice(1))).padStart(2,"0");
-    const group = Number(m.key.slice(1)) >= 51 ? "governance" : "mosque";
+    const n = Number(m.key.slice(1));
+    const group = n >= 62 ? "accounts" : n >= 51 ? "governance" : "mosque";
     return `<div class="staff-module staff-module-item staff-module-${group}" data-module-card="${m.key}">
       <label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
         <span class="staff-module-number">${number}</span>
