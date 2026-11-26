@@ -35,10 +35,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "22"
-      - name: Install pinned browser TTS build dependencies
-        run: npm install --no-audit --no-fund
-      - name: Build local Svara browser TTS
-        run: npm run build:tts
       - name: Validate site files and inline scripts
         run: python tests/validate_site.py
   deploy:
@@ -55,12 +51,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "22"
-      - name: Install pinned browser TTS build dependencies
-        run: npm install --no-audit --no-fund
-      - name: Build local Svara browser TTS
-        run: npm run build:tts
-      - name: Remove build-only dependencies from the Pages artifact
-        run: rm -rf node_modules package-lock.json
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Upload site
