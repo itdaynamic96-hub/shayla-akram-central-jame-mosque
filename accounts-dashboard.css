@@ -137,3 +137,19 @@
 #accountsDashboard nav button.active{background:linear-gradient(100deg,#b8944e,#e3c878)!important;color:#173b2b!important;box-shadow:0 5px 14px #001d1238!important}
 #accountsDashboard nav button:hover{background:#ffffff20!important}
 #accountsDashboard nav button.active .num{background:#173b2b22!important;color:#173b2b!important}
+
+/* Simplified 8-section Accounts navigation with permission-aware submodules. */
+#accountsDashboard #adNav{display:grid;gap:6px}
+#accountsDashboard #adNav button{width:100%;min-width:0;line-height:1.45}
+#accountsDashboard #adNav button .num{font-family:'Noto Sans Bengali',sans-serif}
+#accountsDashboard #adSubNav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 12px;padding:9px 10px;background:#fff;border:1px solid #d7e2ed;border-radius:11px;box-shadow:0 3px 10px rgba(18,52,82,.045)}
+#accountsDashboard #adSubNav[hidden]{display:none!important}
+#accountsDashboard #adSubNav button{flex:0 0 auto;border:1px solid #cbd8e6;border-radius:8px;background:#f3f7fb;color:#23415e!important;padding:8px 12px;font:600 13px 'Noto Sans Bengali',sans-serif;cursor:pointer}
+#accountsDashboard #adSubNav button.active{background:#087f50!important;border-color:#087f50;color:#fff!important}
+#accountsDashboard #adSubNav button:hover{border-color:#087f50;background:#e8f5ee}
+@media(max-width:760px){
+ #accountsDashboard #adNav{display:flex;overflow-x:auto;gap:6px;padding-bottom:5px}
+ #accountsDashboard #adNav button{width:auto;white-space:nowrap;flex:0 0 auto}
+ #accountsDashboard #adSubNav{flex-wrap:nowrap;overflow-x:auto;padding:7px}
+ #accountsDashboard #adSubNav button{white-space:nowrap}
+}
