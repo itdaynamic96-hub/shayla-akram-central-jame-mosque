@@ -413,7 +413,7 @@ assert 'admin_dashboard_settings_updated_by_idx' in hardening_sql, 'Admin dashbo
 admin_modules=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert 'dashboardSettingsOpen=true' in admin_modules and 'settingsPanel.hidden=!dashboardSettingsOpen' in admin_modules, 'Dashboard settings panel must remain open after saving'
 assert "dashboardSettingsNotice='সফলভাবে সংরক্ষিত হয়েছে।'" in admin_modules, 'Dashboard save success must remain visible after dashboard rerender'
-assert 'admin-modules.js?v=20261126-layoutfix2' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
+assert 'admin-modules.js?v=20261126-chanda-route-fix1' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin dashboard settings cache key must be refreshed'
 
 # Website Admin: each writable website module has its own concise field schema.
 admin_modules_text=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
@@ -439,7 +439,7 @@ admin_modules_private=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
 assert "['file_url','প্রতিবেদন ফাইল','private-file']" in admin_modules_private, 'Admin reports must use private-file field type'
 assert "supabase.storage.from('private-module-files').createSignedUrl(path,300)" in admin_modules_private, 'Private report downloads must use short-lived signed URLs'
 assert "kind==='video'?52428800" in admin_modules_private, 'Video upload validation must match the 50 MB Storage bucket limit'
-assert 'admin-modules.js?v=20261126-layoutfix2' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
+assert 'admin-modules.js?v=20261126-chanda-route-fix1' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
 
 # Admin layout regression: fixed sidebar must not be combined with a narrow centered main container.
 admin_layout_html=(ROOT/'admin.html').read_text(encoding='utf-8')
