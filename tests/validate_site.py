@@ -126,7 +126,10 @@ assert 'super admins update dashboard settings' in (ROOT/'supabase/schema.sql').
 print('Admin Panel checks passed: 85 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
-assert '২৪টি পৃথক মডিউল ৬২–৮৫' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: staff manager must explain granular Accounts permissions'
+assert '৮টি প্রধান বিভাগে' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: staff manager must explain the 8 Accounts groups'
+staff_users_source=(ROOT/'admin-users.js').read_text(encoding='utf-8')
+assert 'const accountGroups = [' in staff_users_source and 'data-accounts-group=' in staff_users_source, 'Admin: Accounts staff permissions must be grouped into 8 selectable sections'
+assert all(k in staff_users_source for k in ('m62','m63','m65','m85','m64','m69','m70','m66','m67','m68','m78','m71','m72','m74','m75','m76','m73','m77','m79','m80','m81','m82','m83','m84')), 'Admin: all 24 granular Accounts permission keys must remain available'
 assert 'admin_module_permissions' in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Module permission migration is missing'
 assert 'createUser' in (ROOT/'supabase/functions/admin-create-user/index.ts').read_text(encoding='utf-8'), 'Secure Auth user creation Edge Function is missing'
 assert 'custom_admin' in (ROOT/'admin-modules.js').read_text(encoding='utf-8'), 'Custom module permissions are not wired into Admin modules'
@@ -179,6 +182,8 @@ assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform 
 tts_edge=(ROOT/'supabase/functions/bengali-tts/index.ts').read_text(encoding='utf-8')
 assert 'GOOGLE_TTS_API_KEY' in tts_edge and 'bn-IN-Standard-B' in tts_edge and 'ssmlGender: "MALE"' in tts_edge, 'Read Aloud: Edge Function must request the configured Bengali male voice'
 assert 'texttospeech.googleapis.com/v1/text:synthesize' in tts_edge, 'Read Aloud: Google Cloud TTS endpoint is missing'
+assert 'GOOGLE_TTS_API_KEY' in (ROOT/'SUPABASE_SETUP.md').read_text(encoding='utf-8'), 'Read Aloud: setup docs must describe the required Google Cloud API secret'
+assert 'configured: false' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must not claim the unconfigured service is ready'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
