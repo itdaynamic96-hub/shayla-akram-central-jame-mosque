@@ -56,5 +56,4 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 
 
-Bengali male Read Aloud uses the Google Cloud Text-to-Speech `bn-IN-Standard-B` voice through the Supabase Edge Function `bengali-tts`. It requires the Google Cloud API key stored as the Supabase Edge Function secret `GOOGLE_TTS_API_KEY`; never put that key in browser code or GitHub. The live health check currently reports `configured: false`, so audio generation remains unavailable until the secret is configured and a real audio smoke test passes.
-The Accounts single-operator workflow posts directly only when the assigned user has both `can_write` and `can_approve`; write-only users submit Pending entries.
+Bengali male Read Aloud runs locally in the browser with the Svara-TTS v1 ONNX model. It does not require Google Cloud Text-to-Speech, a Supabase Edge Function, or the `GOOGLE_TTS_API_KEY` secret. The first use downloads approximately 1.95 GB of model weights and requires a WebGPU + shader-f16 capable browser/GPU; subsequent use can reuse the browser cache.
