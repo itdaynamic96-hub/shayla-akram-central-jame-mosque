@@ -176,7 +176,7 @@ reader_check=subprocess.run(['node','--check','--input-type=module'],input=reade
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-espeak-bn1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-espeak-bn-ar1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
@@ -199,6 +199,7 @@ assert "'.video-card'" in reader_js and "'.content-slot.video-card'" in reader_j
 assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
 assert 'GOOGLE_TTS_API_KEY' not in reader_js and 'functions/v1/bengali-tts' not in reader_js, 'Read Aloud: browser must not depend on Google TTS or Supabase secrets'
 assert 'runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download)' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document the lightweight Spellophone/eSpeak voice'
+assert 'Arabic and Bengali' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document Arabic and Bengali voice support'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
