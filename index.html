@@ -443,7 +443,7 @@ function openPublishedPage(slug){
  $('detailTitle').innerHTML=window.MosqueRichText.html(d.page_title||record.title||'তথ্য পেজ');$('detailDesc').innerHTML=window.MosqueRichText.html(d.page_summary||'');
  document.title=d.seo_title||d.page_title||record.title||document.title;
  const root=$('detailItems');root.replaceChildren();
- String(d.page_body||'').split(/\n{2,}/).map(x=>x.trim()).filter(Boolean).forEach(paragraph=>{const p=document.createElement('p');p.className='detailcard';p.textContent=paragraph;root.appendChild(p)});
+ const article=document.createElement('article');article.className='detailcard rich-content';article.innerHTML=window.MosqueRichText.html(d.page_body||'');root.appendChild(article);
  $('detailPending').textContent='এই পেজটি কর্তৃপক্ষের অনুমোদনে প্রকাশিত হয়েছে।';
  history.replaceState(null,'','#page-'+key);window.scrollTo({top:0,behavior:'smooth'});closeMenus();
 }
