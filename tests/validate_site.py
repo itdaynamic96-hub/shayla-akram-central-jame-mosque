@@ -557,5 +557,5 @@ assert 'modules:[1,3,23]' in accounts_dashboard, 'Accounts: donor and monthly ch
 assert "size.max='300'" in rich_text and "size.min='1'" in rich_text and "size.type='number'" in rich_text, 'Rich text editor must accept custom 1–300 px sizes, not a fixed preset list'
 assert "wrapSelection(editor,'font-size',n+'px')" in rich_text and "Number(size[1])<=300" in rich_text, 'Rich text sanitizer must preserve custom font sizes through 300 px'
 assert "document.execCommand('bold')" in rich_text and "aria-pressed" in rich_text, 'Rich text editor must toggle bold on and off with visible state'
-assert "input.type='color'" in rich_text and "wrapSelection(editor,'color',color.value)" in rich_text, 'Rich text editor must apply custom text colors to selected text'
+assert "color.type='color'" in rich_text and "wrapSelection(editor,'color',color.value)" in rich_text, 'Rich text editor must apply custom text colors to selected text'
 assert 'rich-tool-size-apply' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: custom font size apply control must be styled'
