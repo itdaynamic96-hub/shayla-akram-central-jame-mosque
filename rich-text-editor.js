@@ -33,6 +33,7 @@ function escapeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 function init(root=document){
  const candidates=root.querySelectorAll('[data-rich-editor="true"],textarea:not([data-no-rich]),input[type="text"]:not([data-no-rich])');
  candidates.forEach(field=>{
+  if(field.dataset.richReady==='1')return;
   if(!field.matches('[data-rich-editor="true"]')&&!document.body.hasAttribute('data-rich-text-admin'))return;
   const hint=[field.id,field.name,field.placeholder,field.getAttribute('aria-label'),field.parentNode?.textContent].join(' ').toLowerCase();
   if(/phone|mobile|email|url|link|slug|code|number|date|time|amount|account|reference|receipt|password|search|filter|token|\bid\b|bank|routing|postal|zip|nid|passport|username/.test(hint))return;
