@@ -389,7 +389,7 @@ input,select,textarea,.search{border:1px solid #dcd5c5;border-radius:11px;paddin
 </script>
 <main id="islamicLibrary" class="wrap hidden">
   <section class="modulepanel islamic-library-panel">
-    <div class="crumb">শিক্ষা ও জ্ঞান · <span id="islamicCrumb" data-home-text="library_crumb">ইসলামিক জ্ঞানভান্ডার</span></div>
+    <div class="crumb"><span data-home-text="library_crumb_prefix">শিক্ষা ও জ্ঞান ·</span> <span id="islamicCrumb" data-home-text="library_crumb">ইসলামিক জ্ঞানভান্ডার</span></div>
     <div class="eyebrow" data-home-text="library_kicker">QURAN · HADITH · ISLAMIC KNOWLEDGE</div>
     <h1 id="islamicTitle" data-home-text="library_title">ইসলামিক জ্ঞানভান্ডার</h1>
     <p class="lead" id="islamicLead" data-home-text="library_lead">নির্ভরযোগ্য উৎস, মূল আরবি পাঠ ও বাংলা অনুবাদসহ দ্বীনি পাঠ।</p>
@@ -398,10 +398,10 @@ input,select,textarea,.search{border:1px solid #dcd5c5;border-radius:11px;paddin
       <p data-home-text="library_intro">উপরের মেনু থেকে কোরআন, হাদীস অথবা জ্ঞানভান্ডারের বিষয় নির্বাচন করুন۔</p>
     </div>
     <div class="pending" data-home-text="library_policy">ধর্মীয় তথ্য যাচাইয়ের নীতি: কোরআনের আরবি পাঠ ও বাংলা অনুবাদ উৎসসহ দেখানো হবে। শানে নুযুলের ক্ষেত্রে দুর্বল/বিতর্কিত বর্ণনাকে নিশ্চিত তথ্য হিসেবে দেখানো হবে না। হাদীসের ক্ষেত্রে গ্রন্থ ও নম্বর উল্লেখ থাকবে; ফিকহি সিদ্ধান্তের জন্য যোগ্য আলেমের পরামর্শ নিন।</div>
-    <div class="actions"><button class="action primary" type="button" onclick="closeIslamicLibrary()">← হোমে ফিরুন</button><button class="action" type="button" onclick="window.print()">প্রিন্ট / PDF</button></div>
+    <div class="actions"><button class="action primary" type="button" onclick="closeIslamicLibrary()" data-home-text="library_back_button">← হোমে ফিরুন</button><button class="action" type="button" onclick="window.print()" data-home-text="library_print_button">প্রিন্ট / PDF</button></div>
   </section>
 </main>
-<main id="detail" class="wrap hidden"><div class="modulepanel"><div class="crumb" id="crumb"></div><div class="eyebrow" id="detailGroup"></div><h1 id="detailTitle"></h1><p class="lead" id="detailDesc"></p><div class="detailgrid" id="detailItems"></div><div class="pending" id="detailPending"></div><div class="actions"><button class="action primary" onclick="showHome()">← হোমে ফিরুন</button><button class="action" onclick="window.print()">প্রিন্ট / PDF</button></div></div></main>
+<main id="detail" class="wrap hidden"><div class="modulepanel"><div class="crumb" id="crumb"></div><div class="eyebrow" id="detailGroup"></div><h1 id="detailTitle"></h1><p class="lead" id="detailDesc"></p><div class="detailgrid" id="detailItems"></div><div class="pending" id="detailPending"></div><div class="actions"><button class="action primary" onclick="showHome()" data-home-text="detail_back_button">← হোমে ফিরুন</button><button class="action" onclick="window.print()" data-home-text="detail_print_button">প্রিন্ট / PDF</button></div></div></main>
 
 <footer class="footer">© <span id="year"></span> <span data-home-text="footer_brand">শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</span> · <span data-home-text="footer_foundation">শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</span><br><span data-home-text="footer_palette">Dark Green · Gold · Ivory</span><br><a href="./accounts.html" rel="nofollow" data-home-text="footer_accounts">Accounts Login</a>　·　<a href="./admin.html" rel="nofollow" data-home-text="footer_admin">Admin Login</a></footer>
 
