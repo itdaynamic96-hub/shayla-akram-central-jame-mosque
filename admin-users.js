@@ -113,13 +113,22 @@ function renderChecks(selected = []) {
   const accountsModules = visibleModules.filter(m => Number(m.key.slice(1)) >= 62 && Number(m.key.slice(1)) <= 85);
   const accountsAllSelected = accountsModules.length > 0 && accountsModules.every(m => selectedMap.has(m.key));
   staffModuleRoot.innerHTML =
-    (accountsModules.length ? `<div class="staff-module staff-module-master"><label><input id="staffAccountsAllModules" type="checkbox" ${accountsAllSelected ? "checked" : ""}>
-      <strong>সম্পূর্ণ অ্যাকাউন্টিং সফটওয়্যার — ${accountsModules.length}টি প্রযোজ্য মডিউল</strong></label>
-      <small>এটি নির্বাচন করলে নির্বাচিত কর্মী অ্যাকাউন্টিংয়ের সব প্রযোজ্য মডিউলে দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ পূর্ণ কার্যক্রম পরিচালনা করতে পারবেন। আলাদা Approver লাগবে না।</small></div>` : "") +
+    (accountsModules.length ? `<div class="staff-module staff-module-master">
+      <label><input id="staffAccountsAllModules" type="checkbox" ${accountsAllSelected ? "checked" : ""}>
+        <span class="staff-master-copy"><strong>সম্পূর্ণ অ্যাকাউন্টিং সফটওয়্যার</strong><small>${accountsModules.length}টি প্রযোজ্য মডিউল · একসাথে সব নির্বাচন</small></span>
+      </label>
+      <p>এটি নির্বাচন করলে নির্বাচিত কর্মী অ্যাকাউন্টিংয়ের সব প্রযোজ্য মডিউলে দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ পূর্ণ কার্যক্রম পরিচালনা করতে পারবেন। আলাদা Approver লাগবে না।</p>
+    </div>` : "") +
     visibleModules.map(m => {
       const old = selectedMap.get(m.key) || {};
-      return `<div class="staff-module"><label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
-        <span>${String(Number(m.key.slice(1))).padStart(2,"0")}. ${escapeHtml(m.name)} — পূর্ণ কার্যক্রমের অনুমতি</span></label></div>`;
+      const number = String(Number(m.key.slice(1))).padStart(2,"0");
+      const group = Number(m.key.slice(1)) >= 62 ? "accounts" : Number(m.key.slice(1)) >= 51 ? "governance" : "mosque";
+      return `<div class="staff-module staff-module-item staff-module-${group}" data-module-card="${m.key}">
+        <label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
+          <span class="staff-module-number">${number}</span>
+          <span class="staff-module-copy"><strong>${escapeHtml(m.name)}</strong><small>পূর্ণ কার্যক্রমের অনুমতি</small></span>
+        </label>
+      </div>`;
     }).join("");
   const master = $("staffAccountsAllModules");
   if (master) master.addEventListener("change", () => {
