@@ -199,3 +199,10 @@ html,body{width:100%;max-width:none}
 #accountsDashboard .top-brand-copy span{font-size:14px!important;line-height:1.5!important;color:#e7d39b!important;font-weight:700!important}
 #accountsDashboard .top-brand-copy small{font-size:12px!important;color:#d6e2d9!important}
 @media(max-width:760px){#accountsDashboard .top-brand-copy b{font-size:24px!important}#accountsDashboard .top-brand-copy span{font-size:12px!important}}
+
+/* Keep the full 24-item Accounts module list usable on the left. */
+@media(min-width:761px){
+ #accountsDashboard .side{position:sticky;top:0;height:100vh;min-height:100vh;overflow-y:auto;align-self:start}
+ #accountsDashboard #adNav{gap:4px}
+ #accountsDashboard #adNav button{min-height:38px}
+}
