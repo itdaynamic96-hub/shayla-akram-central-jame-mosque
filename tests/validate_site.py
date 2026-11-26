@@ -94,7 +94,7 @@ print('Static site checks passed: HTML IDs, inline JavaScript syntax, 30 homepag
 admin_modules = (ROOT/'admin-modules.js').read_text(encoding='utf-8')
 module_data = admin_modules.split('const data=[', 1)[1].split('];' + chr(10) + 'const groups=', 1)[0]
 module_count = len(re.findall(r"\['[^']+','[^']+'\]", module_data))
-assert module_count == 86, f'Admin Panel: expected 86 module definitions including 24 detailed Accounts modules and the independent media module, found {module_count}'
+assert module_count == 87, f'Admin Panel: expected 87 module definitions including 24 detailed Accounts modules, media and YouTube Management modules, found {module_count}'
 subprocess.run(['node','--check','--input-type=module'],input=admin_modules,text=True,capture_output=True,check=True)
 media_module=(ROOT/'mosque-media.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=media_module,text=True,capture_output=True,check=True)
@@ -133,7 +133,7 @@ assert 'admin_dashboard_settings' in admin_modules and 'dashboardSettingsToggle'
 assert 'data-dash-metric' in admin_modules and 'data-dash-section' in admin_modules and 'data-dash-module' in admin_modules, 'Admin: dashboard visibility controls are incomplete'
 assert 'admin_dashboard_settings' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8'), 'Admin: dashboard settings schema is missing'
 assert 'super admins update dashboard settings' in (ROOT/'supabase/schema.sql').read_text(encoding='utf-8').lower(), 'Admin: dashboard settings must be Super Admin controlled'
-print('Admin Panel checks passed: 85 module definitions, module JS syntax, and RLS migration markers.')
+print('Admin Panel checks passed: 86 module definitions, module JS syntax, and RLS migration markers.')
 
 assert 'staffManager' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: Super Admin account manager is missing'
 assert '৮টি প্রধান বিভাগে' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: staff manager must explain the 8 Accounts groups'
