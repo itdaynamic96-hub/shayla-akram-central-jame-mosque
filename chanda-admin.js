@@ -95,6 +95,8 @@ async function loadAll(){
  ]);
  const failure=[membersRes,duesRes,logsRes,paymentsRes].find(x=>x.error);
  if(failure){if(err)showError(err,failure.error);return}
+ const requiredIds=['chandaMemberCount','chandaOutstanding','chandaOverdueCount','chandaMonthPaid','chandaMembersRows','chandaDueRows','cpMonthOptions','cpMonthTotal','cpDate','cpSubmit','cpMember','chandaCollectionForm','chandaLogsRows'];
+ if(requiredIds.some(id=>!$(id))){console.warn('Monthly chanda view was replaced before its data finished loading; stale render skipped.');return}
  const members=membersRes.data||[], dues=duesRes.data||[], logs=logsRes.data||[], payments=paymentsRes.data||[];
  const byId=new Map(members.map(m=>[m.id,m]));
  const today=todayDhaka(), month=today.slice(0,7);
