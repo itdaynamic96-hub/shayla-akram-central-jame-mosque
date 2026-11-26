@@ -219,8 +219,8 @@ $('date').value=dhakaDate();
  incomePanel.after(expensePanel);
 })();
 $('method')?.addEventListener('change',()=>loadBankAccountOptions().catch(e=>showError($('formError'),e)));$('expensemethod')?.addEventListener('change',()=>loadBankAccountOptions().catch(e=>showError($('expenseformError'),e)));
-if(!configured){setHidden('login',false);setHidden('setup',false);$('loginStatus').textContent='Supabase সংযোগ পাওয়া যায়নি। সেটআপ যাচাই প্রয়োজন; তবুও লগইন ফরম এখানে দৃশ্যমান থাকবে।'}else{setHidden('login',false);await boot()}
 const withTimeout=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' নির্ধারিত সময়ের মধ্যে উত্তর দেয়নি।')),ms))]);
+if(!configured){setHidden('login',false);setHidden('setup',false);$('loginStatus').textContent='Supabase সংযোগ পাওয়া যায়নি। সেটআপ যাচাই প্রয়োজন; তবুও লগইন ফরম এখানে দৃশ্যমান থাকবে।'}else{setHidden('login',false);await boot()}
 async function boot(){
  let current;
  // Stage 1: only authentication/session errors may return the user to the login form.
