@@ -83,7 +83,7 @@ function mount(){
 
 async function renderExpensePayees(){
  const p=el('adPage'),inst=currentInstitution();
- resetAdPage('<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
+ resetAdPage('<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><div><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button> <button type="button" class="action light" id="adGeneralExpense">＋ সাধারণ ব্যয় এন্ট্রি</button></div></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
  const [view,write]=await Promise.all([
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:false}),
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:true})
@@ -107,6 +107,7 @@ async function renderExpensePayees(){
  draw();el('adExpensePayeeSearch').oninput=draw;
  if(write.data)el('adNewPayee').onclick=()=>showExpensePayeeForm(inst);
  else el('adNewPayee').hidden=true;
+ el('adGeneralExpense').onclick=()=>{movePanel('entryForm');if(el('type'))el('type').value='expense'};
  el('adExpensePayeeRows').onclick=e=>{const b=e.target.closest('[data-payee-detail]');if(b)renderExpensePayeeDetail(b.dataset.payeeDetail,inst,write.data).catch(showError)};
 }
 function showExpensePayeeForm(inst){
