@@ -195,7 +195,7 @@ html,body{width:100%;max-width:none}
 #accountsDashboard #adExpensePayeeRows .muted{display:block;margin-top:3px;color:#334155!important;font-size:12px;font-weight:600;line-height:1.5;opacity:1}
 
 /* Match the shared mosque/foundation identity used on the public site and Admin Panel */
-#accountsDashboard .top-brand-copy b{font-size:30px!important;line-height:1.35!important;color:#fff0c6!important;font-weight:800!important}
+#accountsDashboard .top{background:linear-gradient(115deg,#082b20 0%,#174b35 55%,#0d3326 100%)!important;color:#fff!important;border-bottom:2px solid #b8944e!important}\n#accountsDashboard .top-brand-copy b{font-size:30px!important;line-height:1.35!important;color:#fff0c6!important;font-weight:800!important}
 #accountsDashboard .top-brand-copy span{font-size:14px!important;line-height:1.5!important;color:#e7d39b!important;font-weight:700!important}
 #accountsDashboard .top-brand-copy small{font-size:12px!important;color:#d6e2d9!important}
 @media(max-width:760px){#accountsDashboard .top-brand-copy b{font-size:24px!important}#accountsDashboard .top-brand-copy span{font-size:12px!important}}
