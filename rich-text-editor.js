@@ -48,16 +48,19 @@ function init(root=document){
   const underline=makeButton('U','আন্ডারলাইন',()=>document.execCommand('underline'));underline.classList.add('rich-tool-underline');
   const size=document.createElement('select');size.className='rich-tool-size';size.setAttribute('aria-label','লেখার আকার');size.title='লেখার আকার';
   [['','আকার'],['12','12 px'],['14','14 px'],['16','16 px'],['18','18 px'],['20','20 px'],['24','24 px'],['28','28 px'],['32','32 px'],['36','36 px'],['42','42 px'],['48','48 px'],['56','56 px'],['64','64 px'],['72','72 px']].forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;size.appendChild(o)});
-  size.addEventListener('change',()=>{if(size.value)wrapSelection(editor,'font-size',size.value+'px');size.value=''});
+  size.addEventListener('mousedown',rememberSelection);size.addEventListener('change',()=>{restoreSelection();if(size.value)wrapSelection(editor,'font-size',size.value+'px');size.value=''});
   const colorLabel=document.createElement('label');colorLabel.className='rich-tool-color';colorLabel.title='লেখার রং';colorLabel.textContent='রং';
-  const color=document.createElement('input');color.type='color';color.value='#174b35';color.setAttribute('aria-label','লেখার রং');color.addEventListener('input',()=>wrapSelection(editor,'color',color.value));colorLabel.appendChild(color);
+  const color=document.createElement('input');color.type='color';color.value='#174b35';color.setAttribute('aria-label','লেখার রং');color.addEventListener('mousedown',rememberSelection);color.addEventListener('input',()=>{restoreSelection();wrapSelection(editor,'color',color.value)});colorLabel.appendChild(color);
   const clear=makeButton('↺','ফরম্যাট সরান',()=>{document.execCommand('removeFormat');});
   const alignGroup=document.createElement('span');alignGroup.className='rich-tool-align-group';alignGroup.setAttribute('role','group');alignGroup.setAttribute('aria-label','লেখার এলাইনমেন্ট');
   [['justifyLeft','বাম','বাম দিকে সাজান'],['justifyCenter','মাঝ','মাঝখানে সাজান'],['justifyRight','ডান','ডান দিকে সাজান'],['justifyFull','Justify','দুই পাশ সমান (Justify)']].forEach(([command,label,title])=>{const b=makeButton(label,title,()=>document.execCommand(command));b.classList.add('rich-tool-align');if(command==='justifyFull')b.classList.add('rich-tool-justify');alignGroup.appendChild(b)});
   toolbar.append(bold,underline,size,colorLabel,alignGroup,clear);
   field.parentNode.insertBefore(wrap,field);wrap.append(toolbar,editor);wrap.appendChild(field);field.classList.add('rich-editor-source');
+  let savedRange=null;
+  const rememberSelection=()=>{const selection=window.getSelection();if(selection?.rangeCount&&editor.contains(selection.anchorNode))savedRange=selection.getRangeAt(0).cloneRange()};
+  const restoreSelection=()=>{editor.focus();if(!savedRange||!editor.contains(savedRange.commonAncestorContainer))return;const selection=window.getSelection();selection.removeAllRanges();selection.addRange(savedRange.cloneRange())};
   const sync=()=>{field.value=(editor.textContent||'').trim()?clean(editor.innerHTML):'';field.dispatchEvent(new Event('input',{bubbles:true}))};
-  editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('input',sync);editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
+  editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('keyup',rememberSelection);editor.addEventListener('mouseup',rememberSelection);editor.addEventListener('input',()=>{sync();rememberSelection()});editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
   field.addEventListener('change',()=>{if(document.activeElement!==editor)editor.innerHTML=html(field.value)});
  });
 }
