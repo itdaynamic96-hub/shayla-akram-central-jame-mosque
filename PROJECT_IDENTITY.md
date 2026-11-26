@@ -25,9 +25,9 @@ This repository and Supabase project are the **SAKM-61** 61-module Enterprise we
 - Encrypted backups are best-effort recovery bundles, not guaranteed one-click project clones. They exclude password hashes, active sessions, provider credentials, Supabase project secrets, dashboard-only settings, and a verified fresh-project restore.
 
 ## Accounts Panel scope
-- The approved Accounts Panel has **22 core modules** and separate Mosque/Foundation institution views, scoped by the signed-in profile and module permissions.
+- The Accounts Panel presents **8 top-level groups** containing **24 detailed feature permissions** (module keys m62–m85), with separate Mosque/Foundation institution views. The 24 underlying permission keys remain intact for backward compatibility and fine-grained staff access; they are not 24 separate top-level menu sections.
 - Monthly chanda collection is integrated inside **Donors & Donations**; it is not a separate top-level module. Messaging and notification management is available inside **Settings**.
-- The 22 modules include dashboard, income, expenses, donors/donations, bank/cash, transfers, cashbook/ledger, receivables/bills, payroll, budgets, funds, receipts/vouchers, financial reports, PDF/Excel, trial balance/balance sheet, search, bank reconciliation, audit/verification, approvals, audit trail, users/permissions, and settings.
+- The 8 top-level groups are: Dashboard; Income, donors and monthly chanda; Expenses, receivables and payroll; Bank, cash and transactions; Budget and funds; Reports and financial statements; Receipts and search; Audit, approvals and settings. Existing detailed permissions and database records remain unchanged.
 - Bank reconciliation creation calculates book balance server-side. Statement lines must match posted journal lines for the same bank account, amount, direction, institution, and statement date; draft records can be removed by their creator.
 - Bank account numbers are masked server-side; only the last four digits are retained in the masked field.
 
