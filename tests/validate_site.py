@@ -76,6 +76,8 @@ history_end=html.index('</section>', intro_start)
 notice_section=html.index('aria-label="সর্বশেষ নোটিশ ও সাম্প্রতিক কার্যক্রম"')
 notice_start=html.index('<div class="homegrid', notice_section)
 assert intro_start < history_end < notice_section < notice_start, 'Homepage: history and latest updates sections must exist in document order'
+assert 'minmax(300px,5in)!important' in html and 'width:5in!important' in html, 'Homepage: Mutawalli and naming-history cards must retain equal 5-inch desktop width'
+assert 'flex-direction:column!important' in html and 'id="naming-history"' in html, 'Homepage: naming-history card must remain below the Mutawalli card'
 assert 'id="latest-notice-content"' in html and 'id="latest-activity-content"' in html
 assert "from('announcements')" in html and "eq('status','published')" in html
 assert 'YOUR-PROJECT' in (ROOT/'supabase-config.js').read_text(encoding='utf-8') or 'https://' in (ROOT/'supabase-config.js').read_text(encoding='utf-8')
