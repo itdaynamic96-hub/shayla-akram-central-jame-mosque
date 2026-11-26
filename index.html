@@ -490,7 +490,7 @@ renderNav();
    if(publishedError)throw publishedError;
    publishedModuleRecords=published||[];applyAdminMenuRecords(publishedModuleRecords);if(location.hash.startsWith('#page-'))openPublishedPage(location.hash.slice(6));
    const homeData=publishedModuleRecords.filter(x=>x.module_key==='m07').sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0))[0]?.data||{};
-   document.querySelectorAll('[data-home-text]').forEach(node=>{const key=node.getAttribute('data-home-text');if(Object.prototype.hasOwnProperty.call(homeData,key)&&homeData[key]!==null&&String(homeData[key]).trim()!=='')node.innerHTML=window.MosqueRichText.html(homeData[key])});
+   document.querySelectorAll('[data-home-text]').forEach(node=>{const key=node.getAttribute('data-home-text');if(Object.prototype.hasOwnProperty.call(homeData,key)&&homeData[key]!==null)node.innerHTML=window.MosqueRichText.html(homeData[key])});
    if(homeData.banner_title||homeData.welcome_title||homeData.welcome_message||homeData.banner_image){
     const root=document.getElementById('admin-home-banner');root.hidden=false;root.replaceChildren();
     const card=document.createElement('article');card.className='card';card.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,36%);gap:18px;align-items:center;background:linear-gradient(120deg,#103b2b,#1e5a40);color:#fff4d2;padding:clamp(18px,4vw,38px);border:1px solid #b8944e;border-radius:18px';
