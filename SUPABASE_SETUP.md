@@ -98,15 +98,15 @@ For an existing database created before this fix, run `supabase/fix-public-site-
 The Admin Panel dashboard layout is controlled by the Super Admin from the **ড্যাশবোর্ড সাজান** button. Visibility for metric cards, dashboard sections, and quick-access modules is stored in `public.admin_dashboard_settings`. All authenticated staff can read the shared layout; only a `super_admin` can change it. The table is created by migration `20261125162200_admin_dashboard_preferences`.
 
 
-## API Key ছাড়া বাংলা ভয়েস
+## বাংলা পুরুষ কণ্ঠের Read Aloud
 
-ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি Supabase Edge Function `bengali-tts` দিয়ে Google Translate-এর Bengali TTS RPC ব্যবহার করে। আলাদা Google Cloud API key, Microsoft key বা paid subscription লাগে না।
+ওয়েবসাইটের “বাংলায় শুনুন” ফিচারটি Supabase Edge Function `bengali-tts` ব্যবহার করে Google Cloud Text-to-Speech-এর `bn-IN-Standard-B` পুরুষ কণ্ঠ তৈরি করে। এই সংস্করণে Google Cloud Text-to-Speech API চালু থাকা Google Cloud project এবং API key প্রয়োজন; API key ছাড়া সার্ভিস অডিও তৈরি করতে পারবে না।
 
-- Google-এর বর্তমান gTTS-compatible RPC ব্যবহার করা হয়েছে; প্রতি upstream অনুরোধে সর্বোচ্চ ১০০ অক্ষর পাঠানো হয়।
-- ওয়েবসাইটের ৪৫০ অক্ষরের অংশকে Edge Function স্বয়ংক্রিয়ভাবে ১০০ অক্ষরের ছোট অংশে ভাগ করে অডিও একত্র করে।
-- এটি Google-এর undocumented Translate speech endpoint; official Google Cloud TTS নয়। Google চাইলে endpoint বদলাতে পারে বা rate-limit করতে পারে, তাই কোনো uptime/quota guarantee নেই।
-- অডিও তৈরি না হলে কিছুক্ষণ পর আবার চেষ্টা করতে হবে।
-
+- Google Cloud Console-এ Cloud Text-to-Speech API চালু করে প্রয়োজনীয় API key তৈরি করুন এবং billing/API restrictions ঠিক করুন।
+- API key শুধু Supabase Dashboard → Edge Functions → Secrets-এ `GOOGLE_TTS_API_KEY` নামে সংরক্ষণ করুন। এটি কখনো GitHub, HTML, JavaScript বা chat-এ লিখবেন না।
+- Edge Function `bengali-tts`-এর health endpoint: `/functions/v1/bengali-tts?health=1`; `configured: true` হলে key পাওয়া যাচ্ছে। `configured: false` হলে key অনুপস্থিত এবং Read Aloud অনুপলব্ধ থাকবে।
+- বর্তমান লাইভ health check (26 November 2026) `configured: false` দেখিয়েছে। তাই API key নিরাপদে যোগ ও বাস্তব অডিও পরীক্ষা না করা পর্যন্ত বাংলা পুরুষ কণ্ঠের ফিচারকে সচল বলা যাবে না।
+- ওয়েবসাইটের প্রতিটি অংশ সর্বোচ্চ ১৮০ অক্ষরের ছোট অংশে ভাগ করে অডিও তৈরি করে; দীর্ঘ লেখা ধারাবাহিকভাবে চালানো হয়।
 
 ## Single-operator Accounts workflow
 
