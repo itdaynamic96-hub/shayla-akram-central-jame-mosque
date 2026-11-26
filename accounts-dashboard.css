@@ -128,3 +128,12 @@
 .payroll-pay-actions button{border:0;border-radius:9px;padding:10px 14px;background:linear-gradient(120deg,#123b2c,#1e6043);color:#fff;cursor:pointer;font-weight:700}
 .payroll-pay-actions button.secondary{background:#edf1ec;color:#304a38;border:1px solid #cbd7cb}
 @media(max-width:520px){.payroll-pay-months,.payroll-pay-fields{grid-template-columns:1fr}.payroll-pay-wide{grid-column:auto}.payroll-pay-card{padding:13px}}
+
+/* Accounts sidebar matches the page header: deep emerald with warm gold accents */
+#accountsDashboard .side{background:linear-gradient(120deg,#073b2c 0%,#145b40 58%,#1d6043 100%)!important;color:#fff!important;border-right:1px solid #b8944e!important}
+#accountsDashboard .side .brand{color:#fff4d5!important;border-bottom-color:#d9c17b66!important}
+#accountsDashboard .side .brand small{color:#e2eee6!important}
+#accountsDashboard nav button{color:#f3f8f4!important}
+#accountsDashboard nav button.active{background:linear-gradient(100deg,#b8944e,#e3c878)!important;color:#173b2b!important;box-shadow:0 5px 14px #001d1238!important}
+#accountsDashboard nav button:hover{background:#ffffff20!important}
+#accountsDashboard nav button.active .num{background:#173b2b22!important;color:#173b2b!important}
