@@ -176,7 +176,7 @@ reader_check=subprocess.run(['node','--check','--input-type=module'],input=reade
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-svara-local1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261126-espeak-bn1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
@@ -184,8 +184,9 @@ for page_name in ('index.html','admin.html','accounts.html'):
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
 assert '[lang="ar"]' in reader_js and '.arabic-pronunciation' in reader_js, 'Read Aloud: Arabic text must not be passed to Bengali TTS as if it were Bengali'
-assert "from './assets/svara-build/engine.js'" in reader_js and "speaker_id:'Bengali (Male)'" in reader_js and 'new Audio(message.audio)' in reader_js, 'Read Aloud: browser must use the local Svara Bengali male voice engine'
-assert 'প্রায় ১.৯৫ জিবি' in reader_js and "type:'preload'" in reader_js and 'WebGPU' in reader_js, 'Read Aloud: local model download and WebGPU support messaging are required'
+assert '@spelling-creator/spellophone@0.2.1/dist/browser.js' in reader_js and "engine.loadVoice('bn')" in reader_js and "engine.setVoice('bn')" in reader_js, 'Read Aloud: must use the supplied module’s lightweight Bengali eSpeak voice'
+assert 'createSvaraEngine' not in reader_js and '১.৯৫ জিবি' not in reader_js and 'WebGPU' not in reader_js, 'Read Aloud: obsolete multi-GB Svara/WebGPU model must no longer be required'
+assert 'encodeWav' in reader_js and 'new Audio(session.audioUrl)' in reader_js, 'Read Aloud: synthesized Bengali audio must be encoded and played in browser'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
@@ -196,7 +197,7 @@ assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran
 assert "'.video-card'" in reader_js and "'.content-slot.video-card'" in reader_js, 'Share: every video gallery card must receive a share control'
 assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
 assert 'GOOGLE_TTS_API_KEY' not in reader_js and 'functions/v1/bengali-tts' not in reader_js, 'Read Aloud: browser must not depend on Google TTS or Supabase secrets'
-assert 'runs locally in the browser with the Svara-TTS v1 ONNX model' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document local Svara playback'
+assert 'runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download)' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document local Svara playback'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
 subprocess.run(['node','--check','--input-type=module'],input=chanda_js,text=True,capture_output=True,check=True)
