@@ -84,7 +84,7 @@ function mount(){
 
 async function renderExpensePayees(){
  const p=el('adPage'),inst=currentInstitution();
- resetAdPage('<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><div><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button> <button type="button" class="action light" id="adGeneralExpense">＋ সাধারণ ব্যয় এন্ট্রি</button></div></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
+ movePanel('expenseEntryForm');p.insertAdjacentHTML('beforeend','<section class="panel"><div class="head"><h2>ব্যয় ব্যবস্থাপনা — টাকা প্রাপক</h2><div><button type="button" class="action green" id="adNewPayee">＋ নতুন প্রাপক নিবন্ধন</button></div></div><div class="body"><div id="adExpensePayeeList"><div class="empty">প্রাপকের তালিকা লোড হচ্ছে…</div></div></div></section>');
  const [view,write]=await Promise.all([
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:false}),
   supabase.rpc('accounts_feature_access',{target_institution:inst,target_module:'m64',write_access:true})
@@ -108,7 +108,6 @@ async function renderExpensePayees(){
  draw();el('adExpensePayeeSearch').oninput=draw;
  if(write.data)el('adNewPayee').onclick=()=>showExpensePayeeForm(inst);
  else el('adNewPayee').hidden=true;
- el('adGeneralExpense').onclick=()=>{movePanel('entryForm');setLedgerEntryType('expense')};
  el('adExpensePayeeRows').onclick=e=>{const b=e.target.closest('[data-payee-detail]');if(b)renderExpensePayeeDetail(b.dataset.payeeDetail,inst,write.data).catch(showError)};
 }
 function showExpensePayeeForm(inst){
@@ -157,8 +156,8 @@ async function renderExpenseJobHistory(jobId,person,inst){
 }
 function setLedgerEntryType(type){
  const field=el('type');if(field)field.value=type;
- const heading=el('entryFormTitle');if(heading)heading.textContent=type==='expense'?'নতুন ব্যয় / টাকা পরিশোধের তথ্য':'নতুন আয় / টাকা জমার তথ্য';
- const partyLabel=el('partyLabel');if(partyLabel)partyLabel.textContent=type==='expense'?'প্রাপক / দোকানদারের নাম':'দাতা / চাঁদাদাতার নাম';
+ const heading=el('entryFormTitle');if(heading)heading.textContent='নতুন আয় / টাকা জমার তথ্য';
+ const partyLabel=el('partyLabel');if(partyLabel)partyLabel.textContent='দাতা / চাঁদাদাতার নাম';
 }
 function openModule(i){
  if(!visibleModules.includes(i))return;
