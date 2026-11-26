@@ -110,39 +110,82 @@ function renderChecks(selected = []) {
   const visibleModules = modules.filter(m => { const n = Number(m.key.slice(1)); return !(n >= 41 && n <= 50) && (n !== 61 || institution !== "foundation") && (n !== 85 || institution !== "foundation") && (n < 21 || n > 40 || institution === "both" || (institution === "mosque" && n <= 30) || (institution === "foundation" && n >= 31)); });
   const heading = $("staffModuleHeading");
   if (heading) heading.textContent = `মডিউল নির্বাচন (${visibleModules.length}টি প্রযোজ্য · মোট ৮৫টি)`;
+  const accountGroups = [
+    {key:"dashboard",title:"১. ড্যাশবোর্ড",description:"সার্বিক আর্থিক অবস্থা ও দ্রুত প্রবেশ",keys:["m62"]},
+    {key:"income",title:"২. আয়, দাতা ও মাসিক চাঁদা",description:"আয় এন্ট্রি, দাতা/অনুদান এবং চাঁদা আদায়",keys:["m63","m65","m85"]},
+    {key:"expense",title:"৩. ব্যয়, পাওনা ও বেতন",description:"ব্যয়, বিল/পাওনা এবং কর্মচারী বেতন",keys:["m64","m69","m70"]},
+    {key:"bank",title:"৪. ব্যাংক, ক্যাশ ও লেনদেন",description:"ব্যাংক/ক্যাশ, ট্রান্সফার, লেজার ও রিকনসিলিয়েশন",keys:["m66","m67","m68","m78"]},
+    {key:"budget",title:"৫. বাজেট ও তহবিল",description:"বাজেট পরিকল্পনা ও তহবিল নিয়ন্ত্রণ",keys:["m71","m72"]},
+    {key:"reports",title:"৬. রিপোর্ট ও আর্থিক বিবরণী",description:"আর্থিক রিপোর্ট, PDF/Excel এবং ব্যালান্স শিট",keys:["m74","m75","m76"]},
+    {key:"documents",title:"৭. রসিদ ও অনুসন্ধান",description:"রসিদ/ভাউচার এবং লেনদেন অনুসন্ধান",keys:["m73","m77"]},
+    {key:"governance",title:"৮. অডিট, অনুমোদন ও সেটিংস",description:"অডিট, অনুমোদন, ব্যবহারকারী, অনুমতি, বার্তা ও সেটিংস",keys:["m79","m80","m81","m82","m83","m84"]}
+  ];
   const accountsModules = visibleModules.filter(m => Number(m.key.slice(1)) >= 62 && Number(m.key.slice(1)) <= 85);
+  const generalModules = visibleModules.filter(m => Number(m.key.slice(1)) < 62);
   const accountsAllSelected = accountsModules.length > 0 && accountsModules.every(m => selectedMap.has(m.key));
+  const card = m => {
+    const old = selectedMap.get(m.key) || {};
+    const number = String(Number(m.key.slice(1))).padStart(2,"0");
+    const group = Number(m.key.slice(1)) >= 51 ? "governance" : "mosque";
+    return `<div class="staff-module staff-module-item staff-module-${group}" data-module-card="${m.key}">
+      <label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
+        <span class="staff-module-number">${number}</span>
+        <span class="staff-module-copy"><strong>${escapeHtml(m.name)}</strong><small>পূর্ণ কার্যক্রমের অনুমতি</small></span>
+      </label>
+    </div>`;
+  };
+  const groupsHtml = accountGroups.map(group => {
+    const items = accountsModules.filter(m => group.keys.includes(m.key));
+    if (!items.length) return "";
+    const count = items.filter(m => selectedMap.has(m.key)).length;
+    return `<section class="staff-module-group" data-accounts-group-box="${group.key}">
+      <div class="staff-module-group-head">
+        <label><input type="checkbox" data-accounts-group="${group.key}" ${count===items.length?"checked":""}>
+          <span><strong>${group.title}</strong><small>${escapeHtml(group.description)}</small></span>
+        </label>
+        <span class="staff-module-group-count" data-accounts-group-count="${group.key}">${count}/${items.length}</span>
+      </div>
+      <div class="staff-module-group-grid">${items.map(card).join("")}</div>
+    </section>`;
+  }).join("");
   staffModuleRoot.innerHTML =
     (accountsModules.length ? `<div class="staff-module staff-module-master">
       <label><input id="staffAccountsAllModules" type="checkbox" ${accountsAllSelected ? "checked" : ""}>
-        <span class="staff-master-copy"><strong>সম্পূর্ণ অ্যাকাউন্টিং সফটওয়্যার</strong><small>${accountsModules.length}টি প্রযোজ্য মডিউল · একসাথে সব নির্বাচন</small></span>
+        <span class="staff-master-copy"><strong>সম্পূর্ণ অ্যাকাউন্টিং সফটওয়্যার</strong><small>৮টি প্রধান বিভাগ · ${accountsModules.length}টি বিস্তারিত অনুমতি</small></span>
       </label>
-      <p>এটি নির্বাচন করলে নির্বাচিত কর্মী অ্যাকাউন্টিংয়ের সব প্রযোজ্য মডিউলে দেখা, তৈরি, সম্পাদনা, পেমেন্ট, অনুমোদন, রিপোর্ট ও এক্সপোর্টসহ পূর্ণ কার্যক্রম পরিচালনা করতে পারবেন। আলাদা Approver লাগবে না।</p>
+      <p>একসাথে সব নির্বাচন করলে কর্মী Accounts-এর সব বিভাগে পূর্ণ কার্যক্রম পরিচালনা করতে পারবেন। চাইলে নিচের ৮টি বিভাগের যেকোনো একটি বা তার ভেতরের নির্দিষ্ট কাজ নির্বাচন করুন। আলাদা Approver লাগবে না।</p>
     </div>` : "") +
-    visibleModules.map(m => {
-      const old = selectedMap.get(m.key) || {};
-      const number = String(Number(m.key.slice(1))).padStart(2,"0");
-      const group = Number(m.key.slice(1)) >= 62 ? "accounts" : Number(m.key.slice(1)) >= 51 ? "governance" : "mosque";
-      return `<div class="staff-module staff-module-item staff-module-${group}" data-module-card="${m.key}">
-        <label><input type="checkbox" data-module="${m.key}" ${old.module_key ? "checked" : ""}>
-          <span class="staff-module-number">${number}</span>
-          <span class="staff-module-copy"><strong>${escapeHtml(m.name)}</strong><small>পূর্ণ কার্যক্রমের অনুমতি</small></span>
-        </label>
-      </div>`;
-    }).join("");
+    generalModules.map(card).join("") + groupsHtml;
   const master = $("staffAccountsAllModules");
+  const syncGroupChecks = () => {
+    accountGroups.forEach(group => {
+      const boxes = group.keys.map(key => staffModuleRoot.querySelector('[data-module="'+key+'"]')).filter(Boolean);
+      const checked = boxes.filter(x => x.checked).length;
+      const groupBox = staffModuleRoot.querySelector('[data-accounts-group="'+group.key+'"]');
+      if (groupBox) { groupBox.checked = boxes.length > 0 && checked === boxes.length; groupBox.indeterminate = checked > 0 && checked < boxes.length; }
+      const count = staffModuleRoot.querySelector('[data-accounts-group-count="'+group.key+'"]');
+      if (count) count.textContent = checked + "/" + boxes.length;
+    });
+    const boxes = [...staffModuleRoot.querySelectorAll('[data-module]')].filter(x => {
+      const n = Number(x.dataset.module.slice(1)); return n >= 62 && n <= 85;
+    });
+    if (master) { master.checked = boxes.length > 0 && boxes.every(x => x.checked); master.indeterminate = boxes.some(x => x.checked) && !master.checked; }
+  };
   if (master) master.addEventListener("change", () => {
     staffModuleRoot.querySelectorAll('[data-module]').forEach(input => {
       const n = Number(input.dataset.module.slice(1));
       if (n >= 62 && n <= 85) input.checked = master.checked;
     });
+    syncGroupChecks();
   });
-  $("staffModules").querySelectorAll('[data-module]').forEach(input => input.addEventListener("change", () => {
-    const boxes = [...$("staffModules").querySelectorAll('[data-module]')].filter(x => {
-      const n = Number(x.dataset.module.slice(1)); return n >= 62 && n <= 85;
-    });
-    if (master) master.checked = boxes.length > 0 && boxes.every(x => x.checked);
+  staffModuleRoot.querySelectorAll('[data-accounts-group]').forEach(input => input.addEventListener("change", () => {
+    const group = accountGroups.find(x => x.key === input.dataset.accountsGroup);
+    if (!group) return;
+    group.keys.forEach(key => { const box = staffModuleRoot.querySelector('[data-module="'+key+'"]'); if (box) box.checked = input.checked; });
+    syncGroupChecks();
   }));
+  staffModuleRoot.querySelectorAll('[data-module]').forEach(input => input.addEventListener("change", syncGroupChecks));
+  syncGroupChecks();
 }
 function readChecks() {
   const staffModuleRoot = $("staffModules");
