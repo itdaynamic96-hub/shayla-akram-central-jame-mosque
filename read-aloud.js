@@ -1,4 +1,4 @@
-/* Local, API-key-free Bengali male TTS using Svāra + WebGPU. */
+/* Server-based Bengali male TTS using Google Cloud Text-to-Speech. */
 (() => {
   'use strict';
 
@@ -29,13 +29,13 @@
     copy.querySelectorAll(excluded).forEach(el => el.remove());
     copy.querySelectorAll('[dir="rtl"],.arabic,.arabic-pronunciation').forEach(el => el.remove());
     const raw = copy.innerText || copy.textContent || '';
-    return raw.replace(/\\r/g,'').split(/\\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
-      .replace(/https?:\\/\\/[^\\s]+/gi,' ')
-      .replace(/[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF]/g,' ')
+    return raw.replace(/\r/g,'').split(/\n+/).map(line=>line.trim()).filter(Boolean).join('। ')
+      .replace(/https?:\/\/[^\s]+/gi,' ')
+      .replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g,' ')
       .replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)])
-      .replace(/\\s*([।!?])\\s*/g,'$1 ')
-      .replace(/([।!?])(?:\\s*[।!?])+/g,'$1')
-      .replace(/\\s+/g,' ').trim();
+      .replace(/\s*([।!?])\s*/g,'$1 ')
+      .replace(/([।!?])(?:\s*[।!?])+/g,'$1')
+      .replace(/\s+/g,' ').trim();
   };
 
   const splitText = value => {
