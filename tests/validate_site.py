@@ -571,3 +571,16 @@ assert "rich-text-editor.js?v=20261126-home-text-toolbar-fix3" in admin_html_tex
 # Dhaka prayer timetable: automatic Karachi/Hanafi daily calculation with published admin override.
 assert "timingsByCity/'+date" in homepage and "city=Dhaka&country=Bangladesh&method=1&school=1" in homepage and "timezonestring=Asia%2FDhaka" in homepage, 'Homepage must calculate daily Dhaka prayer times using Karachi method and Hanafi Asr'
 assert "loadPrayerTimes(publishedModuleRecords)" in homepage and "module_key==='m23'" in homepage and "fajr_jamaat" in homepage, 'Homepage must use published admin prayer and jamaat timetable records'
+
+
+# YouTube Management: module 87, secure queue table, batch cap, and no-channel-connected guard.
+admin_modules_youtube=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
+youtube_js=(ROOT/'youtube-management.js').read_text(encoding='utf-8')
+youtube_migration=(ROOT/'supabase/migrations/20261126165000_youtube_management_queue.sql').read_text(encoding='utf-8')
+assert "['YouTube Management','প্রকাশিত ভিডিও নির্বাচন" in admin_modules_youtube and "m.n===87" in admin_modules_youtube, 'Admin: YouTube Management must be registered as module 87'
+assert "await import('./youtube-management.js')" in admin_modules_youtube, 'Admin: YouTube Management route must load its dedicated module'
+assert 'MAX_BATCH=15' in youtube_js and 'youtube_upload_queue' in youtube_js, 'YouTube: batch queue must support up to 15 videos with persisted queue records'
+assert 'চ্যানেল এখনো সংযুক্ত হয়নি' in youtube_js and 'OAuth' not in youtube_js, 'YouTube: no-channel state must be clear and no OAuth connection is created yet'
+assert "permission==='অনুমোদিত'" in youtube_js and "status==='published'" in youtube_js, 'YouTube: only approved and published website video posts can be queued'
+assert 'enable row level security' in youtube_migration and "public.has_access(array['super_admin','admin','website_admin'],null)" in youtube_migration, 'YouTube queue must be protected by RLS and admin-role policies'
+assert 'admin-modules.js?v=20261126-youtube-management1' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin: YouTube Management module cache must be refreshed'
