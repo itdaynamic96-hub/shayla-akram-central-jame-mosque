@@ -2,9 +2,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ALLOWED_ORIGIN = "https://itdaynamic96-hub.github.io";
 const PUBLIC_API_KEY = "sb_publishable_rcOi9VHw4tP2umMhDqD1YA_rJWwugHi";
-const GOOGLE_TTS_URL = "https://translate.google.com/_/TranslateWebserverUi/data/batchexecute";
-const GOOGLE_TTS_RPC = "jQ1olc";
-const GOOGLE_TTS_MAX_CHARS = 100;
+const GOOGLE_TTS_URL = "https://texttospeech.googleapis.com/v1/text:synthesize";
+const VOICE_NAME = "bn-IN-Standard-B";
+const MAX_TEXT_CHARS = 450;
 
 function corsHeaders() {
   return {
@@ -16,86 +16,33 @@ function corsHeaders() {
   };
 }
 
-function splitForGoogle(text: string): string[] {
-  const chars = Array.from(text.trim());
-  const chunks: string[] = [];
-  while (chars.length > GOOGLE_TTS_MAX_CHARS) {
-    let cut = GOOGLE_TTS_MAX_CHARS;
-    for (let i = GOOGLE_TTS_MAX_CHARS; i > GOOGLE_TTS_MAX_CHARS - 25; i--) {
-      if (chars[i - 1] === " ") { cut = i; break; }
-    }
-    chunks.push(chars.slice(0, cut).join("").trim());
-    chars.splice(0, cut);
-  }
-  if (chars.length) chunks.push(chars.join("").trim());
-  return chunks.filter(Boolean);
-}
-
-async function synthesizeGoogleChunk(text: string): Promise<Uint8Array> {
-  const parameter = JSON.stringify([text, "bn", null, "null"]);
-  const rpc = [[[GOOGLE_TTS_RPC, parameter, null, "generic"]]];
-  const body = "f.req=" + encodeURIComponent(JSON.stringify(rpc)) + "&";
-  const response = await fetch(GOOGLE_TTS_URL, {
-    method: "POST",
-    headers: {
-      "Referer": "http://translate.google.com/",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36",
-      "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
-    },
-    body,
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) {
-    const error = new Error("Google Bengali TTS request failed (" + response.status + ")");
-    (error as any).status = response.status;
-    throw error;
-  }
-
-  const raw = await response.text();
-  for (const line of raw.split(/\r?\n/)) {
-    const match = line.match(/jQ1olc","\[\\"([A-Za-z0-9+/=]+)\\"\]/);
-    if (match?.[1]) {
-      const binary = atob(match[1]);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      if (bytes.length > 100) return bytes;
-    }
-  }
-  throw new Error("Google Translate returned no Bengali audio data");
-}
-
-async function synthesize(text: string): Promise<ArrayBuffer> {
-  const parts = splitForGoogle(text);
-  const audioParts: Uint8Array[] = [];
-  for (const part of parts) {
-    audioParts.push(await synthesizeGoogleChunk(part));
-  }
-  const total = audioParts.reduce((sum, part) => sum + part.length, 0);
-  const combined = new Uint8Array(total);
-  let offset = 0;
-  for (const part of audioParts) {
-    combined.set(part, offset);
-    offset += part.length;
-  }
-  return combined.buffer;
-}
-
 Deno.serve(async (req: Request) => {
   const headers = corsHeaders();
   const origin = req.headers.get("origin");
+
   if (req.method === "GET" && new URL(req.url).searchParams.get("health") === "1") {
     return Response.json({
       status: "ok",
-      provider: "Google Translate TTS (gTTS-compatible)",
-      language: "bn",
-      api_key_required: false,
-      upstream_max_characters: GOOGLE_TTS_MAX_CHARS,
+      provider: "Google Cloud Text-to-Speech",
+      language: "bn-IN",
+      voice: VOICE_NAME,
+      gender: "MALE",
+      configured: Boolean(Deno.env.get("GOOGLE_TTS_API_KEY")),
     }, { headers });
   }
+
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers });
   if (origin !== ALLOWED_ORIGIN || req.headers.get("apikey") !== PUBLIC_API_KEY) {
     return new Response("Request not allowed", { status: 403, headers });
+  }
+
+  const apiKey = Deno.env.get("GOOGLE_TTS_API_KEY");
+  if (!apiKey) {
+    return Response.json({
+      error: "Google Cloud TTS is not configured",
+      detail: "Supabase Secret GOOGLE_TTS_API_KEY সেট করতে হবে।",
+    }, { status: 503, headers });
   }
 
   let text: string;
@@ -105,22 +52,66 @@ Deno.serve(async (req: Request) => {
   } catch {
     return new Response("Invalid JSON", { status: 400, headers });
   }
-  if (!text || text.length > 450) {
+
+  if (!text || text.length > MAX_TEXT_CHARS) {
     return new Response("Text must contain 1–450 characters", { status: 400, headers });
   }
 
   try {
-    const audio = await synthesize(text);
+    const response = await fetch(GOOGLE_TTS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        input: { text },
+        voice: {
+          languageCode: "bn-IN",
+          name: VOICE_NAME,
+          ssmlGender: "MALE",
+        },
+        audioConfig: {
+          audioEncoding: "MP3",
+          speakingRate: 0.94,
+          pitch: -1.0,
+        },
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+
+    if (!response.ok) {
+      const detail = (await response.text()).slice(0, 300);
+      return Response.json({
+        error: "Google Cloud Text-to-Speech request failed",
+        detail,
+      }, { status: response.status === 429 ? 429 : 502, headers });
+    }
+
+    const result = await response.json();
+    if (typeof result.audioContent !== "string" || !result.audioContent) {
+      return Response.json({ error: "Google TTS returned no audio" }, { status: 502, headers });
+    }
+
+    const binary = atob(result.audioContent);
+    const audio = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) audio[i] = binary.charCodeAt(i);
+
     return new Response(audio, {
       status: 200,
-      headers: { ...headers, "Content-Type": "audio/mpeg", "Cache-Control": "no-store", "X-TTS-Provider": "Google Translate TTS (no API key)" },
+      headers: {
+        ...headers,
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "no-store",
+        "X-TTS-Provider": "Google Cloud Text-to-Speech",
+        "X-TTS-Voice": VOICE_NAME,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Speech synthesis failed";
-    const status = Number((error as any)?.status) === 429 ? 429 : 502;
-    return new Response(JSON.stringify({
-      error: "Free Bengali speech service is temporarily unavailable",
+    return Response.json({
+      error: "বাংলা অডিও তৈরি করা যায়নি।",
       detail: message.slice(0, 240),
-    }), { status, headers: { ...headers, "Content-Type": "application/json" } });
+    }, { status: 502, headers });
   }
 });
