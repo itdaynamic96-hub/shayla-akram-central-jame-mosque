@@ -479,7 +479,7 @@ assert 'accounts_detail_insert_pending' in approval_hardening and "status='pendi
 assert 'account_module_permission(institution,array[\'m63\',\'m80\'],true,true)' in approval_hardening, 'Accounts: direct approval must require explicit can_approve'
 assert "approved_by=(select auth.uid())" in approval_hardening and "approved_at is not null" in approval_hardening, 'Accounts: approval updates must be attributed to the current user'
 accounts_html_text=(ROOT/'accounts.html').read_text(encoding='utf-8')
-assert 'const directApproved=canApproveAccountEntry' in accounts_html_text and "status:directApproved?'approved':'pending'" in accounts_html_text, 'Accounts: UI must submit pending when the operator lacks approval rights'
+assert 'directApproved=canApproveAccountEntry' in accounts_html_text and "status:directApproved?'approved':'pending'" in accounts_html_text, 'Accounts: UI must submit pending when the operator lacks approval rights'
 
 chanda_multi=(ROOT/'supabase/chanda-multi-month-payment.sql').read_text(encoding='utf-8')
 assert 'p_paid_amount numeric' in chanda_multi and 'set search_path = public, pg_temp' in chanda_multi, 'Chanda: multi-month RPC parameter and safe search_path must match the client'
