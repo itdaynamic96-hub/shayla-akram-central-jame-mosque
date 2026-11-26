@@ -64,6 +64,7 @@ expense_method_listener=accounts.find("$('expensemethod')?.addEventListener('cha
 assert expense_form_created >= 0 and expense_form_created < income_method_listener < expense_method_listener, 'Accounts: payment-method listeners must be attached only after the cloned expense form exists'
 assert 'setHidden(\'login\',false);await boot()' in accounts and 'id="loginStatus"' in accounts, 'Accounts: login must remain visible while the saved session/profile is being checked'
 assert 'id="accountBootError"' in accounts and 'লগইন সফল হয়েছে, কিন্তু Accounts-এর তথ্য/অনুমতি লোড করা যায়নি' in accounts, 'Accounts: post-auth data/permission failures must not return the user to login'
+assert accounts.index('const withTimeout=(promise,ms,label)=>') < accounts.index("else{setHidden('login',false);await boot()}") and accounts.index('const withTimeout=(promise,ms,label)=>') < accounts.index('async function boot(){'), 'Accounts: withTimeout must be initialized before boot() is invoked'
 assert '<section id="login" class="panel">' in accounts, 'Accounts: login form must be visible even if external module scripts fail to load'
 assert 'id="accounts-login-visibility-fix"' in accounts and '#login #loginForm{display:grid!important' in accounts and '#login #loginForm input{display:block!important' in accounts, 'Accounts: login fields and submit button must be forced visible outside dashboard CSS'
 assert "if(!configured){setHidden('login',false);setHidden('setup',false)" in accounts, 'Accounts: login must remain visible when Supabase configuration is unavailable'
