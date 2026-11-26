@@ -177,6 +177,34 @@ input,select,textarea,.search{border:1px solid #dcd5c5;border-radius:11px;paddin
 <style>#admin-home-banner .card{grid-template-columns:minmax(0,1fr) minmax(180px,36%)}@media(max-width:700px){#admin-home-banner .card{grid-template-columns:1fr!important}}
 /* Modern, distinct visual treatments for the mosque story cards */
 .history-story{background:linear-gradient(145deg,#e8f4ed 0%,#d7eadf 48%,#f6f0d9 100%)!important;border:1px solid #a8c9b3!important;border-left:6px solid #2f7954!important;border-radius:18px!important;box-shadow:0 12px 30px #173d2618!important;color:#173b2b!important}.history-story h2{color:#15583b!important}.history-story h3{color:#26734d!important}.history-story p{color:#355c49!important}.mutawalli-card{background:linear-gradient(145deg,#f1e9ff 0%,#e5eaff 52%,#f8efff 100%)!important;border:1px solid #c9b9e8!important;border-top:5px solid #7652a8!important;border-radius:18px!important;box-shadow:0 12px 28px #3d286218!important;color:#34234f!important}.mutawalli-card h2{color:#65408f!important}.mutawalli-card p{color:#55436d!important}.mutawalli-card .portrait{border-color:#8a69b7!important;box-shadow:0 5px 16px #49316a24}.naming-story{background:linear-gradient(145deg,#fff1df 0%,#ffe4d6 50%,#fff7e9 100%)!important;border:1px solid #edc5a4!important;border-left:6px solid #c56b43!important;border-radius:18px!important;box-shadow:0 12px 28px #693a2018!important;color:#57331f!important}.naming-story h2{color:#9a4e2d!important}.naming-story h3{color:#a75c38!important}.naming-story p{color:#704b36!important}
+
+/* Home page: latest notices and activities */
+.latest-updates-wrap{margin-top:26px!important;margin-bottom:28px!important}
+.home-updates-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px!important;align-items:stretch}
+.home-update-card{position:relative;min-width:0;padding:0!important;border:1px solid #dce8e1!important;border-radius:18px!important;background:linear-gradient(155deg,#fff 0%,#f8fbf9 100%)!important;box-shadow:0 8px 24px rgba(24,63,45,.075)!important;overflow:hidden}
+.home-update-card:before{content:"";display:block;height:5px;background:linear-gradient(90deg,#176746,#62a77d)}
+.home-activity-card:before{background:linear-gradient(90deg,#94651e,#dfbb6a)}
+.home-update-heading{display:flex;align-items:center;gap:12px;padding:18px 20px 15px;border-bottom:1px solid #e8eee9}
+.home-update-icon{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:13px;background:#e8f4ed;font-size:22px}
+.home-activity-card .home-update-icon{background:#fff3df}
+.home-update-heading>div{min-width:0;flex:1}
+.home-update-eyebrow{display:block;color:#648071;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:2px}
+.home-update-heading h3{margin:0!important;color:#174d36;font-size:21px!important;font-weight:800;line-height:1.35}
+.home-activity-card .home-update-heading h3{color:#805819}
+.home-update-pill{padding:5px 10px;border-radius:30px;background:#e8f4ed;color:#176746;font-size:11px;font-weight:800;white-space:nowrap}
+.home-activity-card .home-update-pill{background:#fff0d4;color:#895d18}
+.home-update-list{display:grid;gap:0;padding:4px 20px}
+.home-update-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px dashed #dfe9e2}
+.home-update-item:last-child{border-bottom:0}
+.home-update-dot{width:10px;height:10px;flex:0 0 10px;margin-top:6px;border-radius:50%;background:#329267;box-shadow:0 0 0 4px #e7f3ec}
+.home-activity-card .home-update-dot{background:#c18b32;box-shadow:0 0 0 4px #fff2dc}
+.home-update-item>div{min-width:0}
+.home-update-item strong{display:block;margin:0 0 4px;color:#254b38;font-size:15px;font-weight:800}
+.home-update-item p{margin:0;color:#5d6f65;font-size:13px;line-height:1.75}
+.home-update-footnote{margin:0!important;padding:12px 20px 15px;background:#f0f7f2;color:#547362;font-size:11px;line-height:1.65}
+.home-activity-card .home-update-footnote{background:#fff8eb;color:#806632}
+@media(max-width:700px){.home-updates-grid{grid-template-columns:minmax(0,1fr)!important;gap:13px!important}.home-update-heading{padding:15px 15px 13px}.home-update-heading h3{font-size:19px!important}.home-update-list{padding:3px 15px}.home-update-item{padding:12px 0}.home-update-footnote{padding:11px 15px}}
+
 </style></head><body>
 <header class="top"><div class="brand"><div class="mark">☪</div><div><strong>শায়লা আকরাম কেন্দ্রীয় জামে মসজিদ</strong><small>শায়লা আকরাম কেন্দ্রীয় ফাউন্ডেশন</small></div></div><span class="lang" aria-label="বাংলা প্রধান সংস্করণ">বাংলা ওয়েবসাইট</span></header>
 <div class="navwrap"><nav class="nav" id="nav" aria-label="প্রধান মেনু"></nav></div>
@@ -232,7 +260,24 @@ input,select,textarea,.search{border:1px solid #dcd5c5;border-radius:11px;paddin
 <p><strong>আমিন, ইয়া রব্বাল আলামিন।</strong></p>
 <p class="closing">শায়লা আকরাম—তিনি হয়তো আর ফিরে আসবেন না, কিন্তু তাঁর নামটি বেঁচে থাকবে এই মসজিদের পরিচয়ে, মানুষের স্মৃতিতে এবং একটি জনপদের ভালোবাসার ইতিহাসে।</p>
 </article></section></aside></section>
-<section class="wrap content-wrap latest-updates-wrap" aria-label="সর্বশেষ নোটিশ ও সাম্প্রতিক কার্যক্রম"><div class="homegrid"><article class="noticebox"><h3>সর্বশেষ নোটিশ</h3><div id="latest-notice-content"><p>এখনো কোনো অনুমোদিত নোটিশ প্রকাশ করা হয়নি। নতুন নোটিশ কর্তৃপক্ষ যাচাই ও অনুমোদনের পর এখানে যুক্ত হবে।</p></div></article><article class="noticebox"><h3>সাম্প্রতিক কার্যক্রম</h3><div id="latest-activity-content"><p>অনুষ্ঠান, উন্নয়নকাজ ও সামাজিক কার্যক্রমের যাচাইকৃত প্রতিবেদন পাওয়া গেলে এখানে যুক্ত হবে।</p></div></article></div></section><section class="wrap content-wrap"><div class="tour-panel"><div class="premium-kicker">মসজিদকে কাছ থেকে জানুন</div><h2 class="sectiontitle" style="text-align:center">মসজিদের ৩৬০° ভার্চুয়াল ভ্রমণ</h2><div class="tour-shell" id="mosque360Viewer"><img data-mosque-image="homepage" src="./assets/mosque-hero.webp" alt="মসজিদের ভার্চুয়াল ভ্রমণের প্রচ্ছদ" class="tour-cover"><div class="tour-overlay" id="mosque360Placeholder"><div style="font-size:42px">۞</div><h3 style="color:#fff4cf;margin:6px 0">ঘরে বসেই মসজিদ ঘুরে দেখুন</h3><p>প্রবেশদ্বার, নামাজের স্থান ও মসজিদের বাইরের দৃশ্য ৩৬০° ঘুরে দেখার ব্যবস্থা এখানে থাকবে। প্রকৃত ৩৬০° প্যানোরামা ছবি যুক্ত হলেই ভ্রমণ চালু হবে।</p><button class="premium-button" id="mosque360Start" type="button" disabled>৩৬০° ছবি যুক্ত হলে চালু হবে</button></div><div id="mosque360Stage" hidden aria-label="মসজিদের ৩৬০ ডিগ্রি ভার্চুয়াল ভ্রমণ"></div><div id="mosque360VideoWrap" hidden style="margin:16px auto 0;max-width:900px;text-align:left"><h3 style="color:#fff4cf">মসজিদের ভ্রমণ ভিডিও</h3><video id="mosque360Video" data-mosque-360-video controls playsinline preload="metadata" style="display:block;width:100%;max-height:520px;background:#111;border-radius:12px"></video><p style="color:#e8dfc6;font-size:13px">ভিডিওর শব্দ প্রশাসনিক সেটিং অনুযায়ী চালু বা বন্ধ থাকবে।</p></div><p id="mosque360Status" class="tour-overlay" aria-live="polite" hidden></p></div></div></section>
+<section class="wrap content-wrap latest-updates-wrap" aria-label="সর্বশেষ নোটিশ ও সাম্প্রতিক কার্যক্রম">
+<div class="homegrid home-updates-grid">
+<article class="noticebox home-update-card home-notice-card">
+<header class="home-update-heading"><span class="home-update-icon" aria-hidden="true">📢</span><div><span class="home-update-eyebrow">প্রয়োজনীয় ঘোষণা</span><h3>সর্বশেষ নোটিশ</h3></div><span class="home-update-pill">নোটিশ</span></header>
+<div id="latest-notice-content" class="home-update-list">
+<div class="home-update-item"><span class="home-update-dot"></span><div><strong>নোটিশ প্রকাশ ও যাচাই</strong><p>মসজিদ ও ফাউন্ডেশনের গুরুত্বপূর্ণ ঘোষণা কর্তৃপক্ষের যাচাই ও অনুমোদনের পর এখানে প্রকাশ করা হবে।</p></div></div>
+<div class="home-update-item"><span class="home-update-dot"></span><div><strong>নামাজ ও ধর্মীয় আয়োজন</strong><p>নামাজের সময়সূচি, মাহফিল, বিশেষ দোয়া ও ধর্মীয় অনুষ্ঠানের সময়-তারিখ সংক্রান্ত ঘোষণা এখানে জানানো হবে।</p></div></div>
+<div class="home-update-item"><span class="home-update-dot"></span><div><strong>সদস্য ও মুসল্লীদের জন্য তথ্য</strong><p>মসজিদের সেবা, নিবন্ধন, আবেদন ও প্রয়োজনীয় নির্দেশনা সম্পর্কে হালনাগাদ তথ্য নোটিশে পাওয়া যাবে।</p></div></div>
+</div><p class="home-update-footnote">অনুমোদিত নতুন নোটিশ প্রকাশিত হলে এই অংশ স্বয়ংক্রিয়ভাবে হালনাগাদ হবে।</p>
+</article>
+<article class="noticebox home-update-card home-activity-card">
+<header class="home-update-heading"><span class="home-update-icon" aria-hidden="true">🕌</span><div><span class="home-update-eyebrow">আমাদের উদ্যোগ</span><h3>সাম্প্রতিক কার্যক্রম</h3></div><span class="home-update-pill">কার্যক্রম</span></header>
+<div id="latest-activity-content" class="home-update-list">
+<div class="home-update-item"><span class="home-update-dot"></span><div><strong>ইসলামিক জ্ঞানভান্ডার</strong><p>ইসলামিক শিক্ষা, নৈতিকতা ও দৈনন্দিন জীবনের প্রয়োজনীয় বিষয় নিয়ে পাঠযোগ্য তথ্য ও লেখা সাজানো হয়েছে।</p></div></div>
+<div class="home-update-item"><span class="home-update-dot"></span><div><strong>আলোকচিত্র ও ভিডিও শিক্ষা</strong><p>মসজিদ-সম্পর্কিত ছবি, ভিডিও এবং শিক্ষা ও দাওয়াহমূলক কনটেন্ট এক জায়গায় দেখার ব্যবস্থা রয়েছে।</p></div></div>
+<div class="home-update-item"><span class="home-update-dot"></span><div><strong>ডিজিটাল তথ্যসেবা</strong><p>মসজিদের পরিচিতি, যোগাযোগ, নোটিশ ও প্রয়োজনীয় তথ্য সহজে খুঁজে পাওয়ার জন্য ওয়েবসাইটের বিভাগগুলো সাজানো হয়েছে।</p></div></div>
+</div><p class="home-update-footnote">যাচাইকৃত নতুন প্রতিবেদন বা কার্যক্রমের তথ্য যুক্ত হলে এখানে সর্বশেষটি দেখানো হবে।</p>
+</article></div></section><section class="wrap content-wrap"><div class="tour-panel"><div class="premium-kicker">মসজিদকে কাছ থেকে জানুন</div><h2 class="sectiontitle" style="text-align:center">মসজিদের ৩৬০° ভার্চুয়াল ভ্রমণ</h2><div class="tour-shell" id="mosque360Viewer"><img data-mosque-image="homepage" src="./assets/mosque-hero.webp" alt="মসজিদের ভার্চুয়াল ভ্রমণের প্রচ্ছদ" class="tour-cover"><div class="tour-overlay" id="mosque360Placeholder"><div style="font-size:42px">۞</div><h3 style="color:#fff4cf;margin:6px 0">ঘরে বসেই মসজিদ ঘুরে দেখুন</h3><p>প্রবেশদ্বার, নামাজের স্থান ও মসজিদের বাইরের দৃশ্য ৩৬০° ঘুরে দেখার ব্যবস্থা এখানে থাকবে। প্রকৃত ৩৬০° প্যানোরামা ছবি যুক্ত হলেই ভ্রমণ চালু হবে।</p><button class="premium-button" id="mosque360Start" type="button" disabled>৩৬০° ছবি যুক্ত হলে চালু হবে</button></div><div id="mosque360Stage" hidden aria-label="মসজিদের ৩৬০ ডিগ্রি ভার্চুয়াল ভ্রমণ"></div><div id="mosque360VideoWrap" hidden style="margin:16px auto 0;max-width:900px;text-align:left"><h3 style="color:#fff4cf">মসজিদের ভ্রমণ ভিডিও</h3><video id="mosque360Video" data-mosque-360-video controls playsinline preload="metadata" style="display:block;width:100%;max-height:520px;background:#111;border-radius:12px"></video><p style="color:#e8dfc6;font-size:13px">ভিডিওর শব্দ প্রশাসনিক সেটিং অনুযায়ী চালু বা বন্ধ থাকবে।</p></div><p id="mosque360Status" class="tour-overlay" aria-live="polite" hidden></p></div></div></section>
 <section class="wrap content-wrap"><div class="contact-panel"><div class="premium-kicker">আমাদের সঙ্গে যোগাযোগ</div><h2 class="sectiontitle" style="text-align:center">গুগল ম্যাপ ও যোগাযোগ</h2><div class="contact-grid"><div class="contact-detail"><h3>মসজিদের অবস্থান</h3><p>পশ্চিম সাকছিপাড়া, হাজীগঞ্জ, চাঁদপুর, বাংলাদেশ</p><p class="subtle">ঠিকানাটি পূর্বের নথিতে প্রাথমিক হিসেবে উল্লেখ আছে; প্রকাশের আগে সঠিক অবস্থান যাচাই করতে হবে।</p><a class="premium-button" href="https://www.google.com/maps/search/?api=1&query=West%20Sakchipara%2C%20Hajiganj%2C%20Chandpur%2C%20Bangladesh" target="_blank" rel="noopener">গুগল ম্যাপে দেখুন</a><p style="margin-top:14px"><strong>ফোন:</strong> যোগাযোগ নম্বর যাচাই ও অনুমোদনের পর যুক্ত হবে।</p></div><iframe class="map-frame" title="মসজিদের সম্ভাব্য এলাকার মানচিত্র" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=West%20Sakchipara%2C%20Hajiganj%2C%20Chandpur%2C%20Bangladesh&t=&z=14&ie=UTF8&iwloc=&output=embed"></iframe></div></div></section>
 </section></main>
 <script>
