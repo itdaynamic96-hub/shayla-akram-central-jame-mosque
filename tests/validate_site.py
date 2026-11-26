@@ -74,7 +74,7 @@ assert 'আর্টিক্যাল undefined' not in html, 'Homepage: slot 1
 intro_start=html.index('<div class="intro-history-column">')
 history_end=html.index('</section>', intro_start)
 notice_section=html.index('aria-label="সর্বশেষ নোটিশ ও সাম্প্রতিক কার্যক্রম"')
-notice_start=html.index('<div class="homegrid">', notice_section)
+notice_start=html.index('<div class="homegrid', notice_section)
 assert intro_start < history_end < notice_section < notice_start, 'Homepage: history and latest updates sections must exist in document order'
 assert 'id="latest-notice-content"' in html and 'id="latest-activity-content"' in html
 assert "from('announcements')" in html and "eq('status','published')" in html
