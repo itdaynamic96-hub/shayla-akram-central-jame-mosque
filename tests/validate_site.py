@@ -546,3 +546,12 @@ assert 'id="expenseEntryForm"' not in accounts_html and 'createSeparateExpenseFo
 assert "submitLedgerEntry(e,'income','')" in accounts_html and "submitLedgerEntry(e,'expense','expense')" in accounts_html, 'Accounts: income and expense forms must submit fixed transaction types independently'
 assert "$('type').options" not in accounts_html, 'Accounts: hidden transaction type must not be accessed as a select element'
 assert "$('expenseEntryPanel').hidden=!expenseAllowed" in accounts_html, 'Accounts: expense form visibility must follow expense permission'
+
+# Accounts dashboard: login must hide after authentication and all 24 modules render individually in the left navigation.
+accounts_page=(ROOT/'accounts.html').read_text(encoding='utf-8')
+assert '#login[hidden]{display:none!important' in accounts_page, 'Accounts: login form must obey the hidden state after authentication'
+accounts_dashboard=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
+assert 'visibleModules.map(i=>' in accounts_dashboard and 'data-module="'+i+'"' in accounts_dashboard, 'Accounts: each permitted module must have its own left navigation item'
+assert 'filter(i=>allowed.has(moduleKeys[i]))' in accounts_dashboard, 'Accounts: all 24 modules must remain permission-filtered'
+assert 'if(i===3){renderDonations().catch(showError);return}' in accounts_dashboard, 'Accounts: donor and donation module must be connected'
+assert 'modules:[1,3,23]' in accounts_dashboard, 'Accounts: donor and monthly chanda modules must remain grouped with income'
