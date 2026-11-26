@@ -342,7 +342,7 @@ assert 'm85' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Monthly ch
 assert 'n >= 41 && n <= 50' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'Legacy grouped Accounts grants must not be assigned to new staff'
 assert 'm84' in (ROOT/'admin-users.js').read_text(encoding='utf-8') and 'm62' in (ROOT/'admin-users.js').read_text(encoding='utf-8'), 'All 24 Accounts module permissions must be assignable from Admin'
 accounts_dashboard_source=(ROOT/'accounts-dashboard.js').read_text(encoding='utf-8')
-assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>allowed.has(moduleKeys[i]))" in accounts_dashboard_source, 'Accounts permissions must retain the original module access keys'
+assert "visibleModules=Object.keys(moduleKeys).map(Number).filter(i=>i!==3&&allowed.has(moduleKeys[i]))" in accounts_dashboard_source, 'Accounts permissions must retain the original module access keys'
 assert 'const moduleGroups=[' in accounts_dashboard_source and 'data-group' in accounts_dashboard_source and 'data-module' in accounts_dashboard_source, 'Accounts navigation must expose the simplified parent groups and permitted submodules'
 group_source=accounts_dashboard_source.split('const moduleGroups=[',1)[1].split('];',1)[0]
 group_indexes=[int(n) for n in re.findall(r'\bmodules:\[([0-9,]+)\]',group_source) for n in n.split(',')]
