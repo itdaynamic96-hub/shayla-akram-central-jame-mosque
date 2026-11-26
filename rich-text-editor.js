@@ -31,7 +31,11 @@ function html(value){
 }
 function escapeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function init(root=document){
- root.querySelectorAll('[data-rich-editor="true"]:not([data-rich-ready])').forEach(field=>{
+ const candidates=root.querySelectorAll('[data-rich-editor="true"],textarea:not([data-no-rich]),input[type="text"]:not([data-no-rich])');
+ candidates.forEach(field=>{
+  if(!field.matches('[data-rich-editor="true"]')&&!document.body.hasAttribute('data-rich-text-admin'))return;
+  const hint=[field.id,field.name,field.placeholder,field.getAttribute('aria-label'),field.parentNode?.textContent].join(' ').toLowerCase();
+  if(/phone|mobile|email|url|link|slug|code|number|date|time|amount|account|reference|receipt|password|search|filter|token|\bid\b|bank|routing|postal|zip|nid|passport|username/.test(hint))return;
   if(!field.parentNode)return;
   field.dataset.richReady='1';
   const wrap=document.createElement('div');wrap.className='rich-editor-wrap';
@@ -50,8 +54,8 @@ function init(root=document){
   const clear=makeButton('↺','ফরম্যাট সরান',()=>{document.execCommand('removeFormat');});
   toolbar.append(bold,underline,size,colorLabel,clear);
   field.parentNode.insertBefore(wrap,field);wrap.append(toolbar,editor);wrap.appendChild(field);field.classList.add('rich-editor-source');
-  const sync=()=>{field.value=clean(editor.innerHTML);field.dispatchEvent(new Event('input',{bubbles:true}))};
-  editor.addEventListener('input',sync);editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
+  const sync=()=>{field.value=(editor.textContent||'').trim()?clean(editor.innerHTML):'';field.dispatchEvent(new Event('input',{bubbles:true}))};
+  editor.addEventListener('keydown',event=>{if(field.tagName==='INPUT'&&event.key==='Enter')event.preventDefault()});editor.addEventListener('input',sync);editor.addEventListener('blur',()=>{editor.innerHTML=clean(editor.innerHTML);sync()});
   field.addEventListener('change',()=>{if(document.activeElement!==editor)editor.innerHTML=html(field.value)});
  });
 }
