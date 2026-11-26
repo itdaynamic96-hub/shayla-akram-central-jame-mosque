@@ -322,7 +322,7 @@ module_block=re.search(r"const modules=\[(.*?)\];",dashboard_js,re.S)
 assert module_block, 'Accounts dashboard module list is missing'
 module_labels=re.findall(r"'([^']*)'",module_block.group(1))
 assert len(module_labels)==24, f'Accounts dashboard must contain exactly 24 approved modules, found {len(module_labels)}'
-assert 'সংরক্ষিত অভ্যন্তরীণ মডিউল' in module_labels and 'দাতা ও অনুদান' not in module_labels and 'মাসিক চাঁদা আদায়' in module_labels and 'বার্তা ও নোটিফিকেশন' in module_labels, 'Retired donor module must stay hidden while monthly chanda and messaging remain separate modules'
+assert 'দাতা ও অনুদান' in module_labels and 'মাসিক চাঁদা আদায়' in module_labels and 'বার্তা ও নোটিফিকেশন' in module_labels, 'Donor, monthly chanda and messaging must remain separate Accounts modules'
 for marker in ("from('chanda_members')","from('chanda_dues')","from('chanda_payments')","record_chanda_payment","chanda_can_access","ensure_chanda_dues_for_month","renderTransfers","renderTrialBalance","renderReports","renderAdvancedSearch","renderReconciliation","resetAdPage","adLegacyBin","renderApprovals","renderUserPermissions","renderSettings","adInstitution","accounts_feature_access"):
     assert marker in dashboard_js, f'Accounts dashboard missing approved module integration: {marker}'
 for marker in ('২০–২৪ তারিখ','২৫ তারিখ','আংশিক আদায়','আদায় সম্পন্ন','মাসিক চাঁদা আদায়ের রসিদ'):
