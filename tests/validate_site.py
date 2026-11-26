@@ -486,6 +486,13 @@ assert "supabase.storage.from('private-module-files').createSignedUrl(path,300)"
 assert "kind==='video'?52428800" in admin_modules_private, 'Video upload validation must match the 50 MB Storage bucket limit'
 assert 'admin-modules.js?v=20261126-youtube-management1' in (ROOT/'admin.html').read_text(encoding='utf-8'), 'Admin private report storage cache key must be refreshed'
 
+
+# User list loader must retain DOM nodes while Admin shell temporarily detaches legacy panels.
+admin_users_html=(ROOT/'admin.html').read_text(encoding='utf-8')
+assert "const usersCountElement=$('usersCount'),usersBodyElement=$('users'),usersErrorElement=$('usersError')" in admin_users_html, 'Admin users: cache stable DOM references before the dynamic shell reparents legacy panels'
+assert 'const count=usersCountElement,body=usersBodyElement' in admin_users_html and 'if(usersBodyElement)usersBodyElement.addEventListener' in admin_users_html, 'Admin users: load and delegate events through stable references instead of querying detached nodes'
+assert 'admin-users.js?v=20261126-users-dom-race-fix1' in admin_users_html, 'Admin users: refresh module cache after the DOM race fix'
+
 # Admin layout regression: fixed sidebar must not be combined with a narrow centered main container.
 admin_layout_html=(ROOT/'admin.html').read_text(encoding='utf-8')
 admin_modules_js=(ROOT/'admin-modules.js').read_text(encoding='utf-8')
