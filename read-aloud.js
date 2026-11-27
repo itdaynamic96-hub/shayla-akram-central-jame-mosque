@@ -97,6 +97,15 @@
     return voices.filter(v=>(v.lang||'').toLowerCase().startsWith(prefix))
       .sort((a,b)=>Number(b.localService)-Number(a.localService))[0]||null;
   };
+  const speakNative=(session,chunk,voice)=>{
+    const utterance=new SpeechSynthesisUtterance(chunk.text);
+    utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=0.92;utterance.pitch=1;
+    session.nativePending=null;session.nativeSpeaking=true;session.nativeUtterance=utterance;
+    utterance.onend=()=>{if(active!==session||session.state!=='playing')return;session.nativeSpeaking=false;session.nativeUtterance=null;session.index++;playNext(session);};
+    utterance.onerror=event=>{if(active===session&&event.error!=='canceled'&&event.error!=='interrupted')finish('ডিভাইসের কণ্ঠে পড়া যায়নি। আবার চেষ্টা করুন।');};
+    statusText((chunk.language==='ar'?'আরবি':'বাংলা')+'—ডিভাইসের কণ্ঠে পড়া হচ্ছে ('+voice.name+')…',session.statusTarget);
+    window.speechSynthesis.speak(utterance);
+  };
   const playNext=async session=>{
     if(active!==session||session.state!=='playing'||session.generating)return;
     if(session.index>=session.chunks.length){finish('পড়া শেষ হয়েছে।');return;}
@@ -105,12 +114,8 @@
       const chunk=session.chunks[session.index];
       const nativeVoice=await findNativeVoice(chunk.language);if(active!==session)return;
       if(nativeVoice){
-        const utterance=new SpeechSynthesisUtterance(chunk.text);
-        utterance.voice=nativeVoice;utterance.lang=nativeVoice.lang;utterance.rate=0.92;utterance.pitch=1;
-        session.nativeSpeaking=true;session.generating=false;
-        utterance.onend=()=>{if(active!==session||session.state!=='playing')return;session.nativeSpeaking=false;session.index++;playNext(session);};
-        utterance.onerror=event=>{if(active===session&&event.error!=='canceled'&&event.error!=='interrupted')finish('ডিভাইসের কণ্ঠে পড়া যায়নি। আবার চেষ্টা করুন।');};
-        if(session.state==='playing'){statusText((chunk.language==='ar'?'আরবি':'বাংলা')+'—ডিভাইসের কণ্ঠে পড়া হচ্ছে ('+nativeVoice.name+')…',session.statusTarget);window.speechSynthesis.speak(utterance);}
+        session.generating=false;session.nativePending={chunk,voice:nativeVoice};
+        if(session.state==='playing')speakNative(session,chunk,nativeVoice);
         else statusText('ডিভাইসের কণ্ঠ প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
         return;
       }
@@ -139,7 +144,7 @@
   const resume=buttons=>{
     if(!active||active.buttons!==buttons||active.state!=='paused')return;
     const session=active;session.state='playing';setControls('playing');statusText('আবার পড়া হচ্ছে।',session.statusTarget);
-    if(session.nativeSpeaking)window.speechSynthesis.resume();else if(session.audio)session.audio.play().catch(()=>finish('অডিও আবার চালু করা যায়নি।'));else if(!session.generating)playNext(session);
+    if(session.nativePending)speakNative(session,session.nativePending.chunk,session.nativePending.voice);else if(session.nativeSpeaking)window.speechSynthesis.resume();else if(session.audio)session.audio.play().catch(()=>finish('অডিও আবার চালু করা যায়নি।'));else if(!session.generating)playNext(session);
   };
   const stop=(message='পড়া বন্ধ করা হয়েছে।')=>finish(message);
   let shareSequence = 0;
