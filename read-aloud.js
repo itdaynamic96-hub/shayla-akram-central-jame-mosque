@@ -15,19 +15,36 @@
       .replace(/[0-9]/g,d=>'০১২৩৪৫৬৭৮৯'[Number(d)])
       .replace(/\s*([।!?])\s*/g,'$1 ').replace(/([।!?])(?:\s*[।!?])+/g,'$1').replace(/\s+/g,' ').trim();
   };
+  // Keep spaces and punctuation with the surrounding language. Only
+  // actual Arabic/Bengali letters should trigger a language switch.
   const splitText=value=>{
     const source=String(value||'').trim(),runs=[];
     let current='',language='';
     for(const char of source){
-      const next=/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(char)?'ar':'bn';
-      if(language&&next!==language){if(current.trim())runs.push({text:current.trim(),language});current='';}
-      language=next;current+=char;
+      const isArabic=/[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF]/.test(char);
+      const isBengali=/[\\u0980-\\u09FF]/.test(char);
+      const next=isArabic?'ar':isBengali?'bn':(language||'bn');
+      if(language&&next!==language){
+        if(current.trim())runs.push({text:current.trim(),language});
+        current='';
+      }
+      language=next;
+      current+=char;
     }
     if(current.trim())runs.push({text:current.trim(),language});
     const result=[];
     for(const run of runs){
       const sentences=run.text.match(/[^।.!?؟]+[।.!?؟]?/g)||[run.text];
-      for(const sentence of sentences){let rest=sentence.trim();while(rest.length>220){let cut=rest.lastIndexOf(' ',220);if(cut<100)cut=220;result.push({text:rest.slice(0,cut).trim(),language:run.language});rest=rest.slice(cut).trim();}if(rest)result.push({text:rest,language:run.language});}
+      for(const sentence of sentences){
+        let rest=sentence.trim();
+        while(rest.length>220){
+          let cut=rest.lastIndexOf(' ',220);
+          if(cut<100)cut=220;
+          result.push({text:rest.slice(0,cut).trim(),language:run.language});
+          rest=rest.slice(cut).trim();
+        }
+        if(rest)result.push({text:rest,language:run.language});
+      }
     }
     return result;
   };
