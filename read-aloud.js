@@ -1,4 +1,4 @@
-/* Lightweight browser Bengali Read Aloud using Spellophone/eSpeak NG. */
+/* Read Aloud using installed browser/device Bengali and Arabic voices only. */
 (() => {
   'use strict';
   const selectors = ['.article-card','.published-content','.content-slot.article-card','.video-card','.content-slot.video-card','.quran-ayah','.hadith-card','.knowledge-card','.tafsir-card','.asbab-card','.detailcard','.noticebox'].join(',');
@@ -63,23 +63,6 @@
   };
   const finish=message=>{const target=active?.statusTarget;if(active?.nativeSpeaking&&'speechSynthesis' in window)window.speechSynthesis.cancel();releaseAudio(active);active=null;setControls('idle');statusText(message,target);};
   // Matches the lightweight Bengali voice used by the supplied module 14.
-  const getEspeak=()=>{
-    if(!enginePromise)enginePromise=(async()=>{
-      const {createEspeak,toFloat32}=await import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/browser.js');
-      const engine=await createEspeak({cdn:'jsdelivr',languages:['bn','ar'],fallback:()=>import('https://cdn.jsdelivr.net/npm/@spelling-creator/spellophone@0.2.1/dist/wasm2js.js')});
-      await engine.loadVoice('bn');engine.setVoice('bn');return {engine,toFloat32};
-    })();
-    return enginePromise;
-  };
-  const encodeWav=(samples,sampleRate)=>{
-    const buffer=new ArrayBuffer(44+samples.length*2),view=new DataView(buffer);
-    const write=(offset,value)=>{for(let i=0;i<value.length;i++)view.setUint8(offset+i,value.charCodeAt(i));};
-    write(0,'RIFF');view.setUint32(4,36+samples.length*2,true);write(8,'WAVE');write(12,'fmt ');
-    view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,sampleRate,true);
-    view.setUint32(28,sampleRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');view.setUint32(40,samples.length*2,true);
-    for(let i=0;i<samples.length;i++){const v=Math.max(-1,Math.min(1,samples[i]));view.setInt16(44+i*2,v<0?v*32768:v*32767,true);}
-    return new Blob([buffer],{type:'audio/wav'});
-  };
   const findNativeVoice=async language=>{
     if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return null;
     const synth=window.speechSynthesis;
@@ -109,29 +92,28 @@
   const playNext=async session=>{
     if(active!==session||session.state!=='playing'||session.generating)return;
     if(session.index>=session.chunks.length){finish('পড়া শেষ হয়েছে।');return;}
-    session.generating=true;statusText(session.chunks[session.index].language==='ar'?'আরবি কণ্ঠ প্রস্তুত হচ্ছে…':'বাংলা কণ্ঠ প্রস্তুত হচ্ছে…',session.statusTarget);
+    session.generating=true;
+    const chunk=session.chunks[session.index];
+    statusText((chunk.language==='ar'?'আরবি':'বাংলা')+' ভাষার ডিভাইস ভয়েস খোঁজা হচ্ছে…',session.statusTarget);
     try{
-      const chunk=session.chunks[session.index];
-      const nativeVoice=await findNativeVoice(chunk.language);if(active!==session)return;
-      if(nativeVoice){
-        session.generating=false;session.nativePending={chunk,voice:nativeVoice};
-        if(session.state==='playing')speakNative(session,chunk,nativeVoice);
-        else statusText('ডিভাইসের কণ্ঠ প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
+      if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window)){
+        finish('এই ব্রাউজারে ডিভাইসের ভয়েস সুবিধা নেই। Chrome বা Edge-এর সর্বশেষ সংস্করণ ব্যবহার করুন।');
         return;
       }
-      const {engine,toFloat32}=await getEspeak();if(active!==session)return;
-      await engine.loadVoice(chunk.language);engine.setVoice(chunk.language);
+      const nativeVoice=await findNativeVoice(chunk.language);
       if(active!==session)return;
-      const result=engine.synthesize(chunk.text),samples=toFloat32(result?.samples||result),sampleRate=Number(result?.sampleRate||engine.sampleRate||22050);
-      if(!samples||!samples.length)throw new Error('এই লেখার অডিও তৈরি হয়নি।');
-      session.audioUrl=URL.createObjectURL(encodeWav(samples,sampleRate));
-      const audio=new Audio(session.audioUrl);session.audio=audio;audio.preload='auto';
-      audio.onended=()=>{if(active!==session||session.state!=='playing')return;releaseAudio(session);session.index++;playNext(session);};
-      audio.onerror=()=>{if(active===session)finish('তৈরি হওয়া অডিও চালানো যায়নি। আবার চেষ্টা করুন।');};
+      if(!nativeVoice){
+        finish((chunk.language==='ar'?'আরবি':'বাংলা')+' ভাষার ডিভাইস ভয়েস পাওয়া যায়নি। আপনার ডিভাইসে এই ভাষার Text-to-Speech ভয়েস ইনস্টল করে আবার চেষ্টা করুন। রোবোটিক বিকল্প ভয়েস চালানো হয়নি।');
+        return;
+      }
       session.generating=false;
-      if(session.state==='playing'){statusText((chunk.language==='ar'?'আরবি':'বাংলা')+'—বিকল্প কণ্ঠে পড়া হচ্ছে…',session.statusTarget);await audio.play();}
-      else statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
-    }catch(error){if(active===session)finish(error?.message||'বাংলা ভয়েস তৈরি করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');console.error('Spellophone Bengali TTS failed',error);}
+      session.nativePending={chunk,voice:nativeVoice};
+      if(session.state==='playing')speakNative(session,chunk,nativeVoice);
+      else statusText('ডিভাইসের কণ্ঠ প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
+    }catch(error){
+      console.error('Native Bengali/Arabic speech failed',error);
+      if(active===session)finish('ডিভাইসের ভয়েস চালু করা যায়নি। ব্রাউজারের ভয়েস সেটিংস পরীক্ষা করে আবার চেষ্টা করুন।');
+    }
   };
   const start=(text,buttons,statusTarget)=>{
     currentButtons=buttons||null;const clean=String(text||'').trim();
@@ -274,7 +256,7 @@
     const status=document.createElement('span');
     status.className='nexora-tts-status';
     status.setAttribute('aria-live','polite');
-    status.textContent='আরবি ও বাংলা—ভাষা অনুযায়ী কণ্ঠে শুনুন';
+    status.textContent='শুনতে বোতাম চাপুন। ডিভাইসে বাংলা ও আরবি ভয়েস থাকতে হবে।';
     box.append(play,pauseButton,resumeButton,stopButton,status);
     card.appendChild(box);
     const buttons={play,pause:pauseButton,resume:resumeButton,stop:stopButton};
