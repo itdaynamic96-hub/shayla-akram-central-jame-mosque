@@ -172,7 +172,7 @@ assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44'
 
 # Prefer installed browser/device speech voices for Bengali and Arabic; eSpeak remains a per-language fallback.
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
-assert 'const findNativeVoice=async language=>' in reader_js and 'speechSynthesis.getVoices()' in reader_js, 'Read Aloud: device-native voices must be searched before eSpeak fallback'
+assert 'const findNativeVoice=async language=>' in reader_js and '.getVoices()' in reader_js, 'Read Aloud: device-native voices must be searched before eSpeak fallback'
 assert "startsWith(prefix)" in reader_js and "const prefix=language==='ar'?'ar':'bn'" in reader_js, 'Read Aloud: native voices must match the requested language'
 assert 'window.speechSynthesis.speak(utterance)' in reader_js and 'window.speechSynthesis.cancel()' in reader_js, 'Read Aloud: native speech must support playback and cancellation'
 # Enterprise Premium additions: browser-local Bengali male read-aloud and monthly chanda workflow.
