@@ -56,4 +56,4 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 
 
-Read Aloud uses only Bengali and Arabic voices installed in the browser/device via the native Speech Synthesis API. It does not silently fall back to the robotic eSpeak voice: if the requested language voice is unavailable, the player displays a clear message asking the user to install that language's Text-to-Speech voice. Voice quality and availability depend on the operating system and browser.
+Read Aloud uses installed browser/device voices only for Bengali and Arabic via the native Speech Synthesis API. It does not silently fall back to the robotic eSpeak voice: if the requested language voice is unavailable, the player displays a clear message asking the user to install that language's Text-to-Speech voice. Voice quality and availability depend on the operating system and browser.
