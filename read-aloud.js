@@ -61,7 +61,7 @@
     if(session.audio){session.audio.onended=null;session.audio.onerror=null;session.audio.pause();session.audio.removeAttribute('src');session.audio.load();session.audio=null;}
     if(session.audioUrl){URL.revokeObjectURL(session.audioUrl);session.audioUrl=null;}
   };
-  const finish=message=>{const target=active?.statusTarget;releaseAudio(active);active=null;setControls('idle');statusText(message,target);};
+  const finish=message=>{const target=active?.statusTarget;if(active?.nativeSpeaking&&'speechSynthesis' in window)window.speechSynthesis.cancel();releaseAudio(active);active=null;setControls('idle');statusText(message,target);};
   // Matches the lightweight Bengali voice used by the supplied module 14.
   const getEspeak=()=>{
     if(!enginePromise)enginePromise=(async()=>{
@@ -80,13 +80,41 @@
     for(let i=0;i<samples.length;i++){const v=Math.max(-1,Math.min(1,samples[i]));view.setInt16(44+i*2,v<0?v*32768:v*32767,true);}
     return new Blob([buffer],{type:'audio/wav'});
   };
+  const findNativeVoice=async language=>{
+    if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return null;
+    const synth=window.speechSynthesis;
+    let voices=synth.getVoices();
+    if(!voices.length){
+      await new Promise(resolve=>{
+        let done=false;
+        const finish=()=>{if(done)return;done=true;synth.removeEventListener('voiceschanged',finish);resolve();};
+        synth.addEventListener('voiceschanged',finish,{once:true});
+        setTimeout(finish,1200);
+      });
+      voices=synth.getVoices();
+    }
+    const prefix=language==='ar'?'ar':'bn';
+    return voices.filter(v=>(v.lang||'').toLowerCase().startsWith(prefix))
+      .sort((a,b)=>Number(b.localService)-Number(a.localService))[0]||null;
+  };
   const playNext=async session=>{
     if(active!==session||session.state!=='playing'||session.generating)return;
     if(session.index>=session.chunks.length){finish('পড়া শেষ হয়েছে।');return;}
     session.generating=true;statusText(session.chunks[session.index].language==='ar'?'আরবি কণ্ঠ প্রস্তুত হচ্ছে…':'বাংলা কণ্ঠ প্রস্তুত হচ্ছে…',session.statusTarget);
     try{
-      const {engine,toFloat32}=await getEspeak();if(active!==session)return;
       const chunk=session.chunks[session.index];
+      const nativeVoice=await findNativeVoice(chunk.language);if(active!==session)return;
+      if(nativeVoice){
+        const utterance=new SpeechSynthesisUtterance(chunk.text);
+        utterance.voice=nativeVoice;utterance.lang=nativeVoice.lang;utterance.rate=0.92;utterance.pitch=1;
+        session.nativeSpeaking=true;session.generating=false;
+        utterance.onend=()=>{if(active!==session||session.state!=='playing')return;session.nativeSpeaking=false;session.index++;playNext(session);};
+        utterance.onerror=event=>{if(active===session&&event.error!=='canceled'&&event.error!=='interrupted')finish('ডিভাইসের কণ্ঠে পড়া যায়নি। আবার চেষ্টা করুন।');};
+        if(session.state==='playing'){statusText((chunk.language==='ar'?'আরবি':'বাংলা')+'—ডিভাইসের কণ্ঠে পড়া হচ্ছে ('+nativeVoice.name+')…',session.statusTarget);window.speechSynthesis.speak(utterance);}
+        else statusText('ডিভাইসের কণ্ঠ প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
+        return;
+      }
+      const {engine,toFloat32}=await getEspeak();if(active!==session)return;
       await engine.loadVoice(chunk.language);engine.setVoice(chunk.language);
       if(active!==session)return;
       const result=engine.synthesize(chunk.text),samples=toFloat32(result?.samples||result),sampleRate=Number(result?.sampleRate||engine.sampleRate||22050);
@@ -96,7 +124,7 @@
       audio.onended=()=>{if(active!==session||session.state!=='playing')return;releaseAudio(session);session.index++;playNext(session);};
       audio.onerror=()=>{if(active===session)finish('তৈরি হওয়া অডিও চালানো যায়নি। আবার চেষ্টা করুন।');};
       session.generating=false;
-      if(session.state==='playing'){statusText(session.chunks[session.index].language==='ar'?'আরবি কণ্ঠে পড়া হচ্ছে…':'বাংলা কণ্ঠে পড়া হচ্ছে…',session.statusTarget);await audio.play();}
+      if(session.state==='playing'){statusText((chunk.language==='ar'?'আরবি':'বাংলা')+'—বিকল্প কণ্ঠে পড়া হচ্ছে…',session.statusTarget);await audio.play();}
       else statusText('অডিও প্রস্তুত। আবার চালু চাপলে শোনা যাবে।',session.statusTarget);
     }catch(error){if(active===session)finish(error?.message||'বাংলা ভয়েস তৈরি করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');console.error('Spellophone Bengali TTS failed',error);}
   };
@@ -104,14 +132,14 @@
     currentButtons=buttons||null;const clean=String(text||'').trim();
     if(!clean){setControls('idle');statusText('পড়ে শোনানোর মতো বাংলা লেখা পাওয়া যায়নি।',statusTarget);return;}
     if(active)finish('আগের পড়া বন্ধ করা হয়েছে।');
-    const session={statusTarget,buttons,chunks:splitText(clean),index:0,audio:null,audioUrl:null,state:'playing',generating:false};
+    const session={statusTarget,buttons,chunks:splitText(clean),index:0,audio:null,audioUrl:null,state:'playing',generating:false,nativeSpeaking:false};
     active=session;setControls('playing');statusText('বাংলা কণ্ঠ প্রস্তুত করা হচ্ছে…',statusTarget);playNext(session);
   };
-  const pause=buttons=>{if(!active||active.buttons!==buttons||active.state!=='playing')return;active.audio?.pause();active.state='paused';setControls('paused');statusText('পড়া বিরতিতে আছে।',active.statusTarget);};
+  const pause=buttons=>{if(!active||active.buttons!==buttons||active.state!=='playing')return;if(active.nativeSpeaking)window.speechSynthesis.pause();else active.audio?.pause();active.state='paused';setControls('paused');statusText('পড়া বিরতিতে আছে।',active.statusTarget);};
   const resume=buttons=>{
     if(!active||active.buttons!==buttons||active.state!=='paused')return;
     const session=active;session.state='playing';setControls('playing');statusText('আবার পড়া হচ্ছে।',session.statusTarget);
-    if(session.audio)session.audio.play().catch(()=>finish('অডিও আবার চালু করা যায়নি।'));else if(!session.generating)playNext(session);
+    if(session.nativeSpeaking)window.speechSynthesis.resume();else if(session.audio)session.audio.play().catch(()=>finish('অডিও আবার চালু করা যায়নি।'));else if(!session.generating)playNext(session);
   };
   const stop=(message='পড়া বন্ধ করা হয়েছে।')=>finish(message);
   let shareSequence = 0;
