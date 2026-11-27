@@ -174,9 +174,10 @@ assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44'
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
 reader_check=subprocess.run(['node','--check','--input-type=module'],input=reader_js,text=True,capture_output=True)
 assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.stderr}'
+assert "const isArabic=/[\\u0600-\\u06FF" in reader_js and "const isBengali=/[\\u0980-\\u09FF" in reader_js, 'Read Aloud: Unicode language ranges must be real regex escapes, not literal backslash-u text'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261126-espeak-bn-ar1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261127-arabic-segmentation-fix2' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
