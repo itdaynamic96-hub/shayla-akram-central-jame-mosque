@@ -174,6 +174,8 @@ assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44'
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
 assert 'const findNativeVoice=async language=>' in reader_js and '.getVoices()' in reader_js, 'Read Aloud: device-native voices must be searched'
 assert "startsWith(prefix)" in reader_js and "const prefix=language==='ar'?'ar':'bn'" in reader_js, 'Read Aloud: native voices must match the requested language'
+assert 'রোবোটিক বিকল্প ভয়েস চালানো হয়নি।' in reader_js and 'getEspeak' not in reader_js and 'spellophone' not in reader_js, 'Read Aloud: no robotic fallback when native language voice is missing'
+assert 'ভাষার ডিভাইস ভয়েস খোঁজা হচ্ছে' in reader_js and 'শুনতে বোতাম চাপুন।' in reader_js, 'Read Aloud: status must clearly change on play'
 assert 'window.speechSynthesis.speak(utterance)' in reader_js and 'window.speechSynthesis.cancel()' in reader_js, 'Read Aloud: native speech must support playback and cancellation'
 # Enterprise Premium additions: browser-local Bengali male read-aloud and monthly chanda workflow.
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
