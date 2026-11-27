@@ -170,9 +170,9 @@ assert 'hasAccountModule' in (ROOT/'accounts.html').read_text(encoding='utf-8'),
 assert "account_module_permission(institution,array['m48'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Budget writes must require the budget module grant'
 assert "account_module_permission(split_part(name,'/',1),array['m42','m43','m44','m45','m49'],true)" in (ROOT/'supabase/module-permissions.sql').read_text(encoding='utf-8'), 'Receipt uploads must require the receipt module grant'
 
-# Prefer installed browser/device speech voices for Bengali and Arabic; eSpeak remains a per-language fallback.
+# Use installed browser/device speech voices only; never fall back to robotic eSpeak.
 reader_js=(ROOT/'read-aloud.js').read_text(encoding='utf-8')
-assert 'const findNativeVoice=async language=>' in reader_js and '.getVoices()' in reader_js, 'Read Aloud: device-native voices must be searched before eSpeak fallback'
+assert 'const findNativeVoice=async language=>' in reader_js and '.getVoices()' in reader_js, 'Read Aloud: device-native voices must be searched'
 assert "startsWith(prefix)" in reader_js and "const prefix=language==='ar'?'ar':'bn'" in reader_js, 'Read Aloud: native voices must match the requested language'
 assert 'window.speechSynthesis.speak(utterance)' in reader_js and 'window.speechSynthesis.cancel()' in reader_js, 'Read Aloud: native speech must support playback and cancellation'
 # Enterprise Premium additions: browser-local Bengali male read-aloud and monthly chanda workflow.
@@ -182,18 +182,18 @@ assert reader_check.returncode==0, f'Read Aloud JS syntax error: {reader_check.s
 assert "const isArabic=/[\\u0600-\\u06FF" in reader_js and "const isBengali=/[\\u0980-\\u09FF" in reader_js, 'Read Aloud: Unicode language ranges must be real regex escapes, not literal backslash-u text'
 for page_name in ('index.html','admin.html','accounts.html'):
     page_source=(ROOT/page_name).read_text(encoding='utf-8')
-    assert './read-aloud.js?v=20261127-native-device-voices1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
+    assert './read-aloud.js?v=20261127-native-only1' in page_source, f'Read Aloud: updated cloud Bengali client is not loaded by {page_name}'
     assert 'supabase-config.js' in page_source, f'Read Aloud: Supabase public configuration is missing from {page_name}'
     assert 'id="readAloud"' not in page_source, f'Read Aloud: page-wide floating control must not be in {page_name}'
     assert 'spellophone.iife.js' not in page_source, f'Read Aloud: obsolete TTS engine must not load in {page_name}'
     assert 'SpeechSynthesisUtterance' not in page_source, f'Read Aloud: duplicated inline speech engine remains in {page_name}'
 for selector in ('.article-card','.published-content','.quran-ayah','.hadith-card','.knowledge-card','.detailcard'):
     assert selector in reader_js, f'Read Aloud: missing content coverage for {selector}'
-assert "languages:['bn','ar']" in reader_js and "engine.loadVoice(chunk.language)" in reader_js and "engine.setVoice(chunk.language)" in reader_js, 'Read Aloud: Arabic and Bengali text must use their matching eSpeak voices'
+assert "const prefix=language==='ar'?'ar':'bn'" in reader_js and 'utterance.lang=voice.lang' in reader_js, 'Read Aloud: Arabic and Bengali chunks must use matching native voices'
 assert '.asbab-card' in reader_js and 'আরবি ও বাংলায় শুনুন' in reader_js, 'Read Aloud: Quran, hadith, tafsir and Asbab al-Nuzul content must be included'
-assert '@spelling-creator/spellophone@0.2.1/dist/browser.js' in reader_js and "engine.loadVoice('bn')" in reader_js and "engine.setVoice('bn')" in reader_js, 'Read Aloud: must use the supplied module’s lightweight Bengali eSpeak voice'
+assert '@spelling-creator/spellophone' not in reader_js, 'Read Aloud: robotic third-party TTS fallback must be removed'
 assert 'createSvaraEngine' not in reader_js and '১.৯৫ জিবি' not in reader_js and 'WebGPU' not in reader_js, 'Read Aloud: obsolete multi-GB Svara/WebGPU model must no longer be required'
-assert 'encodeWav' in reader_js and 'new Audio(session.audioUrl)' in reader_js, 'Read Aloud: synthesized Bengali audio must be encoded and played in browser'
+assert 'window.speechSynthesis.speak(utterance)' in reader_js and 'window.speechSynthesis.pause()' in reader_js, 'Read Aloud: native voice playback and pause must be supported'
 assert 'পড়া বিরতিতে আছে।' in reader_js and 'আবার পড়া হচ্ছে।' in reader_js and 'পড়া বন্ধ করা হয়েছে।' in reader_js, 'Read Aloud: playback controls are incomplete'
 assert 'MutationObserver' in reader_js, 'Read Aloud: dynamically loaded module content must be scanned'
 assert '.nexora-share' in reader_js, 'Share: every supported post and ayah needs a share control'
@@ -204,7 +204,7 @@ assert '.quran-ayah' in reader_js and '.hadith-card' in reader_js, 'Share: Quran
 assert "'.video-card'" in reader_js and "'.content-slot.video-card'" in reader_js, 'Share: every video gallery card must receive a share control'
 assert 'aria-expanded' in reader_js and 'hidden' in reader_js, 'Share: platform menu must be expandable and accessible'
 assert 'GOOGLE_TTS_API_KEY' not in reader_js and 'functions/v1/bengali-tts' not in reader_js, 'Read Aloud: browser must not depend on Google TTS or Supabase secrets'
-assert 'runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download)' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document the lightweight Spellophone/eSpeak voice'
+assert 'installed browser/device voices only' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document native-only voices'
 assert 'Arabic and Bengali' in (ROOT/'README.md').read_text(encoding='utf-8'), 'Read Aloud: README must document Arabic and Bengali voice support'
 assert (ROOT/'read-aloud.js').exists(), 'Read Aloud: client script is missing'
 chanda_js=(ROOT/'chanda-admin.js').read_text(encoding='utf-8')
