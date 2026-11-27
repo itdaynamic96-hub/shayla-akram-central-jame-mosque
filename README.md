@@ -56,4 +56,4 @@ The Admin Panel dashboard layout is controlled by the Super Admin from the **ড
 
 
 
-Bengali male Read Aloud runs locally in the browser with the lightweight Spellophone/eSpeak Bengali voice (no multi-GB model download), with Arabic and Bengali language switching. It does not require Google Cloud Text-to-Speech, a Supabase Edge Function, or the `GOOGLE_TTS_API_KEY` secret. The first use loads the small eSpeak WASM runtime and Bengali voice files from jsDelivr; no multi-gigabyte model or WebGPU is required. Internet access is needed on first load.
+Read Aloud uses only Bengali and Arabic voices installed in the browser/device via the native Speech Synthesis API. It does not silently fall back to the robotic eSpeak voice: if the requested language voice is unavailable, the player displays a clear message asking the user to install that language's Text-to-Speech voice. Voice quality and availability depend on the operating system and browser.
