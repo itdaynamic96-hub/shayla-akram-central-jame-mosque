@@ -353,6 +353,6 @@ $('contentReset').onclick=()=>{const category=$('contentCategory').value;$('cont
 $('loadAudit').onclick=async()=>{const{data,error}=await supabase.from('audit_logs').select('*').order('happened_at',{ascending:false}).limit(100);if(error){showError($('auditError'),error);return}$('audit').innerHTML=data.map(x=>'<tr><td>'+escapeHtml(new Date(x.happened_at).toLocaleString('bn-BD'))+'</td><td>'+escapeHtml(x.actor)+'</td><td>'+escapeHtml(x.table_name)+'</td><td>'+escapeHtml(x.action)+'</td><td>'+escapeHtml(x.record_id)+'</td></tr>').join('')};
 </script>
 
-<script src="./rich-text-editor.js?v=20261126-home-text-toolbar-fix3"></script><script type="module" src="./read-aloud.js?v=20261127-native-device-voices1"></script>
+<script src="./rich-text-editor.js?v=20261126-home-text-toolbar-fix3"></script><script type="module" src="./read-aloud.js?v=20261127-native-only1"></script>
 
 <script type="module" src="./mosque-media.js?v=20261126-account-image-target-fix1"></script><script type="module" src="./admin-modules.js?v=20261126-youtube-management1"></script><script type="module" src="./admin-users.js?v=20261126-users-dom-race-fix1"></script><script type="module" src="./chanda-admin.js?v=20261126-chanda-route-fix1"></script>\n</body></html>
