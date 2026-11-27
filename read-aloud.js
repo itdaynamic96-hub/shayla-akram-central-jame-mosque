@@ -21,8 +21,8 @@
     const source=String(value||'').trim(),runs=[];
     let current='',language='';
     for(const char of source){
-      const isArabic=/[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF]/.test(char);
-      const isBengali=/[\\u0980-\\u09FF]/.test(char);
+      const isArabic=/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(char);
+      const isBengali=/[\u0980-\u09FF]/.test(char);
       const next=isArabic?'ar':isBengali?'bn':(language||'bn');
       if(language&&next!==language){
         if(current.trim())runs.push({text:current.trim(),language});
